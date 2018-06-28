@@ -94,7 +94,7 @@ Launch the processing stages 2 and 3 and the receiving end stage (in their own t
 ```
 ./rmq-filter-pass-on.py -listen stage2 -send stage3
 ./rmq-filter-pass-on.py -listen stage3 -send stage4
-../rmq-filter-receive.py -listen stage4
+./rmq-filter-receive.py -listen stage4
 ```
 
 Finally, in yet another terminal generate the first data and feed it to the first processing stage:
