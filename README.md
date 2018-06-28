@@ -14,7 +14,7 @@ or higher,
 or higher.
 
 ## Build
-Clone the Git repository (`git clone https://github.com/amchavan/alma-guidelines-example.git`).
+Clone the Git repository (`git clone https://github.com/amchavan/alma-datapro-workflow-sandbox.git`).
 
 The current version of this sandbox does not require an explicit build stage.
 
