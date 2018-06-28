@@ -53,7 +53,7 @@ For instance:
 ```
 ./rmq-filter-send.py -send stage2 msg00
 ```
-will send `msg09` to the Pipeline's `stage2`.
+will send `msg00` to the Pipeline's `stage2`.
 
 ### Adding Pipeline stages
 
