@@ -1,22 +1,15 @@
 #!/usr/bin/env python3
 
-from rmq_filter import Filter
+from msgq import Filter
 import sys
 
-# Log messages from the pipe on localhost: extract selectors and
-# message text from the command line
-
-# Parse the command line arguments
-filter_type='RECEIVE_ONLY'
-arg_parser = Filter.arg_parser( "Log messages from the pipe", filter_type)
-args=arg_parser.parse_args()
-listen_to=args.listen.split( ',' )
+# Log all messages from pipe on localhost
 
 # Create a filter
-filter = Filter( 'localhost', 'pipe', filter_type, listen_to=listen_to )
+filter = Filter( 'localhost', 'pipe', 'RECEIVE_ONLY', listen_to='#' )
 
 def callback(ch, method, properties, body):
     print(" [x] %s:%s" % (method.routing_key, body.decode()))
 
-print(' [*] Logging messages matching %r. To exit press CTRL+C' % listen_to )
+print(' [*] Logging messages matching %r. To exit press CTRL+C' % '#' )
 filter.listen( callback )
