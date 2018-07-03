@@ -17,7 +17,7 @@ listen_to=args.listen.split( ',' )
 send_to=args.send
 
 # Create a filter
-filter = Filter( 'localhost', 'pipe', 'SEND_RECEIVE', listen_to=listen_to, send_to=send_to )
+filter = Filter( 'localhost', 'pipe', listen_to=listen_to, send_to=send_to )
 
 # A closure, returning the callback we're interested in
 def generateCallback( filter ):

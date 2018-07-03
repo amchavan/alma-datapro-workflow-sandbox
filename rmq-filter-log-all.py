@@ -6,7 +6,7 @@ import sys
 # Log all messages from pipe on localhost
 
 # Create a filter
-filter = Filter( 'localhost', 'pipe', 'RECEIVE_ONLY', listen_to='#' )
+filter = Filter( 'localhost', 'pipe', listen_to='#' )
 
 def callback(ch, method, properties, body):
     print(" [x] %s:%s" % (method.routing_key, body.decode()))

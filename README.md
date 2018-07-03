@@ -1,11 +1,14 @@
 # Data Processing Workflow Sandbox
 
-This project is a playground for the new architecture of ALMA's Data Processing Workflow system.
+This project is a playground for the new architecture of ALMA's Data Processing Workflow system, based on a message passing backbone (currently RabbitQM)
 <!--
 Place project URL here
 -->
-It defines a
-['pipes and filters'](https://docs.microsoft.com/en-us/azure/architecture/patterns/pipes-and-filters) pipeline made of components interacting by way of a message queue.
+It defines 
+* a ['pipes and filters'](https://docs.microsoft.com/en-us/azure/architecture/patterns/pipes-and-filters) pipeline made of components interacting by way of a message queue
+* a Client/Server _RPC_ mode, where the client sends a computing request to the server by way of a
+  message and awaits the response message
+* ???
 
 ## Prerequisites
 [Python 3.7.x](https://www.python.org/downloads/)
@@ -25,7 +28,13 @@ Start the RabbitMQ server (from any location):
 rabbitmq-server
 ```
 
-## System logger
+## Defining a processing Pipeline
+
+We will define a multi-stage pipeline, with a data generator, one or more intermediate processing stages and a receiving end stage. All messages exchanged within the pipeline will be logged centrally to provide system monitoring.
+
+The message-passing system will provide the Pipelines's "pipes", whereas the "filters" are built by way of the _Filter_ class in _msgq.py_. The pipeline elements can be created as SEND/ONLY, RECEIVE/ONLY or SEND/RECEIVE, depending on constructor parameters.
+
+### System logger
 
 Launch the system logger:
 ```
@@ -33,10 +42,6 @@ cd alma-datapro-workflow-sandbox
 ./rmq-filter-log-all.py -listen '#'
 ```
 The logger will listen to all messages being exchanged and log them on the console.
-
-## Defining a processing Pipeline
-
-We can now define a multi-stage pipeline, with a data generator, one or more intermediate processing stages and a receiving end stage.
 
 
 ### Feeding data into the pipeline
@@ -86,7 +91,7 @@ where _LISTEN_ is the identifier of the stage itself. For instance:
 will implement stage 4 of the pipeline as an end stage.
 
 
-## Putting it all together
+### Putting it all together
 
 We will define a 4-stage pipeline, with two intermediate processing stages. We'll need four terminal windows where `alma-datapro-workflow-sandbox` is the working directory. Refer to the system logger window to see what is going on at all times.
 
@@ -110,3 +115,7 @@ The system logger should display something like
 ```
 
 Try feeding more data into the pipeline with `rmq-filter-send.py`; try also sending data directly to stages 3 and 4.
+
+## Message-passing Remote Proceduce Call
+
+TODO (battery is running out, damn... )

@@ -18,6 +18,6 @@ send_to=args.send
 msg=args.message
 
 # Create a filter
-filter = Filter( 'localhost', 'pipe', 'SEND_ONLY', send_to=args.send )
+filter = Filter( 'localhost', 'pipe', send_to=args.send )
 filter.send( msg )
 print(" [x] Sent %s: %s" % (args.send, args.message))

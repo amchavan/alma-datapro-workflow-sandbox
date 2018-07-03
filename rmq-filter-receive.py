@@ -15,7 +15,7 @@ args=arg_parser.parse_args()
 listen_to=args.listen.split( ',' )
 
 # Create a filter
-filter = Filter( 'localhost', 'pipe', 'RECEIVE_ONLY', listen_to=listen_to )
+filter = Filter( 'localhost', 'pipe', listen_to=listen_to )
 
 def callback(ch, method, properties, body):
     print(" [x] %s: %s" % (method.routing_key, body.decode()))

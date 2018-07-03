@@ -3,7 +3,7 @@ import pika
 from msgq import Executor
 
 # Example Executor (RPC server)
-# Will listen for requests on the 'fibonacci' queue 
+# Will listen for requests on the 'pipe' queue 
 # on localhost, the compute the N-th Fibonacci number,
 # where N is the body of the request
 
@@ -22,5 +22,5 @@ def fib(n):
         return fib(n-1) + fib(n-2)
 
 print(" [x] Awaiting RPC requests to fib()" )
-executor = Executor( 'localhost', 'fibonacci', fib )
+executor = Executor( 'localhost', 'pipe', fib )
 executor.run()

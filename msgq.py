@@ -2,6 +2,7 @@ import pika
 import argparse
 import uuid
 from time import sleep
+import os
 
 # Utility classes for dealing with a message queue -- the implementation
 # is specific to RabbitMQ (and the API too, I'm afraid).
@@ -17,29 +18,17 @@ class Filter():
 		Constructor args:
 		host:        where the queue server is running
 		exchange:    exchange to communicate with the other filters
-		filter_type: can be either SEND_ONLY, RECEIVE_ONLY, SEND_RECEIVE, CMD_REPLY
 	"""
 
-	# All our filter types
-	filter_types = ["SEND_ONLY", "RECEIVE_ONLY", "SEND_RECEIVE", "CMD_REPLY"]
-
-	# Filter types requiring listen selectors
-	must_listen_filter_types = [ "RECEIVE_ONLY", "SEND_RECEIVE", "CMD_REPLY" ]
-
-	# Filter types requiring send selectors
-	must_send_filter_types =   [ "SEND_ONLY", "SEND_RECEIVE" ]
-
-	def __init__( self, host, exchange, filter_type=None, listen_to=None, send_to=None ):
-		if filter_type not in Filter.filter_types:
-			raise ValueError( 'Invalid filter type: %r' % filter_type )
+	def __init__( self, host, exchange, listen_to=None, send_to=None ):
 		self.host = host
 		self.exchange = exchange
-		self.type = filter_type
 		if listen_to != None:
 			self.listen_to = listen_to
 		if send_to != None:
 			self.send_to = send_to
-		print( " [x] Created %r filter on %r for %r" % ( self.type, self.host, self.exchange ))
+
+		print( " [x] Created filter on %r for %r" % ( self.host, self.exchange ))
 
 
 	def send( self, message, selector=None ):
@@ -114,7 +103,7 @@ class Executor():
 	# caller using the request's reply_to and correlation_id properties
 	def __on_execution_request( self, ch, method, props, body ):
 		body = body.decode()
-		print( " [*] calling %s on %s" % (self.service, body) )
+		print( " [*] calling %s on %s (pid=%s)" % (self.service, body, str(os.getpid())) )
 		response = self.service( body )
 		print( " [*] ... got %s" % response )
 		ch.basic_publish(exchange='',
