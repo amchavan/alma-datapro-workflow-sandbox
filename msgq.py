@@ -139,7 +139,8 @@ class ExecutorClient(object):
 		self.queue = queue
 		self.connection = pika.BlockingConnection(pika.ConnectionParameters( host ))
 		self.channel = self.connection.channel()
-		declaration = self.channel.queue_declare(exclusive=True)
+		declaration = self.channel.queue_declare(exclusive=False) # Allow multiple executors to share the same queue
+																  # so they can share the load	 
 		self.callback_queue = declaration.method.queue
 		self.channel.basic_consume( self.__on_response,
 									no_ack=True,
