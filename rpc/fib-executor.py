@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import pika
+import sys
+sys.path.insert(0, "../shared")
 from msgq import Executor
 
 # Example Executor (RPC server)

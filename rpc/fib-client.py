@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import argparse
+import sys
+sys.path.insert(0, "../shared")
 from msgq import ExecutorClient
 
 # Example Executor client (RPC client)

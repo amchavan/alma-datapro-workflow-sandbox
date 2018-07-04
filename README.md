@@ -6,8 +6,8 @@ Place project URL here
 -->
 It defines 
 * a ['pipes and filters'](https://docs.microsoft.com/en-us/azure/architecture/patterns/pipes-and-filters) pipeline made of components interacting by way of a message queue
-* a Client/Server _RPC_ mode, where the client sends a computing request to the server by way of a
-  message and awaits the response message
+* a [message-passing RPC mode](rpc/README.md), where the client sends a computing request message to the server's queue
+
 * ???
 
 ## Prerequisites
