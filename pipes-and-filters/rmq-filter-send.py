@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-from msgq import Filter
 import sys
+sys.path.insert(0, "../shared")
+from msgq import Filter
 import argparse
 
 # Example SEND_ONLY filter.

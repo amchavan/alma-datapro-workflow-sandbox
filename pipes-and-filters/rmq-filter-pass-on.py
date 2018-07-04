@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
+import sys
+sys.path.insert(0, "../shared")
 from msgq import Filter
 import argparse
-import sys
 
 # Example SEND_RECEIVE filter.
 # Receive a message on pipe on localhost, double it (concatenate the

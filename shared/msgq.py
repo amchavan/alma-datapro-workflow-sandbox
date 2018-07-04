@@ -10,25 +10,6 @@ import os
 # A M Chavan, 30-Jun-2018
 
 
-def __listen_in( host, exchange, selectors, callback ):
-		"""
-			Listen on the exchange for messages matching the selectors,
-			invoke the callback on the messages
-		"""
-		connection = pika.BlockingConnection(pika.ConnectionParameters( host=host ))
-		channel = connection.channel()
-		channel.exchange_declare( exchange, exchange_type='topic' )
-		result = channel.queue_declare( exclusive=True )
-		queue_name = result.method.queue   		# Something like "amq.gen-WmsFXfVkqeCbNxvOnw9iqA"
-
-		for selector in selectors:
-			channel.queue_bind( exchange=exchange, queue=queue_name, routing_key=selector )
-			print(" [x] bound: %s:%s:%s" % (exchange, queue_name, selector))
-
-		channel.basic_consume( callback, queue=queue_name, no_ack=True )
-		channel.start_consuming()
-
-
 class Filter():
 	"""
 		Implements a filter of the 'Pipes and filters' pattern: see
@@ -57,7 +38,7 @@ class Filter():
 		'''
 		if selector == None:
 			selector = self.send_to
-		__send_msg( self.host, self.exchange, selector, message );
+		self.__send_msg( self.host, self.exchange, selector, message );
 
 
 	def listen( self, callback, selectors=None ):
@@ -68,10 +49,10 @@ class Filter():
 
 		if selectors == None:
 			selectors = self.listen_to
-		__listen_in( self.host, self.exchange, selectors, callback )
+		self.__listen_in( self.host, self.exchange, selectors, callback )
 
 
-	def __send_msg( host, exchange, selector, message ):
+	def __send_msg( self, host, exchange, selector, message ):
 		'''
 			Send a message to an exchange on a host using a given selector
 		'''
@@ -81,6 +62,23 @@ class Filter():
 		channel.basic_publish(    exchange, selector, message )
 		connection.close()
 
+	def __listen_in( delf, host, exchange, selectors, callback ):
+		"""
+			Listen on the exchange for messages matching the selectors,
+			invoke the callback on the messages
+		"""
+		connection = pika.BlockingConnection(pika.ConnectionParameters( host=host ))
+		channel = connection.channel()
+		channel.exchange_declare( exchange, exchange_type='topic' )
+		result = channel.queue_declare( exclusive=True )
+		queue_name = result.method.queue   		# Something like "amq.gen-WmsFXfVkqeCbNxvOnw9iqA"
+
+		for selector in selectors:
+			channel.queue_bind( exchange=exchange, queue=queue_name, routing_key=selector )
+			print(" [x] bound: %s:%s:%s" % (exchange, queue_name, selector))
+
+		channel.basic_consume( callback, queue=queue_name, no_ack=True )
+		channel.start_consuming()
 	
 
 class Executor():

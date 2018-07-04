@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
+import sys
+sys.path.insert(0, "../shared")
 from msgq import Filter
 import argparse
-import sys
 
 # Example RECEIVE_ONLY filter.
 # Log messages from the pipe on localhost: extract selectors and
