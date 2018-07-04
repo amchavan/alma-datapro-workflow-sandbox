@@ -6,17 +6,18 @@ We can define a multi-stage pipeline, with a data generator, one or more interme
 
 The message-passing system will provide the Pipelines's "pipes", whereas the "filters" are built by way of the _Filter_ class in _shared/msgq.py_. The pipeline elements can be created as _send-only_, _receive-only_ or _send-receive_, depending on constructor parameters.
 
-### System logger
+The following instructions assume your working directory is `alma-datapro-workflow-sandbox/pipes-and-filters`.
+
+## System logger
 
 Launch the system logger:
 ```
-cd alma-datapro-workflow-sandbox
 ./rmq-filter-log-all.py -listen '#'
 ```
 The logger will listen to all messages being exchanged and log them on the console.
 
 
-### Feeding data into the pipeline
+## Feeding data into the pipeline
 
 Data can be fed into the Pipeline by way of the `rmq-filter-send.py` script:
 ```
@@ -32,7 +33,7 @@ For instance:
 ```
 will send `msg00` to the Pipeline's `stage2`.
 
-### Adding Pipeline stages
+## Adding Pipeline stages
 
 Pipeline stages (filters) process the data they receive as inout and pass it on to the next stage -- in this case they simply double the input message (concatenate it to itself).
 
@@ -50,7 +51,7 @@ For instance:
 ```
 will implement stage 2 of the pipeline, doubling its input and passing the result on to stage 3.
 
-### End stage
+## End stage
 
 The end stage of the Pipeline -- `rmq-filter-receive.py` -- simply logs its input to the console:
 ```
@@ -63,7 +64,7 @@ where _LISTEN_ is the identifier of the stage itself. For instance:
 will implement stage 4 of the pipeline as an end stage.
 
 
-### Putting it all together
+## Putting it all together
 
 We will define a 4-stage pipeline, with two intermediate processing stages. We'll need four terminal windows where `alma-datapro-workflow-sandbox` is the working directory. Refer to the system logger window to see what is going on at all times.
 
@@ -87,7 +88,3 @@ The system logger should display something like
 ```
 
 Try feeding more data into the pipeline with `rmq-filter-send.py`; try also sending data directly to stages 3 and 4.
-
-## Message-passing Remote Proceduce Call
-
-TODO (battery is running out, damn... )

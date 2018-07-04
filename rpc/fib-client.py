@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser( description='Fibonacci RPC client' )
 parser.add_argument( dest="n", help="Fibonacci number" )
 args=parser.parse_args()
 
-fibonacci = ExecutorClient( 'localhost', 'pipe' )
+fibonacci = ExecutorClient( 'localhost', 'fibonacci' )
 
 print(" [x] Requesting fib(%s)" % args.n)
 response = fibonacci.call( args.n )

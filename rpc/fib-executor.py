@@ -24,5 +24,5 @@ def fib(n):
         return fib(n-1) + fib(n-2)
 
 print(" [x] Awaiting RPC requests to fib()" )
-executor = Executor( 'localhost', 'pipe', fib )
+executor = Executor( 'localhost', 'fibonacci', fib )
 executor.run()
