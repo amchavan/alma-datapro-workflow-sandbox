@@ -45,7 +45,6 @@ In the second window, issue a number of parallel requests:
 ./fib-client.py 33 & 
 ./fib-client.py 34 & 
 ./fib-client.py 35 & 
-./fib-client.py 28 & 
 ```
 
 You should see the requests being served asynchronously on the servers' console:
