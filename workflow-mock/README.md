@@ -9,7 +9,7 @@ sections: a pipeline of components communicating via a broadcasting messages plu
 This version implements the _ReadyForProcessing_, _Processing_, _ProcessingProblem_ and _ReadyForReview_ stages of the
 [OUS life-cycle](https://ictwiki.alma.cl/twiki/bin/view/ObsIF/ObsUnitSetLifeCycleJpg):
 
-![alt text](life-cycle.png "OUS Life-cycle (section)")
+<img src="life-cycle.png" width="400">
 
 ## Prerequisites
 
