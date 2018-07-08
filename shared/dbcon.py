@@ -18,14 +18,14 @@ class DbConnection():
 		docID = self.__encodeEntityID( documentID )
 		url = "%s/%s/%s" % (self.url, database, docID)
 		ret = requests.put( url, data )
-		print( "save(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))
+		# print( "save(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))
 		return ret.status_code, ret.text
 
 	def findOne( self, database, documentID ):
 		''' Find a document by its ID '''
 		url = "%s/%s/%s" % (self.url, database, self.__encodeEntityID( documentID ))
 		ret = requests.get( url )
-		print( "findOne(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))
+		# print( "findOne(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))
 		return ret.status_code, json.loads( ret.text )
 
 	def find( self, database, selector ):

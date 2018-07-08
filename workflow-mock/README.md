@@ -4,5 +4,5 @@
 
 ## Prerequisites
 
-Requires the [Requests](ancd) Python package to be installed, which in turn requires Python 3.7
-
+* A running instance of [RabbitMQ](http://docs.couchdb.org/en/latest/)
+* The [Requests](http://docs.python-requests.org/en/master) Python package

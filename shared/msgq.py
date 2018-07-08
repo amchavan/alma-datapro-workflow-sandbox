@@ -104,9 +104,9 @@ class Executor():
 	# caller using the request's reply_to and correlation_id properties
 	def __on_execution_request( self, ch, method, props, body ):
 		body = body.decode()
-		print( " [*] calling %s on %s (pid=%s)" % (self.service, body, str(os.getpid())) )
+		print( " [*] calling %r on %r (pid=%s)" % (self.service, body, str(os.getpid())) )
 		response = self.service( body )
-		print( " [*] ... got %s" % response )
+		print( " [*] response: %s" % response )
 		ch.basic_publish(exchange='',
 	                     routing_key=props.reply_to,
 	                     properties=pika.BasicProperties(correlation_id = props.correlation_id),

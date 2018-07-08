@@ -18,6 +18,5 @@ dbcon.save( dbName, docID, doc2 )
 selector = {"selector": {"state": "PartiallyObserved"}}
 (retcode,documents) = dbcon.find( dbName, selector )
 
-print( documents )
 revision = documents[0]['_rev']
 dbcon.delete( dbName, docID, revision )

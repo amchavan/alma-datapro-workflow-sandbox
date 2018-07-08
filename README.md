@@ -7,7 +7,7 @@ Place project URL here
 It defines 
 * a ['pipes and filters' pipeline](pipes-and-filters/README.md)  made of components interacting by way of a message queue
 * a [message-passing RPC mode](rpc/README.md), where the client sends a computing request message to the server's queue
-* **TODO**
+* a mock-up of the [Data Processing Workflow support system](workflow-mock/README.md)
 
 ## Prerequisites
 [Python 3.7.x](https://www.python.org/downloads/)

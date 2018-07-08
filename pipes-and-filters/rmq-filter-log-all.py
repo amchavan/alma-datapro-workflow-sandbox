@@ -10,7 +10,7 @@ from msgq import Filter
 filter = Filter( 'localhost', 'pipe', listen_to='#' )
 
 def callback(ch, method, properties, body):
-    print(" [x] %s:%s" % (method.routing_key, body.decode()))
+    print(" [x] %s %s" % (method.routing_key, body.decode()))
 
 print(' [*] Logging messages matching %r. To exit press CTRL+C' % '#' )
 filter.listen( callback )
