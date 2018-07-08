@@ -41,6 +41,16 @@ def setExecutive( ousID, executive ):
     return setField( ousID, 'executive', executive )
 
 def xtss( body ):
+    """
+        Expects the body of the request to be a string including a triplet of words:
+            <cmd> <ousID> <value>
+        where value depends on the command. For instance:
+            set-state uid://A003/X1/X1a ReadyForReview
+        or
+            set-recipe uid://A003/Xa71/X2c PipelineCalibration
+
+        Returns 201 (created) if all was well.
+    """
     print(" [*] request: " + body )
     words = body.split()
     op = words[0]

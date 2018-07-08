@@ -21,12 +21,8 @@ recipes = ['PipelineCalibration','PipelineImaging',
 
 # Set the OUS's state to ReadyForProcessing
 state = "ReadyForProcessing"
-request = "set-state %s %s" % (args.uid,state)
-print(" [x] Requesting %r" % request)
-response = xtss.call( request )
+response = drwutils.setState( xtss, args.uid, state )
 print(" [.] response: %s" % response)
-if response == '201':
-    drwutils.broadcastStateChange( ousID=args.uid, state=state )
 
 # Set the Pipeline recipe to a random one
 recipe = recipes[random.randint(0,4)]
