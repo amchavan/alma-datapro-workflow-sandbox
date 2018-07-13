@@ -21,65 +21,63 @@ def nowISO():
 class MessageQueue():
 	"""
 		Implements a RabbitMQ-like message queue.
-		Implementation is specific to RabbitMQ (the pipe) and based on a 'topic exchange'
+		Implementation is based on CouchDB
 
 		Constructor args:
-		host:        where the queue server is running
-		exchange:    exchange to communicate with the other filters
+		host:     	where the queue server is running
+		queueName:	name of queue to communicate on
 	"""
 
-	def __init__( self, host, exchange, listen_to=None, send_to=None ):
+	def __init__( self, host, queueName, listenTo=None, sendTo=None ):
+
 		self.host = host
-		self.exchange = exchange
-		if listen_to != None:
-			self.listen_to = listen_to
-		if send_to != None:
-			self.send_to = send_to
-		self.myIP = urllib.request.urlopen('http://api.infoip.io/ip').read().decode('utf8')	# Hack!! this may not work
+		self.queueName = queueName
+		self.listenTo = None
+		self.sendTo = None
+
+		if listenTo != None:
+			self.listenTo = listenTo
+		if sendTo != None:
+			self.sendTo = sendTo
+		try:
+			# This may not work -- some third party service I found somwewhere
+			self.myIP = urllib.request.urlopen('http://api.infoip.io/ip').read().decode('utf8')	
+		except Exception:
+			self.myIP = "0.0.0.0"
+
 		self.dbcon = DbConnection( baseUrl )
-		print( " [x] Created filter on %r for %r" % ( self.host, self.exchange ))
+		print( " [x] Created filter on %r for %r" % ( self.host, self.queueName ))
 
 
-	def send( self, message, selector=None ):
+	def send( self, messageBody, selector=None ):
 		'''
-			Send a message to some other filter listening on the exchange for the selector
+			Send a message to some other filter listening on the queue for the selector
 		'''
 		if selector == None:
-			selector = self.send_to
-		self.__send_msg( selector, message );
+			selector = self.sendTo
+		if selector == None:
+			raise RuntimeError( "No selectors to send to" )
 
-
-	def listen( self, callback, selectors=None ):
-		"""
-			Listen on the exchange for messages matching the selectors,
-			invoke the callback on the messages
-		"""
-
-		if selectors == None:
-			selectors = self.listen_to
-		self.__listen_in( self.host, self.exchange, selectors, callback )
-
-
-	def __send_msg( self, selector, messageBody ):
-		'''
-			Send a message to an exchange on a host using a given selector
-		'''
-		now = nowISO()
+		now = nowISO().replace( ":", "\\:" )
+		correlationID = str( uuid.uuid4() ).replace( "-", "" )
 		message = {}
 		message['creationTimestamp'] = now
 		message['originIP'] = self.myIP
 		message['selector'] = selector
 		message['consumed'] = False
+		message['correlationID'] = correlationID
 		message['body'] = messageBody
-		messageID = now + "-" + str( uuid.uuid4() )
+		messageID = now + "-" + correlationID	
 
-		retcode,msg = self.dbcon.save( self.exchange, messageID, message )
+		retcode,msg = self.dbcon.save( self.queueName, messageID, message )
 		if retcode != 201:
 			raise RuntimeError( "Msg send failed: DB error: %s: %s" % (retcode,msg) )
+		return message
 
-	def getNext( self, selectors, consume=True ):
+
+	def getNext( self, selector, consume=True, fullMessage=False ):
 		"""
-			Listen on the exchange for messages matching the selectors,
+			Listen on the queue for messages matching the selectors,
 			invoke the callback on the messages
 		"""
 		
@@ -89,7 +87,7 @@ class MessageQueue():
 		selector = { 
 			"selector": 
 				{ "$and": [
-					{ "selector": { "$regex" : selectors }},
+					{ "selector": { "$regex" : selector }},
 					{ "consumed": False }
 					]
 				} 
@@ -104,7 +102,7 @@ class MessageQueue():
 			}
 
 		while True:
-			retcode,messages = self.dbcon.find( self.exchange, selector )
+			retcode,messages = self.dbcon.find( self.queueName, selector )
 			if retcode == 200:
 				if len( messages ) != 0:
 					break
@@ -119,10 +117,12 @@ class MessageQueue():
 		ret = messages[0]
 		if consume:
 			ret['consumed'] = True
-			self.dbcon.save( self.exchange, ret["_id"], ret )
+			self.dbcon.save( self.queueName, ret["_id"], ret )
 
 		print( ">>> found: ", ret )
-		return ret
+		if fullMessage:
+			return ret
+		return ret['body']
 	
 	def __incrementalSleep( self, startTime ):
 		'''
@@ -148,110 +148,81 @@ class MessageQueue():
 		return sleep
 
 
-	def listen( self, callback, selectors=None, consume=True ):
+	def listen( self, callback, selector=None, consume=True, fullMessage=False ):
 		"""
-			Listen on the exchange for messages matching the selectors,
+			Listen on the queueName for messages matching the selector,
 			invoke the callback on the messages
 		"""
 
-		if selectors == None:
-			selectors = self.listen_to
+		if selector == None:
+			selector = self.listenTo
+		if selector == None:
+			raise RuntimeError( "No selectors to listen to" )
 
 		while True:
-			print( ">>> waiting for message...")
-			message = self.getNext( selectors, consume )
-			callback( message['body'] )
+			print( ">>> waiting for message on queue '%s' matching selector '%s' ..." % (self.queueName, selector))
+			message = self.getNext( selector, consume, fullMessage=fullMessage )
+			print( ">>> got", message )
+			callback( message )
 
 
-# class Executor():
-# 	"""
-# 		Implements an RPC server executing a service.
-# 	"""
+class Executor():
+	"""
+		Implements an RPC server executing a service.
+	"""
 
-# 	# Standard constructor
-# 	def __init__( self, host, queue, service ):
-# 		"""
-# 		host: where the message queue is running
-# 		queue: the queue where requests will be accepted
-# 		service: the service to run, should be a function of a single arg
+	# Standard constructor
+	def __init__( self, host, queueName, selector, service ):
+		"""
+		host: where the message queue is running
+		queueName: the queueName where requests will be accepted
+		service: the service to run, should be a function of a single arg -- a message
 
-# 		See ExecutorClient.call()
-# 		"""
-# 		self.host = host
-# 		self.queue = queue
-# 		self.service = service
+		See ExecutorClient.call()
+		"""
+		self.service = service
+		self.selector = selector
+		self.queue = MessageQueue( host, queueName, listenTo=selector )
 
-# 	# Invoked when a request arrives: call the service with the
-# 	# request's body, then publish the response back to the original
-# 	# caller using the request's reply_to and correlation_id properties
-# 	def __on_execution_request( self, ch, method, props, body ):
-# 		body = body.decode()
-# 		print( " [*] calling %r on %r (pid=%s)" % (self.service, body, str(os.getpid())) )
-# 		response = self.service( body )
-# 		print( " [*] response: %s" % response )
-# 		ch.basic_publish(exchange='',
-# 	                     routing_key=props.reply_to,
-# 	                     properties=pika.BasicProperties(correlation_id = props.correlation_id),
-# 	                     body=str(response))
-# 		ch.basic_ack(delivery_tag = method.delivery_tag)
-
-# 	# Run the executor: listen for requests on the queue
-# 	def run( self ):
-# 		connection = pika.BlockingConnection(pika.ConnectionParameters( host=self.host ))
-# 		channel = connection.channel()
-# 		channel.queue_declare( self.queue )
-# 		channel.basic_consume( self.__on_execution_request, queue=self.queue )
-# 		channel.start_consuming()
+	# Invoked when a request arrives: call the service with the
+	# request's body, then publish the response back to the original
+	# caller using the incoming message's correlationID as selector
+	def __on_execution_request( self, message ):
+		print( ">>> message", message )
+		body = message['body']
+		print( " [*] calling %r on %r (pid=%s)" % (self.service, body, str(os.getpid())) )
+		response = self.service( body )
+		print( " [*] response: %s" % response )
+		self.queue.send( response, message['correlationID'])
 
 
-# class ExecutorClient(object):
-# 	"""
-# 		Implements the client of RPC server, requesting the execution of
-# 		a service.
-# 	"""
-
-# 	def __init__(self, host, queue ):
-# 		"""
-# 			host: where the message queue is running
-# 			queue: the queue where requests will be accepted
-# 		"""
-# 		self.host = host
-# 		self.queue = queue
-# 		self.connection = pika.BlockingConnection(pika.ConnectionParameters( host ))
-# 		self.channel = self.connection.channel()
-# 		declaration = self.channel.queue_declare(exclusive=False) # Allow multiple executors to share the same queue
-# 																  # so they can share the load	 
-# 		self.callback_queue = declaration.method.queue
-# 		self.channel.basic_consume( self.__on_response,
-# 									no_ack=True,
-# 									queue=self.callback_queue)
+	# Run the executor: listen for requests on the queue
+	def run( self ):
+		self.queue.listen( self.__on_execution_request, self.selector, fullMessage=True )
 
 
-# 	# Discard any replies that don't match the correlation ID of our
-# 	# last service invocation; otherwise terminate the wait
-# 	def __on_response(self, ch, method, props, body):
-# 		if self.corr_id == props.correlation_id:
-# 			self.response = body
+class ExecutorClient():
+	"""
+		Implements the client of RPC server, requesting the execution of
+		a service.
+	"""
 
-# 	def call(self, arg):
-# 		"""
-# 			Invoke the remote service passing the arg, then wait 
-# 			for a response
-# 		"""
-# 		self.response = None
-# 		self.corr_id = str(uuid.uuid4())	# Generate a random correlation ID
-# 		props = pika.BasicProperties( reply_to = self.callback_queue,
-# 									  correlation_id = self.corr_id )
-# 		self.channel.basic_publish(
-# 				exchange='',
-# 				routing_key=self.queue,
-# 				properties=props,
-# 				body=arg)
+	def __init__( self, host, queueName, selector ):
+		"""
+			host: where the message queue is running
+			queueName: the queueName where requests will be accepted
+		"""
+		self.selector = selector
+		self.queue = MessageQueue( host, queueName, sendTo=selector )
 
-# 		# Actively waiting for something to come back: let's
-# 		# insert a short sleep to avoid using the CPU at 100%
-# 		while self.response is None:
-# 			sleep( 0.1 )
-# 			self.connection.process_data_events()
 
-# 		return self.response.decode()	# Return a proper string, not bytes
+	def call( self, body ):
+		"""
+			Invoke the remote service passing the message body, then wait 
+			for a response on the correlationID selector
+		"""
+		message = self.queue.send( body )
+		correlationID = message['correlationID']
+		ret = self.queue.getNext( correlationID )
+		return ret
+

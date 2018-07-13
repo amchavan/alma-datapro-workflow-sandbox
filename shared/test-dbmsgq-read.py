@@ -2,9 +2,9 @@
 
 from dbmsgq import MessageQueue
 
-queue = MessageQueue( "localhost", "msgq" )
+queue = MessageQueue( "localhost", "msgq", listenTo="^gener+ic$" )
 
 def myCallback( msg ):
 	print( ">>> Received message:", msg )
 
-queue.listen( myCallback, selectors="gene.+c" )
+queue.listen( myCallback )
