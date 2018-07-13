@@ -4,12 +4,16 @@ sys.path.insert(0, "../shared")
 from msgq import Executor, Filter
 from dbcon import DbConnection
 import drwutils
+from datetime import datetime
 
 # Mockup of the XTSS, listens on the xtss queue
 
-baseUrl = "http://127.0.0.1:5984" # CouchDB
+baseUrl = "http://localhost:5984" # CouchDB
 dbcon   = DbConnection( baseUrl )
 dbName  = "status-entities"
+
+def __nowISO():
+    return datetime.utcnow().strftime( "%Y-%m-%dT%H:%M:%S" )
 
 def findOUSStatus( ousID ):
     "Find an OUSStatus with the given ID, create a new one if none are found"
@@ -22,9 +26,10 @@ def findOUSStatus( ousID ):
     return ousStatus
 
 def setField( ousID, fieldName, fieldValue ):
-    "Set the value of a field of an OUSStatus"
+    "Set the value of a field of an OUSStatus, update its timestamp"
     ousStatus = findOUSStatus( ousID )
     ousStatus[fieldName] = fieldValue
+    ousStatus['timestamp'] = __nowISO()
     retcode,msg = dbcon.save( dbName, ousID, ousStatus )
     return retcode
 
