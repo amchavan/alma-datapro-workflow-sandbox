@@ -1,5 +1,4 @@
 import pika
-import argparse
 import uuid
 from time import sleep
 import os
