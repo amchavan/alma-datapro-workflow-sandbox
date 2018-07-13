@@ -13,7 +13,7 @@ class DbConnection():
 		return entityID.replace( ":", "_" ).replace( "/", "_" )
 
 	def save( self, database, documentID, document ):
-		''' Add a new document to a database '''
+		''' Add a new document to a database, or update an existing one '''
 		data = json.dumps( document )
 		docID = self.__encodeEntityID( documentID )
 		url = "%s/%s/%s" % (self.url, database, docID)
@@ -43,8 +43,15 @@ class DbConnection():
 		queryURL = "%s/%s/_find" % (self.url, database)
 		headers = {'Content-Type': 'application/json'}
 		ret = requests.post( queryURL, headers=headers, data=json.dumps(selector) )
-		print( "find(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))
+		# print( "find(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))
 		return ret.status_code, json.loads( ret.text )['docs']
+
+	def findAll( self, database ):
+		queryURL = "%s/%s/_all_docs" % (self.url, database)
+		headers = {'Accept': 'application/json'}
+		ret = requests.get( queryURL, headers=headers )
+		print( "find(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))
+		return ret.status_code, json.loads( ret.text )['rows']
 
 	def delete( self, database, documentID, documentRev ):
 		''' Delete a document by its ID '''
