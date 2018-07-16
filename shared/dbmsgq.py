@@ -103,6 +103,7 @@ class MessageQueue():
 
 		while True:
 			retcode,messages = self.dbcon.find( self.queueName, selector )
+			# print( ">>> selector:", selector, "found:", len(messages))
 			if retcode == 200:
 				if len( messages ) != 0:
 					break
@@ -123,6 +124,7 @@ class MessageQueue():
 		if fullMessage:
 			return ret
 		return ret['body']
+
 	
 	def __incrementalSleep( self, startTime ):
 		'''

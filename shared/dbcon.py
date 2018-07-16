@@ -44,6 +44,8 @@ class DbConnection():
 		headers = {'Content-Type': 'application/json'}
 		ret = requests.post( queryURL, headers=headers, data=json.dumps(selector) )
 		# print( "find(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))
+		if( ret.status_code != 200 ):
+			raise RuntimeError( "Error: " + str( ret.status_code ) + ": " + ret.text )
 		return ret.status_code, json.loads( ret.text )['docs']
 
 	def findAll( self, database ):

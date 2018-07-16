@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import sys
 sys.path.insert(0, "../shared")
-from msgq import Executor, Filter
+from dbmsgq import Executor
 from dbcon import DbConnection
-import drwutils
+import dbdrwutils
 from datetime import datetime
 
 # Mockup of the XTSS, listens on the xtss queue
@@ -77,6 +77,6 @@ def xtss( body ):
     return None
 	
 
-print(" [x] Awaiting RPC requests to XTSS" )
+print(" [x] Awaiting RPC requests to 'xtss'" )
 executor = Executor( 'localhost', 'msgq', 'xtss', xtss )
 executor.run()
