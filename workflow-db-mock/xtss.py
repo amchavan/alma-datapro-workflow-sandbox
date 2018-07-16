@@ -77,6 +77,6 @@ def xtss( body ):
     return None
 	
 
-print(" [x] Awaiting RPC requests to 'xtss'" )
 executor = Executor( 'localhost', 'msgq', 'xtss', xtss )
+print(" [x] Awaiting RPC requests to 'xtss'" )
 executor.run()

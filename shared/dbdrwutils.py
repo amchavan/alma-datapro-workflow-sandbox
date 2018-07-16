@@ -12,8 +12,7 @@ stateChangeListener = __stateChange + ".*"
 
 __recipeChange = "recipe.change"
 recipeChangeSelector = __recipeChange + ".%s"
-# recipeChangeListener = "^" + __recipeChange 
-recipeChangeListener = __recipeChange + "..+" 
+recipeChangeListener = __recipeChange + "..+"
 
 __pipelineProcess = "pipeline.process"
 pipelineProcessSelector = __pipelineProcess + ".%s"

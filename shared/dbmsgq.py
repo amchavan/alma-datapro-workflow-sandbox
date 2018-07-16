@@ -16,7 +16,7 @@ import datetime
 baseUrl = "http://localhost:5984" # CouchDB
 
 def nowISO():
-    return datetime.datetime.utcnow().strftime( "%Y-%m-%dT%H-%M-%S" )
+    return datetime.datetime.now().isoformat()#.utcnow().strftime( "%Y-%m-%dT%H-%M-%S.%f" )
 
 class MessageQueue():
 	"""
@@ -27,6 +27,12 @@ class MessageQueue():
 		host:     	where the queue server is running
 		queueName:	name of queue to communicate on
 	"""
+	try:
+		# This may or may not work -- it's some third party service I found somwewhere
+		# It will fail if queried too often, like more than once per second
+		myIP = urllib.request.urlopen('http://api.infoip.io/ip').read().decode('utf8')	
+	except Exception:
+		myIP = "0.0.0.0"
 
 	def __init__( self, host, queueName, listenTo=None, sendTo=None ):
 
@@ -39,17 +45,13 @@ class MessageQueue():
 			self.listenTo = listenTo
 		if sendTo != None:
 			self.sendTo = sendTo
-		try:
-			# This may not work -- some third party service I found somwewhere
-			self.myIP = urllib.request.urlopen('http://api.infoip.io/ip').read().decode('utf8')	
-		except Exception:
-			self.myIP = "0.0.0.0"
+		
 
 		self.dbcon = DbConnection( baseUrl )
-		print( " [x] Created filter on %r for %r" % ( self.host, self.queueName ))
+		print( " [x] Created queue %s on %s" % ( self.queueName, self.host ))
 
 
-	def send( self, messageBody, selector=None ):
+	def send( self, messageBody, selector=None, addMsgbackID=False ):
 		'''
 			Send a message to some other filter listening on the queue for the selector
 		'''
@@ -58,17 +60,19 @@ class MessageQueue():
 		if selector == None:
 			raise RuntimeError( "No selectors to send to" )
 
-		now = nowISO().replace( ":", "\\:" )
-		correlationID = str( uuid.uuid4() ).replace( "-", "" )
+		now = nowISO()
+		
 		message = {}
+		msgbackID = str( uuid.uuid4() ).replace( "-", "" )
 		message['creationTimestamp'] = now
-		message['originIP'] = self.myIP
+		message['originIP'] = MessageQueue.myIP
 		message['selector'] = selector
 		message['consumed'] = False
-		message['correlationID'] = correlationID
+		if addMsgbackID:
+			message['msgbackID'] = msgbackID
 		message['body'] = messageBody
-		messageID = now + "-" + correlationID	
-
+		messageID = now + "-" + msgbackID	
+		print( ">>> Saving at:", message['creationTimestamp'], "(was)", now )
 		retcode,msg = self.dbcon.save( self.queueName, messageID, message )
 		if retcode != 201:
 			raise RuntimeError( "Msg send failed: DB error: %s: %s" % (retcode,msg) )
@@ -188,14 +192,14 @@ class Executor():
 
 	# Invoked when a request arrives: call the service with the
 	# request's body, then publish the response back to the original
-	# caller using the incoming message's correlationID as selector
+	# caller using the incoming message's msgbackID as selector
 	def __on_execution_request( self, message ):
 		print( ">>> message", message )
 		body = message['body']
 		print( " [*] calling %r on %r (pid=%s)" % (self.service, body, str(os.getpid())) )
 		response = self.service( body )
 		print( " [*] response: %s" % response )
-		self.queue.send( response, message['correlationID'])
+		self.queue.send( response, message['msgbackID'])
 
 
 	# Run the executor: listen for requests on the queue
@@ -221,10 +225,10 @@ class ExecutorClient():
 	def call( self, body ):
 		"""
 			Invoke the remote service passing the message body, then wait 
-			for a response on the correlationID selector
+			for a response on the msgbackID selector
 		"""
-		message = self.queue.send( body )
-		correlationID = message['correlationID']
-		ret = self.queue.getNext( correlationID )
+		message = self.queue.send( body, addMsgbackID=True )
+		msgbackID = message['msgbackID']
+		ret = self.queue.getNext( msgbackID )
 		return ret
 
