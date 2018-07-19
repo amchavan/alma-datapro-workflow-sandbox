@@ -8,6 +8,8 @@ It defines
 * a ['pipes and filters' pipeline](pipes-and-filters/README.md)  made of components interacting by way of a message queue
 * a [message-passing RPC mode](rpc/README.md), where the client sends a computing request message to the server's queue
 * a mock-up of the [Data Processing Workflow support system](workflow-mock/README.md)
+* a second mock-up of the [Data Processing Workflow support system](workflow-db-mock/README.md), replacing a  
+  message bus component with a very simple, custom implementation based on a database 
 
 ## Prerequisites
 **TODO**: complete this list

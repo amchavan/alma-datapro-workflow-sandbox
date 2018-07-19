@@ -12,7 +12,7 @@ import dbdrwutils
 ## Main program
 ###################################################################
 
-parser = argparse.ArgumentParser( description='ALMA Pipeline mock-up' )
+parser = argparse.ArgumentParser( description='Temporary component, creates status entities and launches a Pipeline run' )
 parser.add_argument( dest="progID", help="ID of the project containing the OUS" )
 parser.add_argument( dest="ousID",  help="ID of the OUS that should be processed" )
 parser.add_argument( dest="recipe", help="Piepeline recipe" )
