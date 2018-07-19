@@ -3,7 +3,7 @@
 import argparse
 import sys
 sys.path.insert(0, "../shared")
-from dbmsgq import ExecutorClient, MessageQueue
+from dbmsgq import ExecutorClient, MqConnection
 import random
 import dbdrwutils
 
@@ -12,7 +12,7 @@ import dbdrwutils
 
 parser = argparse.ArgumentParser( description='AQUA QA0 mock-up' )
 parser.add_argument( dest="uid", help="UID of an OUS that's become ReadyForProcessing" )
-mq = MessageQueue( 'localhost', 'msgq' )
+mq = MqConnection( 'localhost', 'msgq' )
 args=parser.parse_args()
 
 xtss = ExecutorClient( 'localhost', 'msgq', 'xtss' )

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import sys
+import json
+import datetime
+from collections import namedtuple
 sys.path.insert(0, "../shared")
 from dbmsgq import Executor
 from dbcon import DbConnection
 import dbdrwutils
-from datetime import datetime
 
 # Mockup of the XTSS, listens on the xtss queue
 
@@ -13,16 +15,14 @@ dbcon   = DbConnection( baseUrl )
 dbName  = "status-entities"
 
 def __nowISO():
-    return datetime.utcnow().strftime( "%Y-%m-%dT%H:%M:%S" )
+    return datetime.datetime.utcnow().isoformat()[:-3]
 
 def findOUSStatus( ousID ):
     "Find an OUSStatus with the given ID, create a new one if none are found"
 
     retcode,ousStatus = dbcon.findOne( dbName, ousID )
     if retcode == 404:
-        # Prepare a new record to write
-        ousStatus = {}
-        ousStatus['entityId'] = ousID
+        raise RuntimeError( "OUS not found: %s" % ousID )
     return ousStatus
 
 def setField( ousID, fieldName, fieldValue ):
@@ -47,32 +47,38 @@ def setExecutive( ousID, executive ):
 
 def xtss( body ):
     """
-        Expects the body of the request to be a string including a triplet of words:
-            <cmd> <ousID> <value>
+        Expects the body of the request to be a JSON document including fields
+        "operation", "ousID" and "value":
+            {"operation":"...", "ousID":"...", "value":"..."}
         where value depends on the command. For instance:
-            set-state uid://A003/X1/X1a ReadyForReview
-        or
-            set-recipe uid://A003/Xa71/X2c PipelineCalibration
+            { 
+                "operation":"set-state", 
+                "ousID":"uid://A003/X1/X1a", 
+                "value":"ReadyForReview"
+            }
 
         Returns 201 (created) if all was well.
     """
     print(" [*] request: " + body )
-    words = body.split()
-    op = words[0]
-    if op == "set-state":
-        retcode = setState( ousID=words[1], state=words[2] )
+    request = dbdrwutils.jsonToObj( body )
+    operation = request.operation
+    ousID = request.ousID
+    value = request.value
+
+    if operation == "set-state":
+        retcode = setState( ousID=ousID, state=value )
         return retcode
 
-    elif op == "set-recipe":
-        retcode = setPipelineRecipe( ousID=words[1], recipe=words[2] )
+    elif operation == "set-recipe":
+        retcode = setPipelineRecipe( ousID=ousID, recipe=value )
         return retcode
 
-    elif op == "set-exec":
-        retcode = setExecutive( ousID=words[1], executive=words[2] )
+    elif operation == "set-exec":
+        retcode = setExecutive( ousID=ousID, executive=value )
         return retcode
 
     else:
-        return "Unsupported op: " + op
+        return "Unsupported operation: " + operation
 
     return None
 	

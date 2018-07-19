@@ -2,16 +2,15 @@
 
 import sys
 sys.path.insert(0, "../shared")
-from dbmsgq import MessageQueue, ExecutorClient
+from dbmsgq import MqConnection, ExecutorClient
 import argparse
 import random
 import dbdrwutils
 
 # Mock-up of DRAssign
 
-
 listen_to = dbdrwutils.recipeChangeListener
-mq = MessageQueue( 'localhost', 'msgq', listen_to )
+mq = MqConnection( 'localhost', 'msgq', listen_to )
 xtss = ExecutorClient( 'localhost', 'msgq', 'xtss' )
 # executives = ['EA', 'EU', 'JAO', 'NA']
 executives = ['EU','EU','EU','EU']

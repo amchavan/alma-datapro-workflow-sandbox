@@ -1,4 +1,6 @@
 import sys
+import subprocess
+import os
 sys.path.insert(0, "../shared")
 from msgq import Filter
 

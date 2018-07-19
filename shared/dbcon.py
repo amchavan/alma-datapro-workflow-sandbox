@@ -13,16 +13,32 @@ class DbConnection():
 		return entityID.replace( ":", "_" ).replace( "/", "_" )
 
 	def save( self, database, documentID, document ):
-		''' Add a new document to a database, or update an existing one '''
-		data = json.dumps( document )
+		'''
+			Add a new document to a database, or update an existing one
+		'''
 		docID = self.__encodeEntityID( documentID )
+
+		# See if we have that doc already: if so, 
+		(ret,existingDoc) = self.findOne( database, docID )
+		if ret != 404:
+			# YES, a version of our doc exists already: we need to
+			# add the current revision to our doc's fields
+			# to allow an update
+			revision = existingDoc['_rev']
+			# print( ">>> revision:", revision )
+			document['_rev'] = revision
+
+		data = json.dumps( document )
 		url = "%s/%s/%s" % (self.url, database, docID)
 		ret = requests.put( url, data )
 		# print( "save(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))
 		return ret.status_code, ret.text
 
 	def findOne( self, database, documentID ):
-		''' Find a document by its ID '''
+		''' 
+			Find a document by its ID
+			Return a status code and possibly the document itself
+		'''
 		url = "%s/%s/%s" % (self.url, database, self.__encodeEntityID( documentID ))
 		ret = requests.get( url )
 		# print( "findOne(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))

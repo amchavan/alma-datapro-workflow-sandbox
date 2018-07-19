@@ -16,9 +16,9 @@ import datetime
 baseUrl = "http://localhost:5984" # CouchDB
 
 def nowISO():
-    return datetime.datetime.now().isoformat()#.utcnow().strftime( "%Y-%m-%dT%H-%M-%S.%f" )
+    return datetime.datetime.now().isoformat()
 
-class MessageQueue():
+class MqConnection():
 	"""
 		Implements a RabbitMQ-like message queue.
 		Implementation is based on CouchDB
@@ -65,14 +65,14 @@ class MessageQueue():
 		message = {}
 		msgbackID = str( uuid.uuid4() ).replace( "-", "" )
 		message['creationTimestamp'] = now
-		message['originIP'] = MessageQueue.myIP
+		message['originIP'] = MqConnection.myIP
 		message['selector'] = selector
 		message['consumed'] = False
 		if addMsgbackID:
 			message['msgbackID'] = msgbackID
 		message['body'] = messageBody
 		messageID = now + "-" + msgbackID	
-		print( ">>> Saving at:", message['creationTimestamp'], "(was)", now )
+		# print( ">>> Saving at:", message['creationTimestamp'] )
 		retcode,msg = self.dbcon.save( self.queueName, messageID, message )
 		if retcode != 201:
 			raise RuntimeError( "Msg send failed: DB error: %s: %s" % (retcode,msg) )
@@ -124,7 +124,7 @@ class MessageQueue():
 			ret['consumed'] = True
 			self.dbcon.save( self.queueName, ret["_id"], ret )
 
-		print( ">>> found: ", ret )
+		# print( ">>> found: ", ret )
 		if fullMessage:
 			return ret
 		return ret['body']
@@ -168,7 +168,7 @@ class MessageQueue():
 		while True:
 			print( ">>> waiting for message on queue '%s' matching selector '%s' ..." % (self.queueName, selector))
 			message = self.getNext( selector, consume, fullMessage=fullMessage )
-			print( ">>> got", message )
+			# print( ">>> got", message )
 			callback( message )
 
 
@@ -188,7 +188,7 @@ class Executor():
 		"""
 		self.service = service
 		self.selector = selector
-		self.queue = MessageQueue( host, queueName, listenTo=selector )
+		self.queue = MqConnection( host, queueName, listenTo=selector )
 
 	# Invoked when a request arrives: call the service with the
 	# request's body, then publish the response back to the original
@@ -219,7 +219,7 @@ class ExecutorClient():
 			queueName: the queueName where requests will be accepted
 		"""
 		self.selector = selector
-		self.queue = MessageQueue( host, queueName, sendTo=selector )
+		self.queue = MqConnection( host, queueName, sendTo=selector )
 
 
 	def call( self, body ):
