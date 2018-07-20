@@ -87,7 +87,7 @@ def processWeblog( my_exec, filename, cachedAt ):
     if retcode != 0:
         raise RuntimeError( "unzip %s %s: failed: errno: %d" % (filename, args.lcache, retcode) )
 
-    # If we're at JAO: save the Weblong in NGAS (will
+    # If we're at JAO: save the Weblog in NGAS (will
     # be replicated to the ARCs)
     if my_exec != "JAO":
         return
@@ -137,17 +137,19 @@ def callback( message ):
 ###################################################################
 
 parser = argparse.ArgumentParser( description='Replicated cache' )
-parser.add_argument( "--exec",        "-e",   dest="exec",    help="Where this cache driver is running: one of 'EA', 'EU', 'JAO' or 'NA'" )
-parser.add_argument( "--localcache",  "-lc",  dest="lcache",  help="Absolute pathname of the local cache dir" )
-parser.add_argument( "--eacache",     "-eac", dest="eacache", help="rsync location of the EA cache dir: username@host:dir" )
-parser.add_argument( "--eucache",     "-euc", dest="eucache", help="rsync location of the EU cache dir: username@host:dir" )
-parser.add_argument( "--nacache",     "-nac", dest="nacache", help="rsync location of the NA cache dir: username@host:dir" )
+parser.add_argument( "--exec",       "-e",    dest="exec",     help="Where this cache driver is running: one of 'EA', 'EU', 'JAO' or 'NA'" )
+parser.add_argument( "--eacache",    "-eac",  dest="eacache",  help="Absolute pathname or rsync location of the EA cache dir" )
+parser.add_argument( "--nacache",    "-nac",  dest="nacache",  help="Absolute pathname or rsync location of the NA cache dir" )
+parser.add_argument( "--eucache",    "-euc",  dest="eucache",  help="Absolute pathname or rsync location of the EU cache dir" )
+parser.add_argument( "--lcache",     "-lc",   dest="lcache",   help="Absolute pathname of the local cache dir" )
+parser.add_argument( "--port",       "-p",    dest="port",     help="Port number of the Web server, dafault is 8000", default=8000 )
 args=parser.parse_args()
 
-listen_to = "cached\\..+"
+listen_to = "cached." + args.exec
+port = int(args.port)
 mq = MqConnection( 'localhost', 'msgq', listen_to )
 ngas = NgasConnection()
-dbdrwutils.bgRunHttpServer( 8000, args.lcache )
+dbdrwutils.bgRunHttpServer( port, args.lcache )
 print(' [*] Waiting for messages matching %s' % (listen_to) )
 mq.listen( callback )
 

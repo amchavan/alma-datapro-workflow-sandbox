@@ -85,7 +85,7 @@ def callback( message ):
 	"""
 
 	print( ">>> message:", message[:80], "..." )
-	print( ">>> message:", message )
+	# print( ">>> message:", message )
 	request = dbdrwutils.jsonToObj( message )
 	ousUID = request.ousUID
 	source = request.source	
