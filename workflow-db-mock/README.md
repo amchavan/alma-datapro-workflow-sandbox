@@ -298,3 +298,14 @@ At this point:
 ### Going to the movies
 
 If you made it this far and everything was OK you may try to pretend you are watching the system working in real time: type the following commands into the launcher terminal, then immediately switch to the dashboard tab and watch the OUSs moving down their life-cycle:
+```
+./launcher.py 2015.1.00657.S uid://X1/X1/Xb1 PipelineCalibration EU ; sleep 2
+./launcher.py 2015.1.00657.S uid://X1/X1/Xb2 PipelineCalibration EU ; sleep 2
+./launcher.py 2015.1.00657.S uid://X1/X1/Xb3 PipelineCalibration EU ; sleep 2
+./launcher.py 2015.1.00657.S uid://X1/X1/Xb4 PipelineCalibration EU ; sleep 2
+./launcher.py 2015.1.00657.S uid://X1/X1/Xb5 PipelineCalibration EU ; sleep 2
+./launcher.py 2015.1.00657.S uid://X1/X1/Xb6 PipelineCalibration EU ; sleep 2
+./launcher.py 2015.1.00657.S uid://X1/X1/Xb7 PipelineCalibration EU ; sleep 2
+./launcher.py 2015.1.00657.S uid://X1/X1/Xb8 PipelineCalibration EU ; sleep 2
+./launcher.py 2015.1.00657.S uid://X1/X1/Xba PipelineCalibration EU
+```
