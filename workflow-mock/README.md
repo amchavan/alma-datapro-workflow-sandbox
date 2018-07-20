@@ -39,7 +39,7 @@ Usage:
 ./xtss.py
 ```
 
-It listens on queue _xtss_ and expects the body of the request to be a string including a triplet of words `cmd ousID value` where the meaning of _value_ depends on the command. For instance:  
+It listens on queue _xtss_ and expects the body of the request to be a string including a triplet of words `cmd ousUID value` where the meaning of _value_ depends on the command. For instance:  
 `set-state uid://A003/X1/X1a ReadyForReview`  
 or  
 `set-recipe uid://A003/Xa71/X2c PipelineCalibration`  
@@ -74,7 +74,7 @@ Usage:
 ```
 ./dr-assign.py
 ```
-The module listens to queue _pipe_, selector _recipe.change.&lt;recipe>_ and expects the body of the request to be a string including a pair of words `ousID recipe`; for instance:  
+The module listens to queue _pipe_, selector _recipe.change.&lt;recipe>_ and expects the body of the request to be a string including a pair of words `ousUID recipe`; for instance:  
 `uid://A003/X1/X3 PipelineCombination`. It then selects a random Executive. After this stage the OUSStatus entity is fully populated and looks like:
 ```
 {
@@ -96,7 +96,7 @@ It mocks up the replacement for DARED (and the APA) running at JAO or one of the
 ```
 ./pipeline-driver.py exec
 ```
-where _exec_ is one of EA, EU, JAO or NA. The module listens to queue _pipe_, selector _pipeline.process.&lt;exec>_ and expects the body of the request to be the ousID. It then:
+where _exec_ is one of EA, EU, JAO or NA. The module listens to queue _pipe_, selector _pipeline.process.&lt;exec>_ and expects the body of the request to be the ousUID. It then:
 1. sets the OUS state to _Processing_
 2. "Launches" the Pipeline and waits for it to finish (up to 5 seconds)
 3. Sets the OUS state to _ProcessingProblem_ or _ReadyForReview_ (with some probability)

@@ -15,40 +15,40 @@ dbName  = "status-entities"
 def __nowISO():
     return datetime.utcnow().strftime( "%Y-%m-%dT%H:%M:%S" )
 
-def findOUSStatus( ousID ):
+def findOUSStatus( ousUID ):
     "Find an OUSStatus with the given ID, create a new one if none are found"
 
-    retcode,ousStatus = dbcon.findOne( dbName, ousID )
+    retcode,ousStatus = dbcon.findOne( dbName, ousUID )
     if retcode == 404:
         # Prepare a new record to write
         ousStatus = {}
-        ousStatus['entityId'] = ousID
+        ousStatus['entityId'] = ousUID
     return ousStatus
 
-def setField( ousID, fieldName, fieldValue ):
+def setField( ousUID, fieldName, fieldValue ):
     "Set the value of a field of an OUSStatus, update its timestamp"
-    ousStatus = findOUSStatus( ousID )
+    ousStatus = findOUSStatus( ousUID )
     ousStatus[fieldName] = fieldValue
     ousStatus['timestamp'] = __nowISO()
-    retcode,msg = dbcon.save( dbName, ousID, ousStatus )
+    retcode,msg = dbcon.save( dbName, ousUID, ousStatus )
     return retcode
 
-def setState( ousID, state ):
+def setState( ousUID, state ):
     "Set the state of an OUSStatus"
-    return setField( ousID, 'state', state )
+    return setField( ousUID, 'state', state )
 
-def setPipelineRecipe( ousID, recipe ):
+def setPipelineRecipe( ousUID, recipe ):
     "Set the pipeline recipe of an OUSStatus"
-    return setField( ousID, 'pipeline-recipe', recipe )
+    return setField( ousUID, 'pipeline-recipe', recipe )
 
-def setExecutive( ousID, executive ):
+def setExecutive( ousUID, executive ):
     "Set the Executive of an OUSStatus"
-    return setField( ousID, 'executive', executive )
+    return setField( ousUID, 'executive', executive )
 
 def xtss( body ):
     """
         Expects the body of the request to be a string including a triplet of words:
-            <cmd> <ousID> <value>
+            <cmd> <ousUID> <value>
         where value depends on the command. For instance:
             set-state uid://A003/X1/X1a ReadyForReview
         or
@@ -60,15 +60,15 @@ def xtss( body ):
     words = body.split()
     op = words[0]
     if op == "set-state":
-        retcode = setState( ousID=words[1], state=words[2] )
+        retcode = setState( ousUID=words[1], state=words[2] )
         return retcode
 
     elif op == "set-recipe":
-        retcode = setPipelineRecipe( ousID=words[1], recipe=words[2] )
+        retcode = setPipelineRecipe( ousUID=words[1], recipe=words[2] )
         return retcode
 
     elif op == "set-exec":
-        retcode = setExecutive( ousID=words[1], executive=words[2] )
+        retcode = setExecutive( ousUID=words[1], executive=words[2] )
         return retcode
 
     else:

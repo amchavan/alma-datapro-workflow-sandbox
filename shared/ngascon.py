@@ -12,9 +12,6 @@ import os
 
 baseUrl = "http://localhost:5984" # CouchDB
 
-def nowISO():
-    return datetime.datetime.utcnow().isoformat()[:-3]
-
 class NgasConnection():
     '''
         A simple API for NGAS
@@ -40,7 +37,7 @@ class NgasConnection():
         file = {}
         # file['filename'] = basename
         file['encodedContents'] = s
-        file['writeTimestamp'] = nowISO()
+        file['writeTimestamp'] = dbdrwutils.nowISO()
         # print( ">>> attempting save(): dbName: %s, basename: %s, file: %s" % (self.dbName, basename, file) )
         retcode,msg = self.dbcon.save( self.dbName, basename, file )
         # print( ">>> ngas retcode:", retcode, "msg:", msg )

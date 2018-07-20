@@ -20,14 +20,14 @@ executives = ['EA', 'EU', 'JAO', 'NA']
 def callback( ch, method, properties, body ):
 	# Body of the message is something like 
 	#     uid://A003/X1/X3 PipelineCombination
-	ousID = body.split()[0].decode("UTF-8")
+	ousUID = body.split()[0].decode("UTF-8")
 	executive = executives[random.randint(0,3)]
-	request = "set-exec %s %s" % (ousID,executive)
+	request = "set-exec %s %s" % (ousUID,executive)
 	print(" [x] Requesting %s" % request)
 	response = xtss.call( request )
 	print(" [.] response: %r" % response)
 	if response == '201':
-	    drwutils.broadcastPipelineProcess( ousID, executive, filter )
+	    drwutils.broadcastPipelineProcess( ousUID, executive, filter )
 
 print(' [*] Waiting for messages matching %s' % (listen_to) )
 filter.listen( callback )

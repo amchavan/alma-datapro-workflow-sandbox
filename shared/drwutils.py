@@ -26,27 +26,27 @@ def sendMsgToSelector( msg, selector ):
     filter.send( msg, selector )
     print(" [x] Sent %r to %r" % (msg, selector))
 
-def broadcastStateChange( ousID, state ):
-    msg = "%s %s" % (ousID, state)
+def broadcastStateChange( ousUID, state ):
+    msg = "%s %s" % (ousUID, state)
     selector = stateChangeSelector % state
     sendMsgToSelector( msg, selector )
 
-def broadcastRecipeChange( ousID, recipe ):
-    msg = "%s %s" % (ousID, recipe)
+def broadcastRecipeChange( ousUID, recipe ):
+    msg = "%s %s" % (ousUID, recipe)
     selector = recipeChangeSelector % recipe
     sendMsgToSelector( msg, selector )
 
-def broadcastPipelineProcess( ousID, executive, filter=filter ):
-    msg = "%s" % ousID
+def broadcastPipelineProcess( ousUID, executive, filter=filter ):
+    msg = "%s" % ousUID
     selector = pipelineProcessSelector % executive
     sendMsgToSelector( msg, selector )
 
-def setState( xtss, ousID, state, broadcast=True ):
+def setState( xtss, ousUID, state, broadcast=True ):
 	"Set an OUS state via the XTSS"
 	# Set the OUS's state to ReadyForProcessing
-	request = "set-state %s %s" % (ousID,state)
+	request = "set-state %s %s" % (ousUID,state)
 	print(" [x] Requesting %r" % request)
 	response = xtss.call( request )
 	print(" [.] response: %s" % response)
 	if broadcast & (response == '201'):
-	    broadcastStateChange( ousID=ousID, state=state )
+	    broadcastStateChange( ousUID=ousUID, state=state )

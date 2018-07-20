@@ -14,11 +14,11 @@ import dbdrwutils
 
 parser = argparse.ArgumentParser( description='Temporary component, creates status entities and launches a Pipeline run' )
 parser.add_argument( dest="progID", help="ID of the project containing the OUS" )
-parser.add_argument( dest="ousID",  help="ID of the OUS that should be processed" )
+parser.add_argument( dest="ousUID",  help="ID of the OUS that should be processed" )
 parser.add_argument( dest="recipe", help="Piepeline recipe" )
 parser.add_argument( dest="exec",   help="Executive where this pipeline is running" )
 args = parser.parse_args()
-ousID = args.ousID
+ousUID = args.ousUID
 progID = args.progID
 recipe = args.recipe
 executive = args.exec
@@ -28,11 +28,13 @@ baseUrl = "http://localhost:5984" # CouchDB
 dbcon = DbConnection( baseUrl )
 mq = MqConnection( 'localhost', 'msgq' )
 
-retcode,ousStatus = dbcon.findOne( dbName, ousID )
+retcode,ousStatus = dbcon.findOne( dbName, ousUID )
 if retcode == 404:
     # Prepare a new record and write it
     ousStatus = {}
-    ousStatus['entityId'] = ousID
-    dbcon.save( dbName, ousID, ousStatus )
+    ousStatus['entityId'] = ousUID
+    ousStatus['state'] = "ReadyForProcessing"
+    ousStatus['timestamp'] = dbdrwutils.nowISO()
+    dbcon.save( dbName, ousUID, ousStatus )
 
-dbdrwutils.broadcastPipelineProcess( mq, progID, ousID, recipe, executive )
+dbdrwutils.broadcastPipelineProcess( mq, progID, ousUID, recipe, executive )

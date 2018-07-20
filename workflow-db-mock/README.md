@@ -2,7 +2,8 @@
 
 This is a mockup of the Data Processing Workflow system as shown [here](https://drive.google.com/file/d/11dwEzQyKbKvUbyV__czR1KUtYUBSSo7k/view?usp=sharing), demonstrating that it can be implemented as a asynchronous message-based system. It's based on a pipeline of components communicating via broadcasting messages plus a module (simulating the XTSS) implementing an RPC-like executor.
 
-This version implements stages _ReadyForProcessing_, _Processing_, _ProcessingProblem_ _ReadyForReview_, _Reviewing_, _Verified_ _DeliveryInProgress_ of the
+This version implements stages _ReadyForProcessing_, _Processing_, 
+_ProcessingProblem_, _ReadyForReview_, _Reviewing_, _Verified_, _DeliveryInProgress_ of the
 [OUS life-cycle](https://ictwiki.alma.cl/twiki/bin/view/ObsIF/ObsUnitSetLifeCycleJpg):
 
 <img src="life-cycle.png" width="400">
@@ -38,9 +39,9 @@ It's used in its default configuration.
 
 Temporary (?) component, creates status entities and launches a Pipeline run.  
 Usage:  
-`launcher.py [-h] progID ousID recipe exec`
+`launcher.py [-h] progID ousUID recipe exec`
 
-where _progID_ is the ID of the project containing the OUS, _ousID_ is the ID of the OUS that should be processed,
+where _progID_ is the ID of the project containing the OUS, _ousUID_ is the ID of the OUS that should be processed,
 _recipe_ is the Pipeline recipe (currently unused) and _exec_ is the Executive where this pipeline is running.  
 For instance:  
 `./launcher.py 2015.1.00657.S uid://X1/X1/Xb2 PipelineCalibration EU`
@@ -69,8 +70,8 @@ When a message arrives, it starts the Pipeline by launching `pipeline.py` as a s
 
 Mocks the ALMA Pipeline.  
 Usage:  
-`pipeline.py [-h] progID ousID exec`  
-where where _progID_ is the ID of the project containing the OUS, _ousID_ is the ID of the OUS that should be processed and _exec_ is the Executive where the pipeline is running. For instance:  
+`pipeline.py [-h] progID ousUID exec`  
+where where _progID_ is the ID of the project containing the OUS, _ousUID_ is the ID of the OUS that should be processed and _exec_ is the Executive where the pipeline is running. For instance:  
 `./pipeline.py 2015.1.00657.S uid://X1/X1/Xb2 EU`
 
 It simulates processing by waiting a random interval, and 1 in 10 times (randomly) terminates with a processing error. Otherwise it create a products directory including a Weblog, a Pipeline report and a number of data products. For instance:
@@ -115,9 +116,9 @@ Usage:
 `./xtss.py`
 
 It listens on selector _xtss_ and expects the body of the request to be a JSON document:
-`{ "operation":"...", "ousID":"uid://A003/X1/X1a", "value":"..."}`
+`{ "operation":"...", "ousUID":"uid://A003/X1/X1a", "value":"..."}`
 where _operation_ can be one of _set-state_, _set-exec_, _set-exec_ , ...; and the meaning of _value_ depends on the command. For instance:  
-`{"operation":"set-state", "ousID":"uid://X1/X1/Xb2", "value":"ReadyForProcessing"}`  
+`{"operation":"set-state", "ousUID":"uid://X1/X1/Xb2", "value":"ReadyForProcessing"}`  
 Returns `201` (created) if all was well.
 
 ### aqua-qa2.py
@@ -192,7 +193,7 @@ Usage:
 ```
 ./dr-assign.py
 ```
-The module listens to queue _pipe_, selector _recipe.change.&lt;recipe>_ and expects the body of the request to be a string including a pair of words `ousID recipe`; for instance:  
+The module listens to queue _pipe_, selector _recipe.change.&lt;recipe>_ and expects the body of the request to be a string including a pair of words `ousUID recipe`; for instance:  
 `uid://A003/X1/X3 PipelineCombination`. It then selects a random Executive. After this stage the OUSStatus entity is fully populated and looks like:
 ```
 {
@@ -214,7 +215,7 @@ It mocks up the replacement for DARED (and the APA) running at JAO or one of the
 ```
 ./pipeline-driver.py exec
 ```
-where _exec_ is one of EA, EU, JAO or NA. The module listens to queue _pipe_, selector _pipeline.process.&lt;exec>_ and expects the body of the request to be the ousID. It then:
+where _exec_ is one of EA, EU, JAO or NA. The module listens to queue _pipe_, selector _pipeline.process.&lt;exec>_ and expects the body of the request to be the ousUID. It then:
 1. sets the OUS state to _Processing_
 2. "Launches" the Pipeline and waits for it to finish (up to 5 seconds)
 3. Sets the OUS state to _ProcessingProblem_ or _ReadyForReview_ (with some probability)

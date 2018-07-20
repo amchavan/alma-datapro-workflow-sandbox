@@ -2,6 +2,7 @@
 
 import base64
 import sys
+import random
 from time import sleep
 sys.path.insert(0, "../shared")
 from dbmsgq import MqConnection, ExecutorClient
@@ -84,6 +85,7 @@ def callback( message ):
 	"""
 
 	print( ">>> message:", message[:80], "..." )
+	print( ">>> message:", message )
 	request = dbdrwutils.jsonToObj( message )
 	ousUID = request.ousUID
 	source = request.source	
@@ -101,7 +103,7 @@ def callback( message ):
 ###################################################################
 ## Main program
 ###################################################################
-
+weblogsBaseUrl = "http://localhost:8000"
 baseUrl = "http://localhost:5984" # CouchDB
 dbconn  = DbConnection( baseUrl )
 dbName  = "pipeline-reports"
@@ -115,6 +117,7 @@ print(' [*] Waiting for messages matching %s' % (select) )
 dbdrwutils.bgRun( mq.listen, (callback,) )
 # mq.listen( callback )
 
+# This is the program's text-based UI
 # Loop forever:
 #   Show Pipeline runs awaiting review
 #	Ask for an OUS UID
@@ -151,9 +154,11 @@ while True:
 	productsDir = plReport['productsDir']
 	source = plReport['source']
 
-	# This is the program's command-line UI
 	print( "Pipeline report for UID %s, processed %s" % (ousUID,timestamp))
 	print( report )
+	print()
+	print( "Weblog available at: %s/weblogs/%s" % ( weblogsBaseUrl, dbdrwutils.makeWeblogName( ousUID, timestamp )))
+	print()
 	while True:
 		reply = input( "Enter [F]ail, [P]ass, [S]emipass, [C]ancel: " )
 		reply = reply[0:1].upper()
@@ -173,6 +178,10 @@ while True:
 	message = '{"ousUID" : "%s", "timestamp" : "%s", "source" : "%s", "productsDir" : "%s"}' % \
 		(ousUID, timestamp, source, productsDir)
 	mq.send( message, selector )
+
+	# Wait some, mainly for effect
+	waitTime = random.randint(3,8)
+	sleep( waitTime )
 
 	# Now we can set the state of the OUS to DeliveryInProgress
 	dbdrwutils.setState( xtss, ousUID, "DeliveryInProgress" )

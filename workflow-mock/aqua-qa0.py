@@ -31,4 +31,4 @@ print(" [x] Requesting %s" % request)
 response = xtss.call( request )
 print(" [.] response: %s" % response)
 if response == '201':
-    drwutils.broadcastRecipeChange( ousID=args.uid, recipe=recipe )
+    drwutils.broadcastRecipeChange( ousUID=args.uid, recipe=recipe )

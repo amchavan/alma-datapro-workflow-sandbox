@@ -17,43 +17,43 @@ dbName  = "status-entities"
 def __nowISO():
     return datetime.datetime.utcnow().isoformat()[:-3]
 
-def findOUSStatus( ousID ):
+def findOUSStatus( ousUID ):
     "Find an OUSStatus with the given ID, create a new one if none are found"
 
-    retcode,ousStatus = dbcon.findOne( dbName, ousID )
+    retcode,ousStatus = dbcon.findOne( dbName, ousUID )
     if retcode == 404:
-        raise RuntimeError( "OUS not found: %s" % ousID )
+        raise RuntimeError( "OUS not found: %s" % ousUID )
     return ousStatus
 
-def setField( ousID, fieldName, fieldValue ):
+def setField( ousUID, fieldName, fieldValue ):
     "Set the value of a field of an OUSStatus, update its timestamp"
-    ousStatus = findOUSStatus( ousID )
+    ousStatus = findOUSStatus( ousUID )
     ousStatus[fieldName] = fieldValue
     ousStatus['timestamp'] = __nowISO()
-    retcode,msg = dbcon.save( dbName, ousID, ousStatus )
+    retcode,msg = dbcon.save( dbName, ousUID, ousStatus )
     return retcode
 
-def setState( ousID, state ):
+def setState( ousUID, state ):
     "Set the state of an OUSStatus"
-    return setField( ousID, 'state', state )
+    return setField( ousUID, 'state', state )
 
-def setPipelineRecipe( ousID, recipe ):
+def setPipelineRecipe( ousUID, recipe ):
     "Set the pipeline recipe of an OUSStatus"
-    return setField( ousID, 'pipeline-recipe', recipe )
+    return setField( ousUID, 'pipeline-recipe', recipe )
 
-def setExecutive( ousID, executive ):
+def setExecutive( ousUID, executive ):
     "Set the Executive of an OUSStatus"
-    return setField( ousID, 'executive', executive )
+    return setField( ousUID, 'executive', executive )
 
 def xtss( body ):
     """
         Expects the body of the request to be a JSON document including fields
-        "operation", "ousID" and "value":
-            {"operation":"...", "ousID":"...", "value":"..."}
+        "operation", "ousUID" and "value":
+            {"operation":"...", "ousUID":"...", "value":"..."}
         where value depends on the command. For instance:
             { 
                 "operation":"set-state", 
-                "ousID":"uid://A003/X1/X1a", 
+                "ousUID":"uid://A003/X1/X1a", 
                 "value":"ReadyForReview"
             }
 
@@ -62,19 +62,19 @@ def xtss( body ):
     print(" [*] request: " + body )
     request = dbdrwutils.jsonToObj( body )
     operation = request.operation
-    ousID = request.ousID
+    ousUID = request.ousUID
     value = request.value
 
     if operation == "set-state":
-        retcode = setState( ousID=ousID, state=value )
+        retcode = setState( ousUID=ousUID, state=value )
         return retcode
 
     elif operation == "set-recipe":
-        retcode = setPipelineRecipe( ousID=ousID, recipe=value )
+        retcode = setPipelineRecipe( ousUID=ousUID, recipe=value )
         return retcode
 
     elif operation == "set-exec":
-        retcode = setExecutive( ousID=ousID, executive=value )
+        retcode = setExecutive( ousUID=ousUID, executive=value )
         return retcode
 
     else:

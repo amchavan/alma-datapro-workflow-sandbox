@@ -16,7 +16,7 @@ import datetime
 baseUrl = "http://localhost:5984" # CouchDB
 
 def nowISO():
-    return datetime.datetime.now().isoformat()
+    return datetime.datetime.now().isoformat()[:-3]
 
 class MqConnection():
 	"""

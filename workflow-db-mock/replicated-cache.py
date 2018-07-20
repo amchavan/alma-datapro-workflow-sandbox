@@ -30,7 +30,7 @@ def unzip( zipfile, dir="." ):
     except FileNotFoundError:
         pass # no-op
 
-    completed = subprocess.run( [ "unzip", zipfile ], cwd=dir  )
+    completed = subprocess.run( [ "unzip", "-o", "-d", "weblogs", zipfile ], cwd=dir  )
     print( ">>> unzip: in:", dir, "subprocess returned:", completed )
     return completed.returncode
 

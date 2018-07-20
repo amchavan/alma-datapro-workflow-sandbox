@@ -63,8 +63,8 @@ def getTimestamp( productsDirName ):
 		If productsDirName is something like '2015.1.00657.S_2018_07_19T08_50_10.228' 
 		will return 2018-07-19T08:50:10.228
 	'''
+	# print( ">>> getTimestamp: got:", productsDirName )
 	n = productsDirName.index( '_' )
-	print( n )
 	timestamp = productsDirName[n+1:]
 	timestamp = timestamp.replace( '_', '-', 2 )
 	timestamp = timestamp.replace( '_', ':' )
@@ -94,6 +94,9 @@ def callback( message ):
 	ousUID = request.ousUID
 	recipe = request.recipe		# Ignored
 	
+	# Set the OUS state to Processing
+	dbdrwutils.setState( xtss, ousUID, "Processing" )
+
 	# Run the pipeline on our OUS
 	ret = runPipeline( progID, ousUID, args.exec, pipelineRunDirectory )
 	if ret != 0:
@@ -110,13 +113,13 @@ def callback( message ):
 	# Copy the products directory to the replicating cache directory
 	# and signal that to the JAO cache
 	productsDir = findProductsDir( progID )
-	basedir = os.path.basename( productsDir )
-	repCacheDir = os.path.join( args.cache, basedir )
+	productsBasedir = os.path.basename( productsDir )
+	repCacheDir = os.path.join( args.cache, productsBasedir )
 	print( ">>> Products dir name:", productsDir )
 	print( ">>> Replicating dir name:", repCacheDir )
 	copyAndReplaceDir( productsDir, repCacheDir )
 
-	message = '{"fileType":"productsdir", "cachedAt":"%s", "name": "%s"}' % (args.exec,basedir)
+	message = '{"fileType":"productsdir", "cachedAt":"%s", "name": "%s"}' % (args.exec,productsBasedir)
 	selector = "cached.JAO"
 	mq.send( message, selector )
 
@@ -136,7 +139,7 @@ def callback( message ):
 
 	# Send the XML text of the pipeline report to AQUA at JAO 
 	# We need to BASE64-encode it because it will be wrapped in a JSON field
-	timestamp = getTimestamp( productsDir )
+	timestamp = getTimestamp( productsBasedir )
 	plReportFile = findPipelineReport( productsDir )
 	plReport = dbdrwutils.readTextFileIntoString( plReportFile )
 	plReport = dbdrwutils.b64encode( plReport )
@@ -148,7 +151,7 @@ def callback( message ):
 			"report" : "%s", 
 			"productsDir": "%s"
 		}
-		''' % (ousUID, timestamp, args.exec, plReport, productsDir)
+		''' % (ousUID, timestamp, args.exec, plReport, productsBasedir)
 	message = message.replace( '\n','')
 	selector = "pipeline.report.JAO"
 	mq.send( message, selector )

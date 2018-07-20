@@ -6,6 +6,7 @@ import json
 import threading
 import http.server, socketserver
 import base64
+import datetime
 
 #
 # Utilities for the Data Reduction Workflow
@@ -23,34 +24,34 @@ def sendMsgToSelector( msg, selector, queue ):
     queue.send( msg, selector )
     print(" [x] Sent %r to %r" % (msg, selector))
 
-def broadcastStateChange( ousID, state, queue ):
-    msg = "%s %s" % (ousID, state)
+def broadcastStateChange( ousUID, state, queue ):
+    msg = "%s %s" % (ousUID, state)
     selector = stateChangeSelector % state
     sendMsgToSelector( msg, selector, queue )
 
-def broadcastRecipeChange( queue, ousID, recipe ):
-    msg = "%s %s" % (ousID, recipe)
+def broadcastRecipeChange( queue, ousUID, recipe ):
+    msg = "%s %s" % (ousUID, recipe)
     selector = recipeChangeSelector % recipe
     sendMsgToSelector( msg, selector, queue )
 
-def broadcastPipelineProcess( queue, progID, ousID, recipe, executive ):
-    msg = '{"progID":"%s", "ousUID":"%s", "recipe":"%s"}' % (progID, ousID, recipe)
+def broadcastPipelineProcess( queue, progID, ousUID, recipe, executive ):
+    msg = '{"progID":"%s", "ousUID":"%s", "recipe":"%s"}' % (progID, ousUID, recipe)
     selector = "pipeline.process.%s" % executive
     sendMsgToSelector( msg, selector, queue )
 
-def setExecutive( xtss, ousID, executive ):
+def setExecutive( xtss, ousUID, executive ):
     "Set an OUS executive via the XTSS"
 
-    request = '{"operation":"set-exec", "ousID":"%s", "value":"%s"}' % (ousID, executive)
+    request = '{"operation":"set-exec", "ousUID":"%s", "value":"%s"}' % (ousUID, executive)
     print(" [x] Requesting %r" % request)
     response = xtss.call( request )
     print(" [.] response: %s" % response)
     return response
 
-def setState( xtss, ousID, state ):
+def setState( xtss, ousUID, state ):
     "Set an OUS state via the XTSS"
 
-    request = '{"operation":"set-state", "ousID":"%s", "value":"%s"}' % (ousID,state)
+    request = '{"operation":"set-state", "ousUID":"%s", "value":"%s"}' % (ousUID,state)
     print(" [x] Requesting %r" % request)
     response = xtss.call( request )
     print(" [.] response: %s" % response)
@@ -114,4 +115,13 @@ def b64encode( string ):
 
 def b64decode( string ):
     return base64.b64decode( string.encode() ).decode()
+
+# Copied to pipeline.py -- keep that version in sync!
+def makeWeblogName( ousUID, timestamp ):
+    weblogName = "weblog-%s-%s" % (ousUID,timestamp)
+    weblogName = weblogName.replace( "uid://", "" ).replace( "/", "-" )
+    return weblogName
+
+def nowISO():
+    return datetime.datetime.now().isoformat()[:-3]
 

@@ -8,6 +8,10 @@ import os
 import tempfile
 import shutil
 import subprocess
+from time import sleep
+
+# Note -- this script is made to run in an arbitrary directory
+#         and it cannot depend on any library in 'shared'
 
 # Mock-up of the Pipeline
 # When invoked with an OUS ID it wait for a bit to simulate processing, then
@@ -35,7 +39,13 @@ def plProductsDirname( progID ):
 	print( ">>> dirname: ", dirname )
 	return dirname,now
 
-def makeWeblog( progID, ousID, timestamp ):
+# Copied from shared/dbdrwutils.py -- keep in sync!
+def makeWeblogName( ousUID, timestamp ):
+    weblogName = "weblog-%s-%s" % (ousUID,timestamp)
+    weblogName = weblogName.replace( "uid://", "" ).replace( "/", "-" )
+    return weblogName
+
+def makeWeblog( progID, ousUID, timestamp ):
 	""" 
 		Create weblog HTML file, return its absolute pathname.
 		Basename starts with "weblog-" and ends with ".zip"
@@ -58,10 +68,9 @@ def makeWeblog( progID, ousID, timestamp ):
 		</body>
 	</html>
 	"""
-	html = htmlTemplate % (ousID, ousID, progID, timestamp)
+	html = htmlTemplate % (ousUID, ousUID, progID, timestamp)
 
-	weblogBasedir = "weblog-%s-%s" % (ousID,timestamp)
-	weblogBasedir = weblogBasedir.replace( "uid://", "" ).replace( "/", "-" )
+	weblogBasedir = makeWeblogName( ousUID, timestamp )
 	weblogDir = os.path.join( tempDir, weblogBasedir )
 	weblogIndex = os.path.join( weblogDir, "index.html" )
 	os.makedirs( weblogDir )
@@ -72,7 +81,7 @@ def makeWeblog( progID, ousID, timestamp ):
 	print( ">>> zipfile:", zipfile )
 	return zipfile
 
-def makePipelineReport( progID, ousID, timestamp ):
+def makePipelineReport( progID, ousUID, timestamp ):
 
 	# Create Pipeline report XML file
 	plReportTemplate = """
@@ -97,8 +106,8 @@ def makePipelineReport( progID, ousID, timestamp ):
   </QaPerTopic>
 </PipelineAquaReport>
 	"""
-	plReport = plReportTemplate % (progID, ousID, timestamp.replace( 'T', ' ' ))
-	plReportFile = "pl-report-%s-%s.xml" % (ousID,timestamp)
+	plReport = plReportTemplate % (progID, ousUID, timestamp.replace( 'T', ' ' ))
+	plReportFile = "pl-report-%s-%s.xml" % (ousUID,timestamp)
 	plReportFile = plReportFile.replace( "uid://", "" ).replace( "/", "-" )
 	plReportFile = os.path.join( tempDir, plReportFile )
 	with open( plReportFile, 'w') as text_file:
@@ -106,11 +115,11 @@ def makePipelineReport( progID, ousID, timestamp ):
 	print( ">>> plReport:", plReportFile )
 	return plReportFile
 
-def makeDataProduct( ousID, timestamp, n ):
+def makeDataProduct( ousUID, timestamp, n ):
 
 	# Create Pipeline data product file
 	dataProd = "This is data product %d" % n
-	dataProdFile = "product-%d-%s-%s.data" % (n,ousID,timestamp)
+	dataProdFile = "product-%d-%s-%s.data" % (n,ousUID,timestamp)
 	dataProdFile = dataProdFile.replace( "uid://", "" ).replace( "/", "-" )
 	dataProdFile = os.path.join( tempDir, dataProdFile )
 	with open( dataProdFile, 'w') as text_file:
@@ -126,18 +135,18 @@ def makeDataProduct( ousID, timestamp, n ):
 # TODO Pass in a processing recipe
 parser = argparse.ArgumentParser( description='ALMA Pipeline mock-up' )
 parser.add_argument( dest="progID", help="ID of the project containing the OUS" )
-parser.add_argument( dest="ousID",  help="ID of the OUS that should be processed" )
+parser.add_argument( dest="ousUID",  help="ID of the OUS that should be processed" )
 parser.add_argument( dest="exec",   help="Executive where this pipeline is running" )
 args=parser.parse_args()
-ousID = args.ousID
+ousUID = args.ousUID
 progID = args.progID
 executive = args.exec
 
-print(" [x] Launching Pipeline on OUS %s, program %s, directory %s (%s)" % (ousID, progID, os.getcwd(), executive))
+print(" [x] Launching Pipeline on OUS %s, program %s, directory %s (%s)" % (ousUID, progID, os.getcwd(), executive))
 
 # Pretend we're doing something
-waitTime = random.randint(3,15)
-# sleep( waitTime )
+waitTime = random.randint(3,8)
+sleep( waitTime )
 
 # Simulate that there may be a processing problem
 r = random.randint(1,100)
@@ -152,16 +161,16 @@ if not os.path.exists( dataProdsDir ):
     os.makedirs( dataProdsDir )
 
 # Create a weblog in the products directory
-weblog = makeWeblog( progID, ousID, timestamp )
+weblog = makeWeblog( progID, ousUID, timestamp )
 os.rename( weblog, os.path.join( dataProdsDir, os.path.basename( weblog )))
 
 # Create a pipeline report in the products directory
-plReport = makePipelineReport( progID, ousID, timestamp )
+plReport = makePipelineReport( progID, ousUID, timestamp )
 os.rename( plReport, os.path.join( dataProdsDir, os.path.basename( plReport )))
 
 # Create data products in the products directory
 for i in [0,1,2,3,4]:
-	dataProduct = makeDataProduct( ousID, timestamp, i )
+	dataProduct = makeDataProduct( ousUID, timestamp, i )
 	os.rename( dataProduct, os.path.join( dataProdsDir, os.path.basename( dataProduct )))
 
 # All was OK

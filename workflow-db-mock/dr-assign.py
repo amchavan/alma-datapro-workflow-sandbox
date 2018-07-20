@@ -21,12 +21,12 @@ executives = ['EU','EU','EU','EU']
 def callback( body ):
 	# Body of the message is something like 
 	#     uid://A003/X1/X3 PipelineCombination
-	ousID = body.split()[0]
+	ousUID = body.split()[0]
 	executive = executives[random.randint(0,3)]
-	response = dbdrwutils.setExecutive( xtss, ousID, executive )
+	response = dbdrwutils.setExecutive( xtss, ousUID, executive )
 	print(" [.] response: %r" % response)
 	if response == 201:
-	    dbdrwutils.broadcastPipelineProcess( mq, ousID, executive )
+	    dbdrwutils.broadcastPipelineProcess( mq, ousUID, executive )
 
 print(' [*] Waiting for messages matching %s' % (listen_to) )
 mq.listen( callback )

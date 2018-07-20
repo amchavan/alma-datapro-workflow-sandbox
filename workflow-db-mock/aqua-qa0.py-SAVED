@@ -32,4 +32,4 @@ print(" [x] Requesting %s" % request)
 response = xtss.call( request )
 print(" [.] response: %s" % response)
 if response == 201:
-    dbdrwutils.broadcastRecipeChange( ousID=args.uid, recipe=recipe, queue=mq )
+    dbdrwutils.broadcastRecipeChange( ousUID=args.uid, recipe=recipe, queue=mq )

@@ -28,9 +28,9 @@ xtss = ExecutorClient( 'localhost', 'xtss' )
 def callback( ch, method, properties, body ):
 	# Body of the message is something like 
 	#     uid://A003/X1/X3 
-	ousID = body.decode("UTF-8")
-	drwutils.setState( xtss=xtss, ousID=ousID, state="Processing" )
-	print(" [x] Launching Pipeline in on OUS %s in %s" % (args.exec,ousID) )
+	ousUID = body.decode("UTF-8")
+	drwutils.setState( xtss=xtss, ousUID=ousUID, state="Processing" )
+	print(" [x] Launching Pipeline in on OUS %s in %s" % (args.exec,ousUID) )
 	# Wait for Pipeline to complete
 	waitTime = random.randint(0,5)
 	sleep( waitTime )
@@ -39,16 +39,16 @@ def callback( ch, method, properties, body ):
 	r = random.randint(1,100)
 	failed = (True if (r<=50) else False) # 50% chance of failing
 	if failed:
-		drwutils.setState( xtss=xtss, ousID=ousID, state="ProcessingProblem" )
+		drwutils.setState( xtss=xtss, ousUID=ousUID, state="ProcessingProblem" )
 	else:
-		drwutils.setState( xtss=xtss, ousID=ousID, state="ReadyForReview" )
+		drwutils.setState( xtss=xtss, ousUID=ousUID, state="ReadyForReview" )
 
-	# request = "set-exec %s %s" % (ousID,executive)
+	# request = "set-exec %s %s" % (ousUID,executive)
 	# print(" [x] Requesting %s" % request)
 	# response = xtss.call( request )
 	# print(" [.] response: %r" % response)
 	# if response == '201':
-	#     drwutils.broadcastPipelineProcess( ousID, executive, filter )
+	#     drwutils.broadcastPipelineProcess( ousUID, executive, filter )
 
 print(' [*] Waiting for messages matching %s' % (listen_to) )
 filter.listen( callback )
