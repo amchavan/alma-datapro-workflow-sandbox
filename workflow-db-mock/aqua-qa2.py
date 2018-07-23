@@ -63,6 +63,8 @@ def processQA2flag( ousUID, flag ):
 	print( ">>> Setting the state of", ousUID, "to", newState )
 	# Set the OUS state according to the input flag
 	dbdrwutils.setState( xtss, ousUID, newState )
+	if flag == "F":
+		dbdrwutils.setSubstate( xtss, ousUID, "" )	# Clear Pipeline recipe
 
 
 def callback( message ):

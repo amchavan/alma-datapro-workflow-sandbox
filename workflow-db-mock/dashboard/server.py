@@ -21,7 +21,7 @@ htmlTemplate = """
 	<!doctype html>
 	<html>
 		<head>
-		  <meta http-equiv="refresh" content="2" >
+		  <meta http-equiv="refresh" content="1" >	<!-- Refresh every few secs -->
 		  <title>Dashboard</title>
 		  <style>
 		  	body { font-family: Verdana }
@@ -50,10 +50,25 @@ htmlTemplate = """
 		  <div class="tables">
 			  <div class="table-div">
 			  	<table>
+				  	<caption>Unread messages</caption>
+				  	%s
+			  	</table>
+			  </div>
+			  <div class="table-div">
+			  	<table>
 				  	<caption>Pipeline reports</caption>
 				  	%s
 			  	</table>
 			  </div>
+			  <div class="table-div">
+			  	<table>
+				  	<caption>Delivery status</caption>
+				  	%s
+			  	</table>
+			  </div>
+		  </div>
+		  <p>
+		  <div class="tables">
 			  <div class="table-div">
 			  	<table>
 				  	<caption>NGAS documents</caption>
@@ -63,12 +78,6 @@ htmlTemplate = """
 			  <div class="table-div">
 			  	<table>
 				  	<caption>Products metadata</caption>
-				  	%s
-			  	</table>
-			  </div>
-			  <div class="table-div">
-			  	<table>
-				  	<caption>Delivery status</caption>
 				  	%s
 			  	</table>
 			  </div>
@@ -91,6 +100,9 @@ def compareByTimestamp( record ):
 
 def compareByWriteTimestamp( record ):
 	return record['writeTimestamp']
+
+def compareByCreationTimestamp( record ):
+	return record['creationTimestamp']
 
 def renderOusTable( table, rows, cols ):
 	htmlCellTemplate = '<td> %s %s %s </td>'
@@ -169,15 +181,13 @@ def doPipelineReports( pipelineReports ):
 	return html
 
 def renderPipelineReportsTable( table, rows, cols ):
-	if rows == 0:
-		return
-	print( table )
 	html = '<tr><th>OUS UID</th><th>Timestamp</th>\n'
-	for row in range(0, rows):
-		ousUID    = table[row][0]
-		timestamp = table[row][1]
-		timestamp = timestamp.replace( 'T', '&nbsp;' )
-		html 	  += "<tr><td>%s</td><td>%s</td></tr>\n" % (ousUID,timestamp)
+	if rows > 0:
+		for row in range(0, rows):
+			ousUID    = table[row][0]
+			timestamp = table[row][1]
+			timestamp = timestamp.replace( 'T', '&nbsp;' )
+			html 	  += "<tr><td>%s</td><td>%s</td></tr>\n" % (ousUID,timestamp)
 	return html
 
 def doNgasDocuments( ngasDocs ):
@@ -195,15 +205,15 @@ def doNgasDocuments( ngasDocs ):
 	return html
 
 def renderNgasDocuments( table, rows, cols ):
-	if rows == 0:
-		return
 		
 	html = '<tr><th>NGAS ID</th><th>Write timestamp</th>\n'
-	for row in range(0, rows):
-		ousUID    = table[row][0]
-		timestamp = table[row][1]
-		timestamp = timestamp.replace( 'T', '&nbsp;' )
-		html 	  += "<tr><td>%s</td><td>%s</td></tr>\n" % (ousUID,timestamp)
+
+	if rows > 0:
+		for row in range(0, rows):
+			ousUID    = table[row][0]
+			timestamp = table[row][1]
+			timestamp = timestamp.replace( 'T', '&nbsp;' )
+			html 	  += "<tr><td>%s</td><td>%s</td></tr>\n" % (ousUID,timestamp)
 	return html
 
 def doProductsMetadata( prodsMeta ):
@@ -223,17 +233,17 @@ def doProductsMetadata( prodsMeta ):
 	return html
 
 def renderProductsMetadata( table, rows, cols ):
-	if rows == 0:
-		return
 		
 	html = '<tr><th>Product ID</th><th>Timestamp</th><th>Program ID</th><th>OUS UID</th>\n'
-	for row in range(0, rows):
-		prodID    = table[row][0]
-		timestamp = table[row][1]
-		progID    = table[row][2]
-		ousUID    = table[row][3]
-		timestamp = timestamp.replace( 'T', '&nbsp;' )
-		html 	  += "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (prodID, timestamp, progID, ousUID)
+
+	if rows > 0:
+		for row in range(0, rows):
+			prodID    = table[row][0]
+			timestamp = table[row][1]
+			progID    = table[row][2]
+			ousUID    = table[row][3]
+			timestamp = timestamp.replace( 'T', '&nbsp;' )
+			html 	  += "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (prodID, timestamp, progID, ousUID)
 	return html
 
 
@@ -254,28 +264,52 @@ def doDeliveryStatus( delStatuses ):
 	return html
 
 def renderDeliveryStatus( table, rows, cols ):
-	if rows == 0:
-		return
 		
-	html = '<tr><th>Product ID</th><th>Timestamp</th><th>Program ID</th><th>OUS UID</th>\n'
-	for row in range(0, rows):
-		prodID    = table[row][0]
-		timestamp = table[row][1]
-		progID    = table[row][2]
-		ousUID    = table[row][3]
-		timestamp = timestamp.replace( 'T', '&nbsp;' )
-		html 	  += "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (prodID, timestamp, progID, ousUID)
+	html = '<tr><th>Timestamp</th><th>Program ID</th><th>OUS UID</th><th>Delivered?</th>\n'
+	if rows > 0:
+		for row in range(0, rows):
+			timestamp = table[row][0]
+			progID 	  = table[row][1]
+			ousUID    = table[row][2]
+			complete  = table[row][3]
+			timestamp = timestamp.replace( 'T', '&nbsp;' )
+			html 	  += "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (timestamp, progID, ousUID, complete)
+	return html
+
+def doUnreadMessages( unreadMessages ):
+	ngasDocs = sorted( unreadMessages, key=compareByCreationTimestamp, reverse=True )
+	table = []
+	row = 0
+	for unreadMessage in unreadMessages:
+		table.append( [None] * 2 )
+		table[row][0] = unreadMessage['selector']
+		table[row][1] = unreadMessage['creationTimestamp']
+		row += 1
+
+	html = renderUnreadMessages( table, row, 4 )
+	return html
+
+def renderUnreadMessages( table, rows, cols ):
+		
+	html = '<tr><th>Selector</th><th>Timestamp</th>\n'
+	if rows >= 0:
+		for row in range(0, rows):
+			selector  = table[row][0]
+			timestamp = table[row][1]
+			timestamp = timestamp.replace( 'T', '&nbsp;' )
+			html 	  += "<tr><td>%s</td><td>%s</td></tr>\n" % (selector, timestamp)
 	return html
 
 
-def doDashboard( ousStatuses, pipelineReports, ngasDocs, prodsMeta, delStatuses ):
+def doDashboard( ousStatuses, pipelineReports, ngasDocs, prodsMeta, delStatuses, unreadMessages ):
 	ousTable      = doOusStatusTable( ousStatuses )
 	plTable       = doPipelineReports( pipelineReports )
 	ngasTable     = doNgasDocuments( ngasDocs )
 	prodMetaTable = doProductsMetadata( prodsMeta )
 	delStatTable  = doDeliveryStatus( delStatuses )
+	msgTable      = doUnreadMessages( unreadMessages )
 
-	return htmlTemplate % (ousTable, plTable, ngasTable, prodMetaTable, delStatTable )
+	return htmlTemplate % (ousTable, msgTable, plTable, delStatTable, ngasTable, prodMetaTable )
 
 
 @app.route("/")
@@ -300,7 +334,11 @@ def dashboard():
 	if retcode != 200:
 		raise RuntimeError( "Error %d: %s" % retcode,delStatuses )
 
-	return doDashboard( ousStatuses, pipelineReports, ngasDocs, prodsMeta, delStatuses )
+	retcode,unreadMessages = dbCon.find( 'msgq', {"selector": { "consumed": False }} )
+	if retcode != 200:
+		raise RuntimeError( "Error %d: %s" % retcode,messages )
+
+	return doDashboard( ousStatuses, pipelineReports, ngasDocs, prodsMeta, delStatuses, unreadMessages )
 	
 if __name__ == "__main__":
 	app.run()

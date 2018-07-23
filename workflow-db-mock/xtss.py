@@ -37,13 +37,13 @@ def setState( ousUID, state ):
     "Set the state of an OUSStatus"
     return setField( ousUID, 'state', state )
 
-def setSubstate( ousUID, state ):
+def setSubstate( ousUID, substate ):
     "Set the substate of an OUSStatus"
-    return setField( ousUID, 'substate', state )
+    return setField( ousUID, 'substate', substate )
 
-def setPipelineRecipe( ousUID, recipe ):
-    "Set the pipeline recipe of an OUSStatus"
-    return setField( ousUID, 'pipeline-recipe', recipe )
+# def setPipelineRecipe( ousUID, recipe ):
+#     "Set the pipeline recipe of an OUSStatus"
+#     return setField( ousUID, 'pipeline-recipe', recipe )
 
 def setExecutive( ousUID, executive ):
     "Set the Executive of an OUSStatus"
@@ -73,8 +73,8 @@ def xtss( body ):
         retcode = setState( ousUID=ousUID, state=value )
         return retcode
 
-    elif operation == "set-recipe":
-        retcode = setPipelineRecipe( ousUID=ousUID, recipe=value )
+    elif operation == "set-substate":
+        retcode = setSubstate( ousUID=ousUID, substate=value )
         return retcode
 
     elif operation == "set-exec":

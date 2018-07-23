@@ -70,15 +70,7 @@ def encode( entityID ):
 	return entityID.replace( ":", "_" ).replace( "/", "_" )
 
 def setSubstate( ousUID, substate ):
-	
-	dbcon  = DbConnection( baseUrl )
-	dbName  = "status-entities"
-	retcode,ousStatus = dbcon.findOne( dbName, ousUID )
-	ousStatus['substate'] = substate
-	ousStatus['timestamp'] = dbdrwutils.nowISO()
-	retcode,retmsg = dbcon.save( dbName, ousUID, ousStatus )
-	if retcode != 201:
-		raise RuntimeError( "setSubstate: error %d, %s" % (retcode,retmsg) )
+	dbdrwutils.setSubstate( xtss, ousUID, substate )
 
 def writeMetadata( progID, ousUID, timestamp, dataProduct ):
 	# No error checking!
@@ -164,6 +156,8 @@ def callback( message ):
 ###################################################################
 baseUrl = "http://localhost:5984" # CouchDB
 ngascon = NgasConnection()
+
+xtss   = ExecutorClient( 'localhost', 'msgq', 'xtss' )
 
 select = "ingest.JAO"
 mq     = MqConnection( 'localhost', 'msgq',  select )
