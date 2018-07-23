@@ -3,7 +3,7 @@
 This is a mockup of the Data Processing Workflow system as shown [here](https://drive.google.com/file/d/11dwEzQyKbKvUbyV__czR1KUtYUBSSo7k/view?usp=sharing), demonstrating that it can be implemented as a asynchronous message-based system. It's based on a pipeline of components communicating via broadcasting messages plus a module (simulating the XTSS) implementing an RPC-like executor.
 
 This version implements stages _ReadyForProcessing_, _Processing_,
-_ProcessingProblem_, _ReadyForReview_, _Reviewing_, _Verified_, _DeliveryInProgress_ of the
+_ProcessingProblem_, _ReadyForReview_, _Reviewing_, _Verified_, _DeliveryInProgress_, _Delivered_ of the
 [OUS life-cycle](https://ictwiki.alma.cl/twiki/bin/view/ObsIF/ObsUnitSetLifeCycleJpg):
 
 <img src="life-cycle.png" width="400">
