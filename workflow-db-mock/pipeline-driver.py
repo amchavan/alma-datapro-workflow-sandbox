@@ -9,6 +9,8 @@ import shutil
 import sys
 import json
 import base64
+import time
+import threading
 sys.path.insert(0, "../shared")
 from dbmsgq import MqConnection, ExecutorClient
 import dbdrwutils
@@ -72,8 +74,14 @@ def getTimestamp( productsDirName ):
 
 def callback( message ):
 	""" 
-	Pipeline Driver business logic
-	
+	Executing Pipeline runs, resources permitting
+	"""
+	dbdrwutils.bgRun( processRunPipelineMessage, (message,))
+	time.sleep( 0.5 )	# Give some time to the thread to start up
+						# (just in case)
+
+def processRunPipelineMessage( message ):
+	""" 
 	Body of the message is something like 
 	      { "progID":"...", "ousUID":"...", "recipe":"..." }
 	where:
@@ -87,7 +95,7 @@ def callback( message ):
 			"ousUID":"uid://X1/X1/Xaf", 
 			"recipe":"PipelineCalibration"
 		}
-	"""
+	"""	
 	print( ">>> message:", message )
 	request = dbdrwutils.jsonToObj( message )
 	progID = request.progID
@@ -160,6 +168,14 @@ def callback( message ):
 	dbdrwutils.setState( xtss, ousUID, "ReadyForReview" )
 
 
+def availableExecutors():
+	"""
+		Return 	True if we have at least one available executor, 
+				False if all available executors were taken up and we must wait 
+	"""
+	print( ">>>>>>> threads: active: ", threading.active_count(), "max:", maxThreads )
+	return threading.active_count() < maxThreads
+
 ###################################################################
 ## Main program
 ###################################################################
@@ -175,12 +191,15 @@ print( "workingDirectory:", workingDirectory )
 parser = argparse.ArgumentParser( description='Pipeline Driver mock-up' )
 parser.add_argument( dest="exec",  help="Where this driver is running: one of 'EA', 'EU', 'JAO' or 'NA'" )
 parser.add_argument( dest="cache", help="Absolute pathname of the replicating cache dir" )
+parser.add_argument( "--concurrent-runs", "-r", dest="maxRuns", help="Max number of concurrent Pipeline runs, default=1", default=1 )
+
 args=parser.parse_args()
 
 listen_to = ("pipeline.process.%s" % args.exec)
 mq = MqConnection( 'localhost', 'msgq',  listen_to )
 xtss = ExecutorClient( 'localhost', 'msgq', 'xtss' )
-# ngas = NgasConnection()
+maxThreads = int(args.maxRuns) + 1 	# One thread per Pipeline run, plus the main thread
 
 print(' [*] Waiting for messages matching %s' % (listen_to) )
-mq.listen( callback )
+# If there is an available executor, listen to messages
+mq.listen( callback, condition=availableExecutors )	

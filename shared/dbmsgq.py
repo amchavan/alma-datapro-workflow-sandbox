@@ -79,10 +79,17 @@ class MqConnection():
 		return message
 
 
-	def getNext( self, selector, consume=True, fullMessage=False ):
+	def getNext( self, selector, consume=True, fullMessage=False, condition=None ):
 		"""
-			Listen on the queue for messages matching the selectors,
-			invoke the callback on the messages
+			Listen on the queue for for new messages, return the oldest we find.
+			Args:
+			selector: defines what messages to listen to
+			consume:  if True, the message will be marked as consumed and no other
+			          listener will receive  (default is True)
+          	fullMessage: if True, the message's metadata will be passed in as well and
+          	             the actual message will be in the 'body' field (default False)
+			condition: boolean function to be invoked before starting to listen, will cause the
+			           thread to sleep if the condition is false
 		"""
 		
 		messages = []
@@ -104,6 +111,11 @@ class MqConnection():
 			#
 			# TODO: revisit this if needed
 			}
+
+		# See if we can even start listening: if we have a conditional expression
+		# and it evaluates to False we need to wait a bit
+		while ( condition and (condition() == False) ):
+			time.sleep( self.__incrementalSleep( callTime ))
 
 		while True:
 			retcode,messages = self.dbcon.find( self.queueName, selector )
@@ -154,10 +166,18 @@ class MqConnection():
 		return sleep
 
 
-	def listen( self, callback, selector=None, consume=True, fullMessage=False ):
+	def listen( self, callback, selector=None, consume=True, fullMessage=False, condition=None ):
 		"""
-			Listen on the queueName for messages matching the selector,
-			invoke the callback on the messages
+			Listen on the queueName for messages matching the selector and process them.
+			Args:
+			callback: function to process the message with
+			selector: defines what messages to listen to
+			consume:  if True, the message will be marked as consumed and no other
+			          listener will receive  (default is True)
+          	fullMessage: if True, the message's metadata will be passed in as well and
+          	             the actual message will be in the 'body' field (default False)
+			condition: boolean function to be invoked before starting to listen, will cause the
+			           thread to sleep if the condition is false
 		"""
 
 		if selector == None:
@@ -167,7 +187,7 @@ class MqConnection():
 
 		while True:
 			print( ">>> waiting for message on queue '%s' matching selector '%s' ..." % (self.queueName, selector))
-			message = self.getNext( selector, consume, fullMessage=fullMessage )
+			message = self.getNext( selector, consume, fullMessage=fullMessage, condition=condition )
 			# print( ">>> got", message )
 			callback( message )
 
