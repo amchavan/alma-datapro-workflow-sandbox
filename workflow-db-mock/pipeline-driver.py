@@ -31,20 +31,22 @@ def findProductsDir( progID ):
 	print( ">>> prodDir:", prodDir )
 	return os.path.join( pipelineRunDirectory, prodDir )
 
-def findWeblog( productsDir ):
+def findWeblog( productsDir, ousUID ):
 	# DEMO ONLY: the "products" subdirectory should be looked for
 	#            here we just take the hardcoded path
-	productsDir = productsDir + "/SOUS/GOUS/MOUS/products"
+	ousUID = dbdrwutils.encode( ousUID )
+	productsDir = os.path.join( productsDir, "SOUS", "GOUS", ousUID, "products" )
 	for file in os.listdir( productsDir ):
 		print( ">>> file:", file )
 		if (file.startswith( "weblog-" ) and file.endswith( ".zip" )):
 			return (os.path.join( productsDir, file ))
 	raise RuntimeError( "No weblog found in %s" % productsDir )
 
-def findPipelineReport( productsDir ):
+def findPipelineReport( productsDir, ousUID ):
 	# DEMO ONLY: the "products" subdirectory should be looked for
 	#            here we just take the hardcoded path
-	productsDir = productsDir + "/SOUS/GOUS/MOUS/products"
+	ousUID = dbdrwutils.encode( ousUID )
+	productsDir = os.path.join( productsDir, "SOUS", "GOUS", ousUID, "products" )
 	for file in os.listdir( productsDir ):
 		print( ">>> file:", file )
 		if (file.startswith( "pl-report-" ) and file.endswith( ".xml" )):
@@ -134,7 +136,7 @@ def processRunPipelineMessage( message ):
 	# Copy the weblog to the replicating cache directory
 	# and signal that to the JAO *and* the local cache  (if
 	# they are not one and the same)
-	weblog = findWeblog( productsDir )
+	weblog = findWeblog( productsDir, ousUID )
 	print( ">>> weblog: copying", weblog, "to", args.cache )
 	shutil.copy( weblog, args.cache )
 
@@ -148,7 +150,7 @@ def processRunPipelineMessage( message ):
 	# Send the XML text of the pipeline report to AQUA at JAO 
 	# We need to BASE64-encode it because it will be wrapped in a JSON field
 	timestamp = getTimestamp( productsBasedir )
-	plReportFile = findPipelineReport( productsDir )
+	plReportFile = findPipelineReport( productsDir, ousUID )
 	plReport = dbdrwutils.readTextFileIntoString( plReportFile )
 	plReport = dbdrwutils.b64encode( plReport )
 	message = '''
@@ -191,14 +193,17 @@ print( "workingDirectory:", workingDirectory )
 parser = argparse.ArgumentParser( description='Pipeline Driver mock-up' )
 parser.add_argument( dest="exec",  help="Where this driver is running: one of 'EA', 'EU', 'JAO' or 'NA'" )
 parser.add_argument( dest="cache", help="Absolute pathname of the replicating cache dir" )
-parser.add_argument( "--concurrent-runs", "-r", dest="maxRuns", help="Max number of concurrent Pipeline runs, default=1", default=1 )
+parser.add_argument( "--max-concurrent-executions", "-x", \
+					 dest="maxExecutions", \
+					 help="Max number of concurrent Pipeline executions, default=1", \
+					 default=1 )
 
 args=parser.parse_args()
 
 listen_to = ("pipeline.process.%s" % args.exec)
 mq = MqConnection( 'localhost', 'msgq',  listen_to )
 xtss = ExecutorClient( 'localhost', 'msgq', 'xtss' )
-maxThreads = int(args.maxRuns) + 1 	# One thread per Pipeline run, plus the main thread
+maxThreads = int(args.maxExecutions) + 1 	# One thread per Pipeline run, plus the main thread
 
 print(' [*] Waiting for messages matching %s' % (listen_to) )
 # If there is an available executor, listen to messages

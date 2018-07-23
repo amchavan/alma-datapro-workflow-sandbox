@@ -3,7 +3,7 @@
 import base64
 import sys
 import random
-from time import sleep
+import time
 sys.path.insert(0, "../shared")
 from dbmsgq import MqConnection, ExecutorClient
 from dbcon import DbConnection
@@ -84,7 +84,6 @@ def callback( message ):
 		}
 	"""
 
-	print( ">>> message:", message[:80], "..." )
 	# print( ">>> message:", message )
 	request = dbdrwutils.jsonToObj( message )
 	ousUID = request.ousUID
@@ -99,7 +98,6 @@ def callback( message ):
 	savePlReport( ousUID, timestamp, encodedReport, productsDir, source )
 
 
-
 ###################################################################
 ## Main program
 ###################################################################
@@ -112,10 +110,9 @@ xtss   = ExecutorClient( 'localhost', 'msgq', 'xtss' )
 select = "pipeline.report.JAO"
 mq     = MqConnection( 'localhost', 'msgq',  select )
 
-# Launch the listener in the backgrounf
+# Launch the listener in the background
 print(' [*] Waiting for messages matching %s' % (select) )
 dbdrwutils.bgRun( mq.listen, (callback,) )
-# mq.listen( callback )
 
 # This is the program's text-based UI
 # Loop forever:
@@ -175,13 +172,13 @@ while True:
 
 	# Tell the Product Ingestor that it should ingest those Pipeline products
 	selector = "ingest.JAO"
-	message = '{"ousUID" : "%s", "timestamp" : "%s", "source" : "%s", "productsDir" : "%s"}' % \
-		(ousUID, timestamp, source, productsDir)
+	message = '{"ousUID" : "%s", "timestamp" : "%s", "productsDir" : "%s"}' % \
+		(ousUID, timestamp, productsDir)
 	mq.send( message, selector )
 
 	# Wait some, mainly for effect
 	waitTime = random.randint(3,8)
-	sleep( waitTime )
+	time.sleep( waitTime )
 
 	# Now we can set the state of the OUS to DeliveryInProgress
 	dbdrwutils.setState( xtss, ousUID, "DeliveryInProgress" )

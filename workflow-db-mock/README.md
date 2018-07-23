@@ -52,12 +52,18 @@ If needed, it creates a status entity for the OUS, then sends message to the Pip
 
 Mocks the replacement for DARED.  
 Usage:  
-`pipeline-driver.py [-h] exec cache`  
-where _exec_ is the executive where this driver is running ( one of 'EA', 'EU', 'JAO' or 'NA') and _cache_ is the absolute pathname of the replicating cache directory. For instance:  
-`./pipeline-driver.py EU /tmp/EU`
+`pipeline-driver.py [-h] [-mr maxruns] exec cache`  
+where _exec_ is the executive where this driver is running ( one of 'EA', 'EU', 'JAO' or 'NA') and _cache_ is the absolute pathname of the replicating cache directory. Optional parameter _maxruns_ indicates how many Pipeline executions may run in parallel; defaults to 1. For instance:  
+`./pipeline-driver.py -mr EU /tmp/EU`
 
-It listens on the `pipeline.process.EU` selector and expects the message to include the Observing Program ID, OUS ID and the Pipeline processing recipe, for instance:  
-`{"progID":"2015.1.00657.S", "ousUID":"uid://X1/X1/Xb2", "recipe":"PipelineCalibration"}`
+It listens on the `pipeline.process.EU` selector and expects the message to include the Observing Program ID, OUS ID and the Pipeline processing recipe, for instance:
+```
+  {
+    "progID":"2015.1.00657.S",
+    "ousUID":"uid://X1/X1/Xb2",
+    "recipe":"PipelineCalibration"
+  }
+```
 
 When a message arrives:
 * Sets the OUS to _Processing_
@@ -82,7 +88,7 @@ It simulates processing by waiting a random interval, and 1 in 10 times (randoml
 2015.1.00657.S_2018_07_19T07_10_03.781/
 └── SOUS
     └── GOUS
-        └── MOUS
+        └── uid___X1_X1_Xc1
             └── products
                 ├── pl-report-X1-X1-Xa1-2018-07-19T07:10:03.781.xml
                 ├── product-0-X1-X1-Xa1-2018-07-19T07:10:03.781.data
@@ -92,6 +98,7 @@ It simulates processing by waiting a random interval, and 1 in 10 times (randoml
                 ├── product-4-X1-X1-Xa1-2018-07-19T07:10:03.781.data
                 └── weblog-X1-X1-Xa1-2018-07-19T07:10:03.781.zip
 ```
+Note that we don't need to keep track of the actual UIDs of the Science Goal and Group OUS, we just use _SOUS_ and _GOUS_ instead.
 
 ### replicated-cache.py
 
@@ -105,7 +112,13 @@ where _EXEC_ is the Executive where this cache driver is running, one of *EA*, *
 `./replicated-cache.py -e JAO -lc /tmp/local -euc /tmp/EU`
 
 It expects the body of the request to be a JSON document:  
-`{"fileType":"weblog", "cachedAt":"EU", "name": "weblog-X1-X1-Xa1-2018-07-19T07:10:03.781.zip"}`  
+```
+  {
+    "fileType":"weblog",
+    "cachedAt":"EU",
+    "name": "weblog-X1-X1-Xa1-2018-07-19T07:10:03.781.zip"
+  }
+```
 where _fileType_ can be _weblog_, _productsdir_, ...
 
 It will then replicate the file or directory from the _cachedAt_ executive to JAO using the _XXCACHE_ spec given on the command line.
@@ -147,14 +160,20 @@ Otherwise (QA2 flag _Pass_ or _Semipass_) OUS state is set to _Verified_ and a m
 
 ### product-ingestor.py
 
-**NOT IMPLEMENTED**  
 Mocks the Product Ingestor. Usage:  
-`TODO`
-where ...
+`product-ingestor.py [-h] lcache`
+where _lcache_ is the absolute pathname of the local replicating cache directory.
 
-It listens on selector `ingest.JAO` and expects the body of the request to be a JSON document:  
-`{TODO}`  
-where ...
+It listens on selector `ingest.JAO` and expects the body of the request to be a JSON document including _ousUID_; _timestamp_, timestamp of the Pipeline execution; _productsDir_, the name of the products directory for that Pipeline run. For instance:
+```
+{
+  "ousUID" : "uid://X1/X1/Xc1",
+  "timestamp" : "2018-07-23T13:32:25.355",
+  "productsDir" : "2015.1.00657.S_2018_07_23T13_32_25.355"
+}
+```
+The products directory should be a subdirectory of the local replicating cache directory.
+
 
 ### data-tracker.py
 
@@ -240,6 +259,8 @@ Create some empty databases in CouchDB:
    * _ngas_, where NGAS is mocked; see also `shared/ngascon.py`
    * _pipeline-reports_, to store the Pipeline report files (mocks Oracle)
    * _status-entities_, where the OUSs are persisted
+   * _products-metadata_, metadata of the Pipeline-generated data products
+   * _delivery-status_, delivery status reports of the Product Ingestor
 
 If you are restarting the system you should remove all entries from those databases.
 
@@ -270,6 +291,8 @@ Make sure to `cd ..../workflow-db-mock` before you start; the *DRW_xxxx_CACHE* d
 
 * `./aqua-qa2` launches AQUA/QA2
 
+* `./product-ingestor.py $DRW_JAO_CACHE` launches the JAO Product Ingestor, reading from the local replicating cache.
+
 * `cd dashboard` and `./server.py` will launch the system dashboard Web application; open a browser tab and visit `http://localhost:5000`
 
 * Finally, `./launcher.py 2015.1.00657.S uid://X1/X1/Xb0 PipelineCalibration EU` will create an OUS with ID=uid://X1/X1/Xb0 belonging to ObsProgram 2015.1.00657.S and launch the EU Pipeline on its 'data'
@@ -286,10 +309,10 @@ If you enter [P]ass or [S]emipass at the prompt you should see the OUS going fir
 If you enter [F]ail it should go to _ReadyForProcessing_.  
 If you enter [C]ancel is should show you the list of OUSs again.
 
-At this point:
-* `http://localhost:8000/`, the EU cache, should show you a products directory (which you can browse down to the _products_ directory and its contents) and a zipped Weblog for that Pipeline execution.  `http://localhost:8000/weblogs/` should show an expanded Weblog
+At this point you can go to the Dashboard page and verify that:
+* [The EU cache](http://localhost:8000/) at `http://localhost:8000` should show you a products directory (which you can navigate down to the bottommost _products_ directory and view its contents) and a zipped Weblog for that Pipeline execution.  [The EU weblogs cache](`http://localhost:8000/weblogs/`) should show an expanded Weblog.
 
-* `http://localhost:8001`, the JAO cache, should be identical to the EU one
+* [The JAO cache](http://localhost:8001) at `http://localhost:8001` should be identical to the EU one
 
 * `curl -H "Content-Type: application/json" localhost:5984/pipeline-reports/_all_docs` should show one entry, the Pipeline report shown by AQUA/QA2 when we assigned a QA2 flag
 

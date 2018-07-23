@@ -132,5 +132,8 @@ def makeWeblogName( ousUID, timestamp ):
     return weblogName
 
 def nowISO():
-    return datetime.datetime.now().isoformat()[:-3]
+    return datetime.datetime.utcnow().isoformat()[:-3]
+
+def encode( entityID ):
+    return entityID.replace( ":", "_" ).replace( "/", "_" ).replace( "-", "_" )
 

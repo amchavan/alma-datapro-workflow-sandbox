@@ -1,6 +1,6 @@
 import pika
 import uuid
-from time import sleep
+import time
 import os
 
 # Utility classes and functions for dealing with a message queue -- the implementation
@@ -168,7 +168,7 @@ class ExecutorClient(object):
 		# Actively waiting for something to come back: let's
 		# insert a short sleep to avoid using the CPU at 100%
 		while self.response is None:
-			sleep( 0.1 )
+			time.sleep( 0.1 )
 			self.connection.process_data_events()
 
 		return self.response.decode()	# Return a proper string, not bytes

@@ -21,33 +21,79 @@ htmlTemplate = """
 	<!doctype html>
 	<html>
 		<head>
-		  <meta http-equiv="refresh" content="1" >
+		  <meta http-equiv="refresh" content="2" >
 		  <title>Dashboard</title>
 		  <style>
 		  	body { font-family: Verdana }
-		  	table{ width: 100%%; table-layout: fixed; }
 			th { text-align: left; }
 			td { padding: 5px; }
+			caption { font-size: larger; font-style: italic; font-weight: bold;}
+
+		  	.ous-table{ width: 100%%; table-layout: fixed; }
+		  	.tables div { float: left; }
+		  	.table-div  { border-width:2px; border-style:solid; border-color:gray; }
 			.smalltext { font-size: smaller }
 		  </style>
 		</head>
 		<body>
 		  <h1>Dashboard</h1>
-		  <h2>ObsUnitSets</h2>
-		  <table>
+		  <div>
+		  	<a href="http://localhost:8000/"        target="_blank">The local cache</a>
+		  	<a href="http://localhost:8000/weblogs" target="_blank">Locally cached weblogs</a> 
+		  </div>
+		  <div class="table-div">
+		  <table class="ous-table">
+		  	<caption>ObsUnitSets status entities</caption>
 		  %s
 		  </table>
+		  </div>
+		  <div class="tables">
+			  <div class="table-div">
+			  	<table>
+				  	<caption>Pipeline reports</caption>
+				  	%s
+			  	</table>
+			  </div>
+			  <div class="table-div">
+			  	<table>
+				  	<caption>NGAS documents</caption>
+				  	%s
+			  	</table>
+			  </div>
+			  <div class="table-div">
+			  	<table>
+				  	<caption>Products metadata</caption>
+				  	%s
+			  	</table>
+			  </div>
+			  <div class="table-div">
+			  	<table>
+				  	<caption>Delivery status</caption>
+				  	%s
+			  	</table>
+			  </div>
+		  </div>
 		</body>
 	</html>
 	"""
 
-def compareByState( ous ):
-	return ous['state']
+def compareByState( record ):
+	return record['state']
 
-def compareByTimestamp( ous ):
-	return ous['timestamp']
+def compareByOusUid( record ):
+	return record['ousUID']
 
-def renderTable( table, rows, cols ):
+def compareById( record ):
+	return record['_id']
+
+def compareByTimestamp( record ):
+	return record['timestamp']
+
+def compareByWriteTimestamp( record ):
+	return record['writeTimestamp']
+
+def renderOusTable( table, rows, cols ):
+	htmlCellTemplate = '<td> %s %s %s </td>'
 
 	html = "<tr>"
 	for state in states:
@@ -58,14 +104,19 @@ def renderTable( table, rows, cols ):
 		html += "<tr>"
 		for col in range( 0, cols ):
 			t = table[row][col]
-			ousUID,timestamp = t if (t != None) else ("&nbsp;","&nbsp;")
-			timestamp = timestamp.replace( 'T', ' ' )
-			html += ('<td><span>%s</span> <span class="smalltext">%s</span></td>' % (ousUID,timestamp))
+			ousUID,timestamp,substate = t if (t != None) else ("&nbsp;","&nbsp;",None)
+			timestamp = timestamp.replace( 'T', '&nbsp;' )
+
+			ousUIDSpan    = '<span>%s</span>' % ousUID
+			timestampSpan = '<span class="smalltext">%s</span>' % timestamp
+			substateSpan  = ('<span class="smalltext">%s</span>' % substate) if substate else ""
+
+			html += (htmlCellTemplate % (ousUIDSpan,substateSpan,timestampSpan))
 		html += "</tr>\n"
 
 	return html
 
-def doDashboard( ousStatuses ):
+def doOusStatusTable( ousStatuses ):
 	ousStatuses = sorted( ousStatuses, key=compareByTimestamp, reverse=True )
 	ousStatuses = sorted( ousStatuses, key=compareByState )
 
@@ -96,23 +147,161 @@ def doDashboard( ousStatuses ):
 		#print( "before: table = %s" % (table))
 		#print( "        state = %s" % (state))
 		#print( "table[%d][%d] = %s" % (row,column,state))
-		table[row][column] = (ousStatus['entityId'], ousStatus['timestamp'])
-		print( "after: table = %s" % (table))
+		table[row][column] = (ousStatus['entityId'], ousStatus['timestamp'], ousStatus['substate'])
+		# print( "after: table = %s" % (table))
 		currentState = state
 
-	ousTable = renderTable( table, rows+1, numStates )
+	ousTable = renderOusTable( table, rows+1, numStates )
+	return ousTable
 
-	return htmlTemplate % ousTable
+def doPipelineReports( pipelineReports ):
+	pipelineReports = sorted( pipelineReports, key=compareByTimestamp, reverse=True )
+
+	table = []
+	row = 0
+	for pipelineReport in pipelineReports:
+		table.append( [None] * 2 )
+		table[row][0] = pipelineReport['ousUID']
+		table[row][1] = pipelineReport['timestamp']
+		row += 1
+
+	html = renderPipelineReportsTable( table, len( pipelineReports ), 2 )
+	return html
+
+def renderPipelineReportsTable( table, rows, cols ):
+	if rows == 0:
+		return
+	print( table )
+	html = '<tr><th>OUS UID</th><th>Timestamp</th>\n'
+	for row in range(0, rows):
+		ousUID    = table[row][0]
+		timestamp = table[row][1]
+		timestamp = timestamp.replace( 'T', '&nbsp;' )
+		html 	  += "<tr><td>%s</td><td>%s</td></tr>\n" % (ousUID,timestamp)
+	return html
+
+def doNgasDocuments( ngasDocs ):
+	ngasDocs = sorted( ngasDocs, key=compareByWriteTimestamp, reverse=True )
+
+	table = []
+	row = 0
+	for ngasDoc in ngasDocs:
+		table.append( [None] * 2 )
+		table[row][0] = ngasDoc['_id']
+		table[row][1] = ngasDoc['writeTimestamp']
+		row += 1
+
+	html = renderNgasDocuments( table, len( ngasDocs ), 2 )
+	return html
+
+def renderNgasDocuments( table, rows, cols ):
+	if rows == 0:
+		return
+		
+	html = '<tr><th>NGAS ID</th><th>Write timestamp</th>\n'
+	for row in range(0, rows):
+		ousUID    = table[row][0]
+		timestamp = table[row][1]
+		timestamp = timestamp.replace( 'T', '&nbsp;' )
+		html 	  += "<tr><td>%s</td><td>%s</td></tr>\n" % (ousUID,timestamp)
+	return html
+
+def doProductsMetadata( prodsMeta ):
+	ngasDocs = sorted( prodsMeta, key=compareByTimestamp, reverse=True )
+
+	table = []
+	row = 0
+	for prodMeta in prodsMeta:
+		table.append( [None] * 4 )
+		table[row][0] = prodMeta['_id']
+		table[row][1] = prodMeta['timestamp']
+		table[row][2] = prodMeta['progID']
+		table[row][3] = prodMeta['ousUID']
+		row += 1
+
+	html = renderProductsMetadata( table, len( prodsMeta ), 4 )
+	return html
+
+def renderProductsMetadata( table, rows, cols ):
+	if rows == 0:
+		return
+		
+	html = '<tr><th>Product ID</th><th>Timestamp</th><th>Program ID</th><th>OUS UID</th>\n'
+	for row in range(0, rows):
+		prodID    = table[row][0]
+		timestamp = table[row][1]
+		progID    = table[row][2]
+		ousUID    = table[row][3]
+		timestamp = timestamp.replace( 'T', '&nbsp;' )
+		html 	  += "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (prodID, timestamp, progID, ousUID)
+	return html
+
+
+def doDeliveryStatus( delStatuses ):
+	ngasDocs = sorted( delStatuses, key=compareByTimestamp, reverse=True )
+
+	table = []
+	row = 0
+	for delStatus in delStatuses:
+		table.append( [None] * 4 )
+		table[row][0] = delStatus['timestamp']
+		table[row][1] = delStatus['progID']
+		table[row][2] = delStatus['ousUID']
+		table[row][3] = delStatus['complete']
+		row += 1
+
+	html = renderDeliveryStatus( table, len( delStatuses ), 4 )
+	return html
+
+def renderDeliveryStatus( table, rows, cols ):
+	if rows == 0:
+		return
+		
+	html = '<tr><th>Product ID</th><th>Timestamp</th><th>Program ID</th><th>OUS UID</th>\n'
+	for row in range(0, rows):
+		prodID    = table[row][0]
+		timestamp = table[row][1]
+		progID    = table[row][2]
+		ousUID    = table[row][3]
+		timestamp = timestamp.replace( 'T', '&nbsp;' )
+		html 	  += "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (prodID, timestamp, progID, ousUID)
+	return html
+
+
+def doDashboard( ousStatuses, pipelineReports, ngasDocs, prodsMeta, delStatuses ):
+	ousTable      = doOusStatusTable( ousStatuses )
+	plTable       = doPipelineReports( pipelineReports )
+	ngasTable     = doNgasDocuments( ngasDocs )
+	prodMetaTable = doProductsMetadata( prodsMeta )
+	delStatTable  = doDeliveryStatus( delStatuses )
+
+	return htmlTemplate % (ousTable, plTable, ngasTable, prodMetaTable, delStatTable )
 
 
 @app.route("/")
 def dashboard():
 	retcode,ousStatuses = dbCon.find( dbName, {"selector": { "state": { "$ne" : "" }}} )
-	if retcode == 200:
-		return doDashboard( ousStatuses )
-	else:
-		return "Error: %D" % retcode
+	if retcode != 200:
+		raise RuntimeError( "Error %d: %s" % retcode,ousStatuses )
 
+	retcode,pipelineReports = dbCon.find( 'pipeline-reports', {"selector": { "ousUID": { "$ne": "" }}} )
+	if retcode != 200:
+		raise RuntimeError( "Error %d: %s" % retcode,ousStatuses )
+
+	retcode,ngasDocs = dbCon.find( 'ngas', {"selector": { "_id": { "$ne": "" }}} )
+	if retcode != 200:
+		raise RuntimeError( "Error %d: %s" % retcode,ngasDocs )
+
+	retcode,prodsMeta = dbCon.find( 'products-metadata', {"selector": { "_id": { "$ne": "" }}} )
+	if retcode != 200:
+		raise RuntimeError( "Error %d: %s" % retcode,prodsMeta )
+
+	retcode,delStatuses = dbCon.find( 'delivery-status', {"selector": { "_id": { "$ne": "" }}} )
+	if retcode != 200:
+		raise RuntimeError( "Error %d: %s" % retcode,delStatuses )
+
+	return doDashboard( ousStatuses, pipelineReports, ngasDocs, prodsMeta, delStatuses )
+	
 if __name__ == "__main__":
 	app.run()
 

@@ -8,7 +8,7 @@ import os
 import tempfile
 import shutil
 import subprocess
-from time import sleep
+import time
 
 # Note -- this script is made to run in an arbitrary directory
 #         and it cannot depend on any library in 'shared'
@@ -31,12 +31,14 @@ def zipDirectory( dirname, workingDirectory ):
     pathname = os.path.join( workingDirectory, zipfile )
     return completed.returncode, pathname
 
-def plProductsDirname( progID ):
+def encode( entityID ):
+	return entityID.replace( ":", "_" ).replace( "/", "_" ).replace( "-", "_" )
+
+def plProductsDirname( progID, ousUID ):
 	now = datetime.datetime.utcnow().isoformat()[:-3]
-	dirname = progID + "_" + now
-	dirname = dirname.replace( ":", "_" ).replace( "/", "_" ).replace( "-", "_" )
-	dirname = dirname + "/SOUS/GOUS/MOUS/products"
-	print( ">>> dirname: ", dirname )
+	dirname = encode( progID + "_" + now )
+	dirname = os.path.join( dirname, "SOUS", "GOUS", encode( ousUID ), "products" )
+	print( ">>> products dirname: ", dirname )
 	return dirname,now
 
 # Copied from shared/dbdrwutils.py -- keep in sync!
@@ -127,7 +129,6 @@ def makeDataProduct( ousUID, timestamp, n ):
 	print( ">>> dataProd:", dataProdFile )
 	return dataProdFile
 
-
 ###################################################################
 ## Main program
 ###################################################################
@@ -146,7 +147,7 @@ print(" [x] Launching Pipeline on OUS %s, program %s, directory %s (%s)" % (ousU
 
 # Pretend we're doing something
 waitTime = random.randint(3,8)
-sleep( waitTime )
+time.sleep( waitTime )
 
 # Simulate that there may be a processing problem
 r = random.randint(1,100)
@@ -156,7 +157,7 @@ if failed:
 	sys.exit( 2 )	# exit with retcode 2 for "processing problem"
 
 # No processing problem, create a products directory
-dataProdsDir,timestamp = plProductsDirname( progID )
+dataProdsDir,timestamp = plProductsDirname( progID, ousUID )
 if not os.path.exists( dataProdsDir ):
     os.makedirs( dataProdsDir )
 
