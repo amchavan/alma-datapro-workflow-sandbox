@@ -33,8 +33,12 @@ if retcode == 404:
     # Prepare a new record and write it
     ousStatus = {}
     ousStatus['entityId'] = ousUID
-    ousStatus['state'] = "ReadyForProcessing"
-    ousStatus['timestamp'] = dbdrwutils.nowISO()
     dbcon.save( dbName, ousUID, ousStatus )
+
+# Set the proper state now
+retcode,ousStatus = dbcon.findOne( dbName, ousUID )
+ousStatus['state'] = "ReadyForProcessing"
+ousStatus['timestamp'] = dbdrwutils.nowISO()
+dbcon.save( dbName, ousUID, ousStatus )
 
 dbdrwutils.broadcastPipelineProcess( mq, progID, ousUID, recipe, executive )
