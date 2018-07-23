@@ -310,13 +310,17 @@ If you enter [F]ail it should go to _ReadyForProcessing_.
 If you enter [C]ancel is should show you the list of OUSs again.
 
 At this point you can go to the Dashboard page and verify that:
+
+* The substate of the OUS becomes _IngestionTriggered_, ... until it completes at _ProductsIngested_
+
 * [The EU cache](http://localhost:8000/) at `http://localhost:8000` should show you a products directory (which you can navigate down to the bottommost _products_ directory and view its contents) and a zipped Weblog for that Pipeline execution.  [The EU weblogs cache](`http://localhost:8000/weblogs/`) should show an expanded Weblog.
 
 * [The JAO cache](http://localhost:8001) at `http://localhost:8001` should be identical to the EU one
 
-* `curl -H "Content-Type: application/json" localhost:5984/pipeline-reports/_all_docs` should show one entry, the Pipeline report shown by AQUA/QA2 when we assigned a QA2 flag
+* Tables _Pipeline reports_, _NGAS documents_, _Products metadata_ and _Delivery status_ of the dashboard should display consistent information.
 
-* `curl -H "Content-Type: application/json" localhost:5984/ngas/_all_docs` should show one entry, the zipped Weblog file
+If you prefer not to use the Dashboard you can query the database from the command line instead. For instance:  
+`curl -H "Content-Type: application/json localhost:5984/pipeline-reports/_all_docs`
 
 ### Going to the movies
 
@@ -332,3 +336,5 @@ If you made it this far and everything was OK you may try to pretend you are wat
 ./launcher.py 2015.1.00657.S uid://X1/X1/Xb8 PipelineCalibration EU ; sleep 2
 ./launcher.py 2015.1.00657.S uid://X1/X1/Xba PipelineCalibration EU
 ```
+
+Note that the step from _ReadyForReview_ to _Reviewing_ is manual and requires AQUA/QA2 (see above). After that, the OUS should proceed again automatically until it reaches _Delivered_. 
