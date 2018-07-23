@@ -16,9 +16,9 @@ __stateChange = "state.change"
 stateChangeSelector = __stateChange + ".%s"
 stateChangeListener = __stateChange + "..+"
 
-__recipeChange = "recipe.change"
-recipeChangeSelector = __recipeChange + ".%s"
-recipeChangeListener = __recipeChange + "..+"
+# __recipeChange = "recipe.change"
+# recipeChangeSelector = __recipeChange + ".%s"
+# recipeChangeListener = __recipeChange + "..+"
 
 def sendMsgToSelector( msg, selector, queue ):
     queue.send( msg, selector )
@@ -29,10 +29,10 @@ def broadcastStateChange( ousUID, state, queue ):
     selector = stateChangeSelector % state
     sendMsgToSelector( msg, selector, queue )
 
-def broadcastRecipeChange( queue, ousUID, recipe ):
-    msg = "%s %s" % (ousUID, recipe)
-    selector = recipeChangeSelector % recipe
-    sendMsgToSelector( msg, selector, queue )
+# def broadcastRecipeChange( queue, ousUID, recipe ):
+#     msg = "%s %s" % (ousUID, recipe)
+#     selector = recipeChangeSelector % recipe
+#     sendMsgToSelector( msg, selector, queue )
 
 def broadcastPipelineProcess( queue, progID, ousUID, recipe, executive ):
     msg = '{"progID":"%s", "ousUID":"%s", "recipe":"%s"}' % (progID, ousUID, recipe)
@@ -52,6 +52,15 @@ def setState( xtss, ousUID, state ):
     "Set an OUS state via the XTSS"
 
     request = '{"operation":"set-state", "ousUID":"%s", "value":"%s"}' % (ousUID,state)
+    print(" [x] Requesting %r" % request)
+    response = xtss.call( request )
+    print(" [.] response: %s" % response)
+    return response
+
+def setSubState( xtss, ousUID, state ):
+    "Set an OUS substate via the XTSS"
+
+    request = '{"operation":"set-substate", "ousUID":"%s", "value":"%s"}' % (ousUID,state)
     print(" [x] Requesting %r" % request)
     response = xtss.call( request )
     print(" [.] response: %s" % response)

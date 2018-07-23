@@ -35,9 +35,10 @@ if retcode == 404:
     ousStatus['entityId'] = ousUID
     dbcon.save( dbName, ousUID, ousStatus )
 
-# Set the proper state now
+# Set the proper state/substate now
 retcode,ousStatus = dbcon.findOne( dbName, ousUID )
 ousStatus['state'] = "ReadyForProcessing"
+ousStatus['substate'] = recipe
 ousStatus['timestamp'] = dbdrwutils.nowISO()
 dbcon.save( dbName, ousUID, ousStatus )
 

@@ -37,6 +37,10 @@ def setState( ousUID, state ):
     "Set the state of an OUSStatus"
     return setField( ousUID, 'state', state )
 
+def setSubstate( ousUID, state ):
+    "Set the substate of an OUSStatus"
+    return setField( ousUID, 'substate', state )
+
 def setPipelineRecipe( ousUID, recipe ):
     "Set the pipeline recipe of an OUSStatus"
     return setField( ousUID, 'pipeline-recipe', recipe )
