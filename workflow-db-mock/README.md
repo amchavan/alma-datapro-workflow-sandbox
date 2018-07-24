@@ -193,7 +193,7 @@ It then checks whether all those products can be found in the local (ARC) NGAS: 
 A simple Web app showing all (?) that's interesting to know about the system. It refreshes automatically every second.
 Example:
 
-<img src="dashboard.png" width="600">
+<img src="dashboard.png" width="850">
 
 
 
