@@ -1,4 +1,3 @@
-from dbcon import DbConnection
 import uuid
 import time
 import os
@@ -6,6 +5,9 @@ import socket
 import uuid
 import urllib.request
 import datetime
+
+import dbdrwutils
+from dbcon import DbConnection
 
 
 # Utility classes and functions for dealing with a message queue -- the implementation
@@ -48,8 +50,7 @@ class MqConnection():
 		
 
 		self.dbcon = DbConnection( baseUrl )
-		print( " [x] Created queue %s on %s" % ( self.queueName, self.host ))
-
+		# print( " [x] Created queue %s on %s" % ( self.queueName, self.host ))
 
 	def send( self, messageBody, selector=None, addMsgbackID=False ):
 		'''
@@ -115,7 +116,7 @@ class MqConnection():
 		# See if we can even start listening: if we have a conditional expression
 		# and it evaluates to False we need to wait a bit
 		while ( condition and (condition() == False) ):
-			time.sleep( self.__incrementalSleep( callTime ))
+			time.sleep( drwutils.incrementalSleep( callTime ))
 
 		while True:
 			retcode,messages = self.dbcon.find( self.queueName, selector )
@@ -124,7 +125,7 @@ class MqConnection():
 				if len( messages ) != 0:
 					break
 				else:
-					time.sleep( self.__incrementalSleep( callTime ))
+					time.sleep( dbdrwutils.incrementalSleep( callTime ))
 			else:
 				raise RuntimeError( "Msg read failed: DB error: %s: %s" % (retcode,messages) )
 
@@ -140,31 +141,6 @@ class MqConnection():
 		if fullMessage:
 			return ret
 		return ret['body']
-
-	
-	def __incrementalSleep( self, startTime ):
-		'''
-			Returns the number of seconds to sleep waiting for an event to appear;
-			sleep time increases with how long we've been waiting already
-		'''
-		now = time.time()
-		waitingSince = now - startTime
-		sleep = -1
-		if waitingSince <= 60:
-			# waiting since a minute or less: sleep for one sec
-			sleep = 1
-		elif waitingSince <= 300:
-			# waiting since five minutes or less: sleep for 5 sec
-			sleep = 5
-		elif waitingSince <= 3600:
-			# waiting since one hour or less: sleep for 30 sec
-			sleep = 30
-		else:
-			# waiting since a long time: sleep for a minute
-			sleep = 60
-		# print( ">>> waitingSince: ", waitingSince, ", sleep for: ", sleep )
-		return sleep
-
 
 	def listen( self, callback, selector=None, consume=True, fullMessage=False, condition=None ):
 		"""

@@ -174,23 +174,28 @@ It listens on selector `ingest.JAO` and expects the body of the request to be a 
 ```
 The products directory should be a subdirectory of the local replicating cache directory.
 
+Upon receiving the message, the script recovers all products from the JAO replicating cache and ingests them into NGAS. While doing that it adds metadata records and keeps the delivery status updated.  
+When done with the data products, it updates the delivery status one more time.
+
+In the course of its operation, it updates the OUS status substate from _IngestionTriggered_ to _AnalyzingProducts_, _IngestingProducts_ and _ProductsIngested_.
 
 ### data-tracker.py
 
-**NOT IMPLEMENTED**  
-Mocks the Data Tracker. Usage:  
-`TODO`
-where ...
+Mocks the Data Tracker running at an ARC. Usage:  
+`data-tracker.py`
 
-It listens on selector `TODO` and expects the body of the request to be a JSON document:  
-`{TODO}`  
-where ...
+It runs an endless loop looking for OUS status entities with state _DeliveryInProgress_ and substate _ProductsIngested_. when one is found, the script retrieves its delivery status record and extracts the list of ingested data products.
+
+It then checks whether all those products can be found in the local (ARC) NGAS: if they are all present it sets the OUS state to _Delivered_. (No email notification is sent.)
 
 ### webapp/server.py
 
 A simple Web app showing all (?) that's interesting to know about the system. It refreshes automatically every second.
+Example:
 
- *Notice* Currently showing only status entities.
+<img src="dashboard.png" width="600">
+
+
 
 <!--
 ### aqua-qa0.py
@@ -253,18 +258,6 @@ The following setup is for running the system on a single machine, with:
 * a replicated cache, replicating to the same machine
 * all remaining actors running at JAO: Oracle, State System, AQUA QA2 and NGAS
 
-### CouchDB setup
-Create some empty databases in CouchDB:
-   * _msgq_, supporting the message bus
-   * _ngas_, where NGAS is mocked; see also `shared/ngascon.py`
-   * _pipeline-reports_, to store the Pipeline report files (mocks Oracle)
-   * _status-entities_, where the OUSs are persisted
-   * _products-metadata_, metadata of the Pipeline-generated data products
-   * _delivery-status_, delivery status reports of the Product Ingestor
-
-If you are restarting the system you should remove all entries from those databases.
-
-**Note** All CouchDB operations can be performed from the Fauxton GUI (`http://localhost:5984/_utils/#`) or from the command line, see [the CouchDB API documentation](http://docs.couchdb.org/en/2.1.2/api/index.html).
 
 ### Directories
 
@@ -275,6 +268,29 @@ export DRW_JAO_CACHE=/tmp/jao-cache
 rm -rf $DRW_JAO_CACHE $DRW_EU_CACHE
 mkdir -p $DRW_JAO_CACHE/weblogs $DRW_EU_CACHE/weblogs
 ```
+
+But see also section _Resetting all data_ below.
+
+### CouchDB setup
+Create some empty databases in CouchDB:
+   * _msgq_, supporting the message bus
+   * _ngas_, where NGAS is mocked; see also `shared/ngascon.py`
+   * _pipeline-reports_, to store the Pipeline report files (mocks Oracle)
+   * _status-entities_, where the OUSs are persisted
+   * _products-metadata_, metadata of the Pipeline-generated data products
+   * _delivery-status_, delivery status reports of the Product Ingestor
+
+**Note** All CouchDB operations can be performed from the Fauxton GUI (`http://localhost:5984/_utils/#`) or from the command line, see [the CouchDB API documentation](http://docs.couchdb.org/en/2.1.2/api/index.html).
+
+If you are restarting the system you should remove all entries from those databases. See also section _Resetting all data_ below.
+
+### Resetting all data
+
+If you need to restart from scratch, with no data in the caches or the database your best option is to run the `clear-all.sh` script. _This script is highly destructive_, use with care.
+
+The script depends on the `DRW_EU_CACHE` and `DRW_JAO_CACHE` environment variables.
+
+clear-all.sh can also be used to create the initial caches and databases.
 
 ### Processes
 
@@ -293,9 +309,13 @@ Make sure to `cd ..../workflow-db-mock` before you start; the *DRW_xxxx_CACHE* d
 
 * `./product-ingestor.py $DRW_JAO_CACHE` launches the JAO Product Ingestor, reading from the local replicating cache.
 
+* `./data-tracker.py` launches the Data Tracker running at the EU ARC.
+
 * `cd dashboard` and `./server.py` will launch the system dashboard Web application; open a browser tab and visit `http://localhost:5000`
 
-* Finally, `./launcher.py 2015.1.00657.S uid://X1/X1/Xb0 PipelineCalibration EU` will create an OUS with ID=uid://X1/X1/Xb0 belonging to ObsProgram 2015.1.00657.S and launch the EU Pipeline on its 'data'
+* Finally,  
+`./launcher.py 2015.1.00657.S uid://X1/X1/Xb0 PipelineCalibration EU`  
+will create an OUS with ID=uid://X1/X1/Xb0 belonging to ObsProgram 2015.1.00657.S and launch the EU Pipeline on its 'data'
 
 ### Checking that all is OK
 
@@ -311,13 +331,20 @@ If you enter [C]ancel is should show you the list of OUSs again.
 
 At this point you can go to the Dashboard page and verify that:
 
-* The substate of the OUS becomes _IngestionTriggered_, ... until it completes at _ProductsIngested_
+* The OUS state becomes _Verified_, then _DeliveryInProgress_
+  * The OUS substate becomes _IngestionTriggered_, ... until it completes at _ProductsIngested_
+
+* The OUS state becomes _Delivered_
 
 * [The EU cache](http://localhost:8000/) at `http://localhost:8000` should show you a products directory (which you can navigate down to the bottommost _products_ directory and view its contents) and a zipped Weblog for that Pipeline execution.  [The EU weblogs cache](`http://localhost:8000/weblogs/`) should show an expanded Weblog.
 
 * [The JAO cache](http://localhost:8001) at `http://localhost:8001` should be identical to the EU one
 
-* Tables _Pipeline reports_, _NGAS documents_, _Products metadata_ and _Delivery status_ of the dashboard should display consistent information.
+* Tables _Pipeline reports_, _NGAS documents_, _Products metadata_ and _Delivery status_ of the dashboard should display consistent information:
+  * One Pipeline report and one Delivery status
+  * Six files in NGAS (5 data products and one ZIP file)
+  * Five product metadata records
+  * Zero unread messages
 
 If you prefer not to use the Dashboard you can query the database from the command line instead. For instance:  
 `curl -H "Content-Type: application/json localhost:5984/pipeline-reports/_all_docs`
@@ -337,4 +364,4 @@ If you made it this far and everything was OK you may try to pretend you are wat
 ./launcher.py 2015.1.00657.S uid://X1/X1/Xba PipelineCalibration EU
 ```
 
-Note that the step from _ReadyForReview_ to _Reviewing_ is manual and requires AQUA/QA2 (see above). After that, the OUS should proceed again automatically until it reaches _Delivered_. 
+Note that the step from _ReadyForReview_ to _Reviewing_ is manual and requires AQUA/QA2 (see above). After that, [P]ass or [S]emipass OUSs should proceed automatically until  reaching _Delivered_.

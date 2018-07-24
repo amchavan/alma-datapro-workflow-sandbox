@@ -5,6 +5,7 @@ import sys
 sys.path.insert(0, "../../shared")
 from dbcon import DbConnection
 import json
+from flask import Flask, request, send_from_directory
 
 # TODO
 
@@ -29,46 +30,51 @@ htmlTemplate = """
 			td { padding: 5px; }
 			caption { font-size: larger; font-style: italic; font-weight: bold;}
 
-		  	.ous-table{ width: 100%%; table-layout: fixed; }
+		  	.wide-table{ width: 100%%; table-layout: fixed; }
 		  	.tables div { float: left; }
-		  	.table-div  { border-width:2px; border-style:solid; border-color:gray; }
+		  	.table-div  { border-width:1px; border-style:solid; border-color:gray; margin: 5px; }
 			.smalltext { font-size: smaller }
 		  </style>
 		</head>
 		<body>
 		  <h1>Dashboard</h1>
 		  <div>
-		  	<a href="http://localhost:8000/"        target="_blank">The local cache</a>
-		  	<a href="http://localhost:8000/weblogs" target="_blank">Locally cached weblogs</a> 
+		  	<ul>
+				<li> <a href="http://localhost:8000/"        target="_blank"><!-- <img src="resources/cache.png"> --> Local cache</a>
+		  		<li> <a href="http://localhost:8000/weblogs" target="_blank"><!-- <img src="resources/cache.png"> --> Locally cached weblogs</a> 
+	  		</ul>
 		  </div>
 		  <div class="table-div">
-		  <table class="ous-table">
+		  <table class="wide-table">
 		  	<caption>ObsUnitSets status entities</caption>
 		  %s
 		  </table>
 		  </div>
-		  <div class="tables">
-			  <div class="table-div">
-			  	<table>
-				  	<caption>Unread messages</caption>
-				  	%s
-			  	</table>
-			  </div>
-			  <div class="table-div">
-			  	<table>
-				  	<caption>Pipeline reports</caption>
-				  	%s
-			  	</table>
-			  </div>
-			  <div class="table-div">
-			  	<table>
-				  	<caption>Delivery status</caption>
-				  	%s
-			  	</table>
-			  </div>
-		  </div>
-		  <p>
-		  <div class="tables">
+		  	<div class="tables">
+				<div class="table-div">
+					<table>
+					  	<caption>Pipeline reports</caption>
+					  	%s
+					</table>
+				</div>
+				<div class="table-div">
+					<table>
+					  	<caption>Delivery status</caption>
+					  	%s
+					</table>
+				</div>
+			  	<div class="table-div">
+				  	<table>
+					  	<caption>Unread messages</caption>
+					  	%s
+				  	</table>
+				</div>
+			</div>
+			<div>
+				<!-- Create an empty wide table to break the floating and start a on a new row -->
+			 	<table class="wide-table"></table>
+			</div>
+			<div class="tables">
 			  <div class="table-div">
 			  	<table>
 				  	<caption>NGAS documents</caption>
@@ -81,7 +87,7 @@ htmlTemplate = """
 				  	%s
 			  	</table>
 			  </div>
-		  </div>
+			</div>
 		</body>
 	</html>
 	"""
@@ -309,8 +315,11 @@ def doDashboard( ousStatuses, pipelineReports, ngasDocs, prodsMeta, delStatuses,
 	delStatTable  = doDeliveryStatus( delStatuses )
 	msgTable      = doUnreadMessages( unreadMessages )
 
-	return htmlTemplate % (ousTable, msgTable, plTable, delStatTable, ngasTable, prodMetaTable )
+	return htmlTemplate % (ousTable, plTable, delStatTable, msgTable, ngasTable, prodMetaTable )
 
+@app.route('/resources/<path:path>')
+def send_js(path):
+    return send_from_directory( 'resources', path )
 
 @app.route("/")
 def dashboard():

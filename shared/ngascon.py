@@ -42,3 +42,10 @@ class NgasConnection():
         retcode,msg = self.dbcon.save( self.dbName, basename, file )
         # print( ">>> ngas retcode:", retcode, "msg:", msg )
         return 0 if (retcode==201) else retcode
+
+    def check( self, id ):
+        "Return true if we have a file with the given ID, false otherwise"
+        retcode,files = self.dbcon.findOne( self.dbName, id )
+        if retcode != 200:
+            raise RuntimeError( "NGAS: error %d: %s" % ( retcode,files ))
+        return True if ( len(files) > 0 ) else False

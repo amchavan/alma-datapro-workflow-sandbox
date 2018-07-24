@@ -6,6 +6,7 @@ import json
 import threading
 import http.server, socketserver
 import base64
+import time
 import datetime
 
 #
@@ -57,7 +58,7 @@ def setState( xtss, ousUID, state ):
     print(" [.] response: %s" % response)
     return response
 
-def setSubState( xtss, ousUID, state ):
+def setSubstate( xtss, ousUID, state ):
     "Set an OUS substate via the XTSS"
 
     request = '{"operation":"set-substate", "ousUID":"%s", "value":"%s"}' % (ousUID,state)
@@ -136,4 +137,28 @@ def nowISO():
 
 def encode( entityID ):
     return entityID.replace( ":", "_" ).replace( "/", "_" ).replace( "-", "_" )
+
+def incrementalSleep( startTime ):
+    '''
+        Returns the number of seconds to sleep waiting for an event to appear;
+        sleep time increases with how long we've been waiting already
+    '''
+    now = time.time()
+    waitingSince = now - startTime
+    sleep = -1
+    if waitingSince <= 60:
+        # waiting since a minute or less: sleep for one sec
+        sleep = 1
+    elif waitingSince <= 300:
+        # waiting since five minutes or less: sleep for 5 sec
+        sleep = 5
+    elif waitingSince <= 3600:
+        # waiting since one hour or less: sleep for 30 sec
+        sleep = 30
+    else:
+        # waiting since a long time: sleep for a minute
+        sleep = 60
+    # print( ">>> waitingSince: ", waitingSince, ", sleep for: ", sleep )
+    return sleep
+
 

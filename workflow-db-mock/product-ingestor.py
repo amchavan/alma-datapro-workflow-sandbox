@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import base64
 import sys
 # import random
 import argparse
@@ -12,60 +11,9 @@ from dbcon import DbConnection
 from ngascon import NgasConnection
 import dbdrwutils
 
-# Mock-up of the Producr Ingestor
+# Mock-up of the Product Ingestor
 # TODO
 
-# def savePlReport( ousUID, timestamp, encodedReport, productsDir, source ):
-# 	'''
-# 		Saves a pipeline run report to 'Oracle'
-# 	'''
-# 	plReport = {}
-# 	plReport['ousUID'] = ousUID
-# 	plReport['timestamp'] = timestamp
-# 	plReport['encodedReport'] = encodedReport
-# 	plReport['productsDir'] = productsDir
-# 	plReport['source'] = source
-# 	plReportID = timestamp + "." + ousUID
-
-# 	retcode,msg = dbcon.save( dbName, plReportID, plReport )
-# 	if retcode != 201:
-# 		raise RuntimeError( "Error saving Pipeline report: %d, %s" % (retcode,msg) )
-
-# def findMostRecentPlReport( ousUID ):
-# 	selector = { "selector": { "ousUID": ousUID }}
-# 	retcode,reports = dbcon.find( dbName, selector )
-# 	if len( reports ) == 0:
-# 		return None
-# 	if retcode != 200:
-# 		print( reports )
-# 		return None
-
-# 	# Find the most recent report and return it
-# 	reports.sort( key=lambda x: x['timestamp'], reverse=True )
-# 	return reports[0]
-
-# def findReadyForReview():
-# 	selector = {
-# 	   "selector": {
-# 	      "state": "ReadyForReview"
-# 	   }
-# 	}
-# 	retcode,ouss = dbcon.find( "status-entities", selector )
-# 	if len( ouss ) == 0:
-# 		return None
-# 	if retcode != 200:
-# 		print( ouss )
-# 		return None
-
-# 	ouss.sort( key=lambda x: x['entityId'])
-# 	return ouss
-	
-# def processQA2flag( ousUID, flag ):
-# 	"Flag should be one of 'F' (fail), 'P' (pass) or 'S' (semi-pass)"
-# 	newState = "ReadyForProcessing" if (flag == "F" ) else "Verified"
-# 	print( ">>> Setting the state of", ousUID, "to", newState )
-# 	# Set the OUS state according to the input flag
-# 	dbdrwutils.setState( xtss, ousUID, newState )
 def encode( entityID ):
 	return entityID.replace( ":", "_" ).replace( "/", "_" )
 
@@ -146,9 +94,6 @@ def callback( message ):
 	writeDeliveryStatus( progID, ousUID, timestamp, ingestedDataProds, complete=True )
 
 	setSubstate( ousUID, 'ProductsIngested' )
-
-
-
 
 
 ###################################################################
