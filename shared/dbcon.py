@@ -68,7 +68,7 @@ class DbConnection():
 		queryURL = "%s/%s/_all_docs" % (self.url, database)
 		headers = {'Accept': 'application/json'}
 		ret = requests.get( queryURL, headers=headers )
-		print( "find(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))
+		# print( "find(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))
 		return ret.status_code, json.loads( ret.text )['rows']
 
 	def delete( self, database, documentID, documentRev ):
@@ -76,6 +76,6 @@ class DbConnection():
 		url = "%s/%s/%s" % (self.url, database, self.__encodeEntityID( documentID ))
 		params = { "rev": documentRev }
 		ret = requests.delete( url, params=params )
-		print( "delete(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))
+		# print( "delete(): %s, %s: %s" % (ret.url, ret.status_code, ret.text ))
 		return ret.status_code, ret.text
 

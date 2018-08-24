@@ -8,6 +8,8 @@ import os
 #
 # A M Chavan, 30-Jun-2018
 
+### OBSOLETE, for reference only
+
 
 class Filter():
 	"""

@@ -35,10 +35,19 @@ def broadcastStateChange( ousUID, state, queue ):
 #     selector = recipeChangeSelector % recipe
 #     sendMsgToSelector( msg, selector, queue )
 
-def broadcastPipelineProcess( queue, progID, ousUID, recipe, executive ):
-    msg = '{"progID":"%s", "ousUID":"%s", "recipe":"%s"}' % (progID, ousUID, recipe)
-    selector = "pipeline.process.%s" % executive
-    sendMsgToSelector( msg, selector, queue )
+# def broadcastPipelineProcess( queue, progID, ousUID, recipe, executive ):
+#     msg = '{"progID":"%s", "ousUID":"%s", "recipe":"%s"}' % (progID, ousUID, recipe)
+#     selector = "pipeline.process.%s" % executive
+#     sendMsgToSelector( msg, selector, queue )
+
+def clearExecutive( xtss, ousUID ):
+    "Clear an OUS executive via the XTSS"
+
+    request = '{"operation":"clear-exec", "ousUID":"%s", "value":""}' % (ousUID)
+    print(" [x] Requesting %r" % request)
+    response = xtss.call( request )
+    print(" [.] response: %s" % response)
+    return response
 
 def setExecutive( xtss, ousUID, executive ):
     "Set an OUS executive via the XTSS"
@@ -111,7 +120,7 @@ def bgRunHttpServer( port, resourceDir ):
     '''
     bgRun( runHttpServer, (port,resourceDir) )
 
-def bgRun( function, args ):
+def bgRun( function, args=() ):
     '''
         Runs a function on a background thread.
         Parameter args should be a tuple including all

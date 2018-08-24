@@ -116,7 +116,7 @@ class MqConnection():
 		# See if we can even start listening: if we have a conditional expression
 		# and it evaluates to False we need to wait a bit
 		while ( condition and (condition() == False) ):
-			time.sleep( drwutils.incrementalSleep( callTime ))
+			time.sleep( dbdrwutils.incrementalSleep( callTime ))
 
 		while True:
 			retcode,messages = self.dbcon.find( self.queueName, selector )
@@ -162,7 +162,7 @@ class MqConnection():
 			raise RuntimeError( "No selectors to listen to" )
 
 		while True:
-			print( ">>> waiting for message on queue '%s' matching selector '%s' ..." % (self.queueName, selector))
+			# print( ">>> waiting for message on queue '%s' matching selector '%s' ..." % (self.queueName, selector))
 			message = self.getNext( selector, consume, fullMessage=fullMessage, condition=condition )
 			# print( ">>> got", message )
 			callback( message )
@@ -190,11 +190,11 @@ class Executor():
 	# request's body, then publish the response back to the original
 	# caller using the incoming message's msgbackID as selector
 	def __on_execution_request( self, message ):
-		print( ">>> message", message )
+		# print( ">>> message", message )
 		body = message['body']
-		print( " [*] calling %r on %r (pid=%s)" % (self.service, body, str(os.getpid())) )
+		# print( " [*] calling %r on %r (pid=%s)" % (self.service, body, str(os.getpid())) )
 		response = self.service( body )
-		print( " [*] response: %s" % response )
+		# print( " [*] response: %s" % response )
 		self.queue.send( response, message['msgbackID'])
 
 
