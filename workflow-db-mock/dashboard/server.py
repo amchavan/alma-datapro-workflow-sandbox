@@ -122,12 +122,12 @@ def renderOusTable( table, rows, cols ):
 		html += "<tr>"
 		for col in range( 0, cols ):
 			t = table[row][col]
-			ousUID,timestamp,substate = t if (t != None) else ("&nbsp;","&nbsp;",None)
+			ousUID,timestamp,substate,exec = t if (t != None) else ("&nbsp;","&nbsp;",None, "&nbsp;")
 			timestamp = timestamp.replace( 'T', '&nbsp;' )
 
 			ousUIDSpan    = '<span>%s</span>' % ousUID
 			timestampSpan = '<span class="smalltext">%s</span>' % timestamp
-			substateSpan  = ('<span class="smalltext">%s</span>' % substate) if substate else ""
+			substateSpan  = ('<span class="smalltext">%s %s</span>' % (substate,exec)) if substate else ""
 
 			html += (htmlCellTemplate % (ousUIDSpan,substateSpan,timestampSpan))
 		html += "</tr>\n"
@@ -165,12 +165,23 @@ def doOusStatusTable( ousStatuses ):
 		#print( "before: table = %s" % (table))
 		#print( "        state = %s" % (state))
 		#print( "table[%d][%d] = %s" % (row,column,state))
-		table[row][column] = (ousStatus['entityId'], ousStatus['timestamp'], ousStatus['substate'])
+		exec = extractExec( ousStatus )
+		table[row][column] = (ousStatus['entityId'], ousStatus['timestamp'], ousStatus['substate'], exec )
 		# print( "after: table = %s" % (table))
 		currentState = state
 
 	ousTable = renderOusTable( table, rows+1, numStates )
 	return ousTable
+
+def extractExec( ousStatus ):
+	flags = ousStatus['flags']
+	flag = 'PL_PROCESSING_EXECUTIVE'
+	if flag in flags:
+		return flags[flag]
+	else:
+		return ''
+		
+
 
 def doPipelineReports( pipelineReports ):
 	pipelineReports = sorted( pipelineReports, key=compareByTimestamp, reverse=True )

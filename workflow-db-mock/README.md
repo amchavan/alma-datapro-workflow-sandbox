@@ -37,14 +37,13 @@ It's used in its default configuration.
 
 ### launcher.py
 
-Temporary (?) component, creates status entities and launches a Pipeline run.  
+Infrastructure component, creates status entities.  
 Usage:  
-`launcher.py [-h] progID ousUID recipe exec`
+`launcher.py [-h] progID ousUID`
 
-where _progID_ is the ID of the project containing the OUS, _ousUID_ is the ID of the OUS that should be processed,
-_recipe_ is the Pipeline recipe (currently unused) and _exec_ is the Executive where this pipeline is running.  
+where _progID_ is the ID of the project containing the OUS, _ousUID_ is the ID of the OUS that should be processed.  
 For instance:  
-`./launcher.py 2015.1.00657.S uid://X1/X1/Xb2 PipelineCalibration EU`
+`./launcher.py 2015.1.00657.S uid://X1/X1/Xb2`
 
 If needed, it creates a status entity for the OUS, then sends message to the Pipeline Driver on the `pipeline.process.EU` selector.
 
@@ -111,7 +110,7 @@ replicated-cache.py [-h] [-e EXEC] [-lc LCACHE] [-eac EACACHE]
 where _EXEC_ is the Executive where this cache driver is running, one of *EA*, *EU*, *JAO* or *NA*; _LCACHE_ is the absolute pathname of the local cache directory; *EACACHE* is the `rsync` location of the EA cache directory,  _username@host:dir_ (or simply _dir_);  *EUCACHE* for the EU cache dir and *NACACHE* for the NA cache directory. For instance:  
 `./replicated-cache.py -e JAO -lc /tmp/local -euc /tmp/EU`
 
-It expects the body of the request to be a JSON document:  
+It listens for message sent to _cached.EXEC_ and expects the body of the request to be a JSON document:  
 ```
   {
     "fileType":"weblog",
@@ -122,7 +121,7 @@ It expects the body of the request to be a JSON document:
 where _fileType_ can be _weblog_, _productsdir_, ...
 
 It will then replicate the file or directory from the _cachedAt_ executive to JAO using the _XXCACHE_ spec given on the command line.
-If the file type is Weblog, the zipped file is expanded and can be served to a browser by an embedded HTTP server, visiting for instance  `http://localhost:8000/weblog-X1-X1-Xa1-2018-07-19T07:10:03.781`
+If the file type is Weblog, the zipped file is expanded and can be served to a browser by an embedded HTTP server, visiting for instance  `http://localhost:8000/weblogs/weblog-X1-X1-Xa1-2018-07-19T07:10:03.781`
 
 ### xtss.py
 
@@ -135,7 +134,6 @@ It listens on selector _xtss_ and expects the body of the request to be a JSON d
 `{ "operation":"...", "ousUID":"uid://A003/X1/X1a", "value":"..."}`
 where _operation_ can be one of _set-state_, _set-exec_, _set-exec_ , ...; and the meaning of _value_ depends on the command. For instance:  
 `{"operation":"set-state", "ousUID":"uid://X1/X1/Xb2", "value":"ReadyForProcessing"}`  
-Returns `201` (created) if all was well.
 
 ### aqua-qa2.py
 

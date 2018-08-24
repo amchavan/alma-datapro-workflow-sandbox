@@ -24,7 +24,6 @@ import time
 
 tempDir = tempfile.mkdtemp( prefix="drw-" )
 
-
 def zipDirectory( dirname, workingDirectory ):
     zipfile = dirname + ".zip"
     completed = subprocess.run( ["zip", "-r", zipfile , dirname], cwd=workingDirectory  )
@@ -38,7 +37,7 @@ def plProductsDirname( progID, ousUID ):
 	now = datetime.datetime.utcnow().isoformat()[:-3]
 	dirname = encode( progID + "_" + now )
 	dirname = os.path.join( dirname, "SOUS", "GOUS", encode( ousUID ), "products" )
-	print( ">>> products dirname: ", dirname )
+	print( ">>> Pipeline: products dirname: ", dirname )
 	return dirname,now
 
 # Copied from shared/dbdrwutils.py -- keep in sync!
@@ -78,9 +77,9 @@ def makeWeblog( progID, ousUID, timestamp ):
 	os.makedirs( weblogDir )
 	with open( weblogIndex, 'w') as text_file:
 		text_file.write( html )
-	print( ">>> Weblog index.html:", weblogIndex )
+	print( ">>> Pipeline: Weblog index.html:", weblogIndex )
 	retcode,zipfile = zipDirectory( weblogBasedir, tempDir )
-	print( ">>> zipfile:", zipfile )
+	print( ">>> Pipeline: zipfile:", zipfile )
 	return zipfile
 
 def makePipelineReport( progID, ousUID, timestamp ):
@@ -114,7 +113,7 @@ def makePipelineReport( progID, ousUID, timestamp ):
 	plReportFile = os.path.join( tempDir, plReportFile )
 	with open( plReportFile, 'w') as text_file:
 		text_file.write( plReport )
-	print( ">>> plReport:", plReportFile )
+	print( ">>> Pipeline: plReport:", plReportFile )
 	return plReportFile
 
 def makeDataProduct( ousUID, timestamp, n ):
@@ -126,24 +125,28 @@ def makeDataProduct( ousUID, timestamp, n ):
 	dataProdFile = os.path.join( tempDir, dataProdFile )
 	with open( dataProdFile, 'w') as text_file:
 		text_file.write( dataProd )
-	print( ">>> dataProd:", dataProdFile )
+	print( ">>> Pipeline: dataProd:", dataProdFile )
 	return dataProdFile
 
 ###################################################################
 ## Main program
 ###################################################################
 
-# TODO Pass in a processing recipe
+# Make sure we know where we are
+executive = os.environ.get( 'DRAWS_LOCATION' )
+if executive == None:
+    raise RuntimeError( "DRAWS_LOCATION env variable is not defined" )
+
 parser = argparse.ArgumentParser( description='ALMA Pipeline mock-up' )
 parser.add_argument( dest="progID", help="ID of the project containing the OUS" )
-parser.add_argument( dest="ousUID",  help="ID of the OUS that should be processed" )
-parser.add_argument( dest="exec",   help="Executive where this pipeline is running" )
+parser.add_argument( dest="ousUID", help="ID of the OUS that should be processed" )
+parser.add_argument( dest="recipe", help="Pipeline recipe to run" )
 args=parser.parse_args()
 ousUID = args.ousUID
 progID = args.progID
-executive = args.exec
+recipe = args.recipe
 
-print(" [x] Launching Pipeline on OUS %s, program %s, directory %s (%s)" % (ousUID, progID, os.getcwd(), executive))
+print( ">>> Pipeline: Launching on OUS %s, program %s, recipe %s, directory %s (%s)" % (ousUID, progID, recipe, os.getcwd(), executive))
 
 # Pretend we're doing something
 waitTime = random.randint(3,8)

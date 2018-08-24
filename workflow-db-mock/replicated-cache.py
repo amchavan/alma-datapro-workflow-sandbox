@@ -123,9 +123,9 @@ def callback( message ):
     request = dbdrwutils.jsonToObj( message )
 
     if request.fileType == "weblog":
-        processWeblog( args.exec, request.name, request.cachedAt )
+        processWeblog( location, request.name, request.cachedAt )
     elif request.fileType == "productsdir":
-        processProductsDir( args.exec, request.name, request.cachedAt )
+        processProductsDir( location, request.name, request.cachedAt )
     else:
         raise RuntimeError( "Unsupported fileType: " + request.fileType )
 
@@ -136,8 +136,12 @@ def callback( message ):
 ## Main program
 ###################################################################
 
+# Make sure we know where we are
+location = os.environ.get( 'DRAWS_LOCATION' )
+if location == None:
+    raise RuntimeError( "DRAWS_LOCATION env variable is not defined" )
+
 parser = argparse.ArgumentParser( description='Replicated cache' )
-parser.add_argument( "--exec",       "-e",    dest="exec",     help="Where this cache driver is running: one of 'EA', 'EU', 'JAO' or 'NA'" )
 parser.add_argument( "--eacache",    "-eac",  dest="eacache",  help="Absolute pathname or rsync location of the EA cache dir" )
 parser.add_argument( "--nacache",    "-nac",  dest="nacache",  help="Absolute pathname or rsync location of the NA cache dir" )
 parser.add_argument( "--eucache",    "-euc",  dest="eucache",  help="Absolute pathname or rsync location of the EU cache dir" )
@@ -145,7 +149,7 @@ parser.add_argument( "--lcache",     "-lc",   dest="lcache",   help="Absolute pa
 parser.add_argument( "--port",       "-p",    dest="port",     help="Port number of the Web server, dafault is 8000", default=8000 )
 args=parser.parse_args()
 
-listen_to = "cached." + args.exec
+listen_to = "cached." + location
 port = int(args.port)
 mq = MqConnection( 'localhost', 'msgq', listen_to )
 ngas = NgasConnection()

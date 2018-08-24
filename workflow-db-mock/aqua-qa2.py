@@ -98,6 +98,7 @@ def callback( message ):
 	
 	# Save the report to Oracle
 	savePlReport( ousUID, timestamp, encodedReport, productsDir, source )
+	print( ">>> AQUA/QA2: saved PL report: ousUID=%s, timestamp=%s" % (ousUID,timestamp) )
 
 
 ###################################################################

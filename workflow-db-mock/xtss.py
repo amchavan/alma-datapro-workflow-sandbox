@@ -18,7 +18,7 @@ def __nowISO():
     return datetime.datetime.utcnow().isoformat()[:-3]
 
 def findOUSStatus( ousUID ):
-    "Find an OUSStatus with the given ID, create a new one if none are found"
+    "Find an OUSStatus with the given ID, raise an error if none are found"
 
     retcode,ousStatus = dbcon.findOne( dbName, ousUID )
     if retcode == 404:
@@ -41,33 +41,80 @@ def setSubstate( ousUID, substate ):
     "Set the substate of an OUSStatus"
     return setField( ousUID, 'substate', substate )
 
-# def setPipelineRecipe( ousUID, recipe ):
-#     "Set the pipeline recipe of an OUSStatus"
-#     return setField( ousUID, 'pipeline-recipe', recipe )
-
 def setExecutive( ousUID, executive ):
     "Set the Executive of an OUSStatus"
-    return setField( ousUID, 'executive', executive )
+    return setFlag( ousUID, 'PL_PROCESSING_EXECUTIVE', executive )
+
+def clearExecutive( ousUID ):
+    "Clear the Executive of an OUSStatus"
+    return clearFlag( ousUID, 'PL_PROCESSING_EXECUTIVE' )
+
+def setFlag( ousUID, name, value ):
+    "Set an OUSStatus flag"
+    ousStatus = findOUSStatus( ousUID )
+    if 'flags' in ousStatus:
+        flags = ousStatus['flags']
+    else:
+        flags = {}
+    flags[name] = value
+    return setField( ousUID, 'flags', flags )
+
+def clearFlag( ousUID, name ):
+    "Clear an OUSStatus flag"
+    ousStatus = findOUSStatus( ousUID )
+    if 'flags' in ousStatus:
+        flags = ousStatus['flags']
+    else:
+        flags = {}
+    del flags[name]
+    return setField( ousUID, 'flags', flags )
+
+def findByStateSubstate( state, substate ):
+	"""
+		Returns a return code and, if all was well and the code is 200, 
+        all OUSs with the given state and substate; note substate is
+        interpreted as a regexp
+	"""
+	selector = {
+	   "selector": {
+			"state": state,
+			"substate": { "$regex": substate }
+       }
+	}
+	retcode,ouss = dbcon.find( "status-entities", selector )
+	if retcode == 200:
+	    ouss.sort( key=lambda x: x['entityId'])
+	return retcode,ouss
+
+
 
 def xtss( body ):
     """
-        Expects the body of the request to be a JSON document including fields
-        "operation", "ousUID" and "value":
-            {"operation":"...", "ousUID":"...", "value":"..."}
-        where value depends on the command. For instance:
+        Expects the body of the request to be a JSON document including field
+        "operation". The name and value of other fields depend on 
+        the operation itself. For instance:
             { 
                 "operation":"set-state", 
                 "ousUID":"uid://A003/X1/X1a", 
                 "value":"ReadyForReview"
             }
+        or:
+            { 
+                "operation":"get-ouss-by-state-substate", 
+                "state":"ReadyForProcessing", 
+                "substate":"^Pipeline"
+            }
 
-        Returns 201 (created) if all was well.
+        For 'set' operations, returns 201 (created) if all was well.
+        For 'get' operations, returns .
     """
     print(" [*] request: " + body )
     request = dbdrwutils.jsonToObj( body )
     operation = request.operation
-    ousUID = request.ousUID
-    value = request.value
+
+    if operation.startswith( "set-" ):
+        ousUID = request.ousUID
+        value = request.value
 
     if operation == "set-state":
         retcode = setState( ousUID=ousUID, state=value )
@@ -80,6 +127,20 @@ def xtss( body ):
     elif operation == "set-exec":
         retcode = setExecutive( ousUID=ousUID, executive=value )
         return retcode
+
+    elif operation == "clear-exec":
+        ousUID = request.ousUID
+        retcode = clearExecutive( ousUID=ousUID )
+        return retcode
+
+    elif operation == "get-ouss-by-state-substate":
+        # Currently unused
+        state = request.state
+        substate = request.substate
+        retcode,ouss = findByStateSubstate( state, substate )
+        if retcode != 200:
+            return retcode
+        return ouss
 
     else:
         return "Unsupported operation: " + operation

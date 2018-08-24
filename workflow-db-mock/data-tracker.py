@@ -82,6 +82,7 @@ while True:
 			if allReplicated:
 				dbdrwutils.setState( xtss, ousUID, "Delivered" )
 				dbdrwutils.setSubstate( xtss, ousUID, "" )
+				dbdrwutils.clearExecutive( xtss, ousUID )
 				time.sleep( 5 )	# Pretend this actually took some time
 
 	dbdrwutils.incrementalSleep( startTime )

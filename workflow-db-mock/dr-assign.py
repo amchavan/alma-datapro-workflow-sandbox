@@ -7,7 +7,9 @@ import argparse
 import random
 import dbdrwutils
 
-# Mock-up of DRAssign
+## OBSOLETE -- For reference only
+## 
+## Mock-up of DRAssign
 
 listen_to = dbdrwutils.recipeChangeListener
 mq = MqConnection( 'localhost', 'msgq', listen_to )
