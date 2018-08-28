@@ -71,7 +71,7 @@ def replicateIfNeeded( my_exec, name, cachedAt ):
 
     # Get the file or directory over here
     rep_from = os.path.join( location, name )
-    rep_to   = args.lcache
+    rep_to   = lcache
     retcode  = replicate( rep_from, rep_to )
     if retcode != 0:
         raise RuntimeError( "replicate %s %s: failed: errno: %d" % (rep_from, rep_to, retcode) )
@@ -83,15 +83,15 @@ def processWeblog( my_exec, filename, cachedAt ):
     replicateIfNeeded( my_exec, filename, cachedAt )
 
     # Now expand the weblog
-    retcode = unzip( filename, args.lcache )
+    retcode = unzip( filename, lcache )
     if retcode != 0:
-        raise RuntimeError( "unzip %s %s: failed: errno: %d" % (filename, args.lcache, retcode) )
+        raise RuntimeError( "unzip %s %s: failed: errno: %d" % (filename, lcache, retcode) )
 
     # If we're at JAO: save the Weblog in NGAS (will
     # be replicated to the ARCs)
     if my_exec != "JAO":
         return
-    weblogPathname = os.path.join( args.lcache, filename )
+    weblogPathname = os.path.join( lcache, filename )
     retcode = ngas.put( weblogPathname )
     if retcode != 0:
         raise RuntimeError( "NGAS put %s: failed: errno: %d" % (weblogPathname, retcode) )
@@ -141,19 +141,23 @@ location = os.environ.get( 'DRAWS_LOCATION' )
 if location == None:
     raise RuntimeError( "DRAWS_LOCATION env variable is not defined" )
 
+# Make sure we know where the local replicated cache directory is
+lcache = os.environ.get( 'DRAWS_REPLICATED_CACHE' )
+if lcache == None:
+    raise RuntimeError( "DRAWS_REPLICATED_CACHE env variable is not defined" )
+
 parser = argparse.ArgumentParser( description='Replicated cache' )
 parser.add_argument( "--eacache",    "-eac",  dest="eacache",  help="Absolute pathname or rsync location of the EA cache dir" )
 parser.add_argument( "--nacache",    "-nac",  dest="nacache",  help="Absolute pathname or rsync location of the NA cache dir" )
 parser.add_argument( "--eucache",    "-euc",  dest="eucache",  help="Absolute pathname or rsync location of the EU cache dir" )
-parser.add_argument( "--lcache",     "-lc",   dest="lcache",   help="Absolute pathname of the local cache dir" )
-parser.add_argument( "--port",       "-p",    dest="port",     help="Port number of the Web server, dafault is 8000", default=8000 )
+parser.add_argument( "--port",       "-p",    dest="port",     help="Port number of the embedded Web server, default is 8000", default=8000 )
 args=parser.parse_args()
 
 listen_to = "cached." + location
 port = int(args.port)
 mq = MqConnection( 'localhost', 'msgq', listen_to )
 ngas = NgasConnection()
-dbdrwutils.bgRunHttpServer( port, args.lcache )
+dbdrwutils.bgRunHttpServer( port, lcache )
 print(' [*] Waiting for messages matching %s' % (listen_to) )
 mq.listen( callback )
 

@@ -1,6 +1,7 @@
 # Data Processing Workflow Sandbox -- System mockup
 
-This is a mockup of the Data Processing Workflow system as shown [here](https://drive.google.com/file/d/11dwEzQyKbKvUbyV__czR1KUtYUBSSo7k/view?usp=sharing), demonstrating that it can be implemented as a asynchronous message-based system. It's based on a pipeline of components communicating via broadcasting messages plus a module (simulating the XTSS) implementing an RPC-like executor.
+This is a mockup of the Data Processing Workflow system as shown [here](https://drive.google.com/file/d/1ZOBstezIVuuSk9BTgO9LrMb2INlfKTbj/view?usp=sharing)
+and [here](https://drive.google.com/file/d/11dwEzQyKbKvUbyV__czR1KUtYUBSSo7k/view?usp=sharing), demonstrating that it can be implemented as an asynchronous message-based system. It's based on a pipeline of components communicating via a messages-passing bus, including a module (simulating the XTSS) implementing an RPC-like executor.
 
 This version implements stages _ReadyForProcessing_, _Processing_,
 _ProcessingProblem_, _ReadyForReview_, _Reviewing_, _Verified_, _DeliveryInProgress_, _Delivered_ of the
@@ -14,20 +15,20 @@ _ProcessingProblem_, _ReadyForReview_, _Reviewing_, _Verified_, _DeliveryInProgr
 * A running instance of [CouchDB](couchdb.apache.org)
 * The [Requests](http://docs.python-requests.org/en/master) Python package to communicate with the database
 
+<!-- 
 For this module, and in contrast to what is listed
 [here](../README.md), you will not need the
 [Pika package](https://pika.readthedocs.io/en/0.11.2/) or
 [RabbitMQ 3.7.x](https://www.rabbitmq.com/)
-
+-->
 
 ## Modules
 
 ### The message bus
 
-*TODO*
-* Based on CouchDB
-* It works
-* *Notice* To reduce the amount of polling the bus uses a simple algorithm that extends the sleep intervals progressively. In practice that means, after a period of inactivity the message queue may take some time to react to new messages.
+See the sec. "Message bus" of the [DRAWS System Architecture Document](https://docs.google.com/document/d/1JQJUDraWk5ipAxgfIP5FoLXRGRnb_F4WeKDvXa2kwxU/edit?usp=sharing)
+
+*Notice* To reduce the amount of polling the bus uses a simple algorithm that extends the sleep intervals progressively. That means, after a period of inactivity the message queue may take some time to react to new messages.
 
 
 ### CouchDB
@@ -45,17 +46,33 @@ where _progID_ is the ID of the project containing the OUS, _ousUID_ is the ID o
 For instance:  
 `./launcher.py 2015.1.00657.S uid://X1/X1/Xb2`
 
-If needed, it creates a status entity for the OUS, then sends message to the Pipeline Driver on the `pipeline.process.EU` selector.
+If needed, it creates (or resets) a status entity for the OUS in the _ReadyForProcessing_ state, with no substate (Pipeline recipe).
 
-### pipeline-driver.py
+### aqua-batch-helper.py
+Mock of AQUA Batch Helper. Usage:  
+`./aqua-batch-helper.py`  
 
-Mocks the replacement for DARED.  
-Usage:  
-`pipeline-driver.py [-h] [-mr maxruns] exec cache`  
-where _exec_ is the executive where this driver is running ( one of 'EA', 'EU', 'JAO' or 'NA') and _cache_ is the absolute pathname of the replicating cache directory. Optional parameter _maxruns_ indicates how many Pipeline executions may run in parallel; defaults to 1. For instance:  
-`./pipeline-driver.py -mr EU /tmp/EU`
+A **background thread** polls the database for instances of _ReadyForProcessing_ state with no substate. When one is found a Pipeline recipe is selected (in some random way) and assigned.
 
-It listens on the `pipeline.process.EU` selector and expects the message to include the Observing Program ID, OUS ID and the Pipeline processing recipe, for instance:
+### dra.py
+Mock of Data Reducer Assignment tool. Usage:  
+`./dra.py`  
+Depends on the value of the DRAWS_LOCATION environment variable, one of _EA_, _EU_, _JAO_ and _NA_.
+
+This is an interactive application. A text-based user interface allows rudimentary assignment of an OUS to an executive/location for Pipeline processing. _ReadyForProcessing_ OUSs with no substate (PL recipe) are displayed: when one is selected it transitions to the _Processing_ state and it's assigned to the current location (by setting the PL_PROCESSING_EXECUTIVE flag).
+
+Finally, a message is sent to Torque/Maui on the `pipeline.process.<loc>` selector, where &lt;loc&gt; is the current location, simulating the Torque/Maui interface.
+
+
+### torque-maui.py
+
+Mock of Torque/Maui resource management and scheduling tools. Usage:  
+`./torque-maui.py [-x MAXEXECUTIONS]`  
+where optional parameter _MAXEXECUTIONS_ indicates how many Pipeline executions may run in parallel; defaults to 1.
+
+The script depends on the value of the DRAWS_LOCATION environment variable, one of _EA_, _EU_, _JAO_ and _NA_.
+
+It listens for messages on `matching pipeline.process.<loc>` selector, where &lt;loc&gt; is the current location, and expects the message to include the Observing Program ID, OUS ID and the Pipeline processing recipe. For instance:
 ```
   {
     "progID":"2015.1.00657.S",
@@ -63,6 +80,19 @@ It listens on the `pipeline.process.EU` selector and expects the message to incl
     "recipe":"PipelineCalibration"
   }
 ```
+Upon reception, `pipeline-driver.py` is launched as a subprocess.
+
+
+### pipeline-driver.py
+
+Mocks the replacement for DARED.  
+Usage:  
+`pipeline-driver.py [-h] [-mr maxruns] progID ousUID recipe`  
+where _progID_ is the the ObsProgram ID (something like _2015.1.00657.S_), _ousUID_ is the OUS UID (for instance _uid://X1/X1/Xb2_) and _recipe_ is one of the Pipeline recipes, like _PipelineCalibration_.  
+For instance:    
+`./pipeline-driver.py 2015.1.00657.S uid://X1/X1/Xb2 PipelineCalibration`
+
+The script depends on the value of environment variables DRAWS_LOCATION (one of _EA_, _EU_, _JAO_, _NA_) and DRAWS_REPLICATED_CACHE, the absolute pathname of the local replicated cache directory.
 
 When a message arrives:
 * Sets the OUS to _Processing_
@@ -104,13 +134,18 @@ Note that we don't need to keep track of the actual UIDs of the Science Goal and
 Implements an `rsync` based replicator, used to copy files from the ARCs to JAO. For instance, Pipeline product directories and Weblogs produced at the ARCs are copied to a local (ARC) cache, then replicated to JAO.  
 Usage:
 ```
-replicated-cache.py [-h] [-e EXEC] [-lc LCACHE] [-eac EACACHE]
-  [--euc EUCACHE] [--nac NACACHE]
+replicated-cache.py [-eac EACACHE] [--euc EUCACHE] [--nac NACACHE] [-p PORT]
 ```
-where _EXEC_ is the Executive where this cache driver is running, one of *EA*, *EU*, *JAO* or *NA*; _LCACHE_ is the absolute pathname of the local cache directory; *EACACHE* is the `rsync` location of the EA cache directory,  _username@host:dir_ (or simply _dir_);  *EUCACHE* for the EU cache dir and *NACACHE* for the NA cache directory. For instance:  
-`./replicated-cache.py -e JAO -lc /tmp/local -euc /tmp/EU`
+where PORT is the port number of the embedded Web server (default is 8000), EACACHE is the `rsync` location of the EA cache directory,  _username@host:dir_ (or simply _dir_);  EUCACHE for the EU cache dir and NACACHE for the NA cache directory. 
 
-It listens for message sent to _cached.EXEC_ and expects the body of the request to be a JSON document:  
+The script depends on the value of environment variables DRAWS_LOCATION (one of _EA_, _EU_, _JAO_, _NA_) and DRAWS_REPLICATED_CACHE, the absolute pathname of the local replicated cache directory. 
+
+Note that parameters _eac_, _euc_ and _nac_ are only meaningful if DRAWS_LOCATION=JAO; that is, if we are mocking the JAO installation of the replicated cache, which needs to know about the Executives' installations.
+
+For instance:  
+`./replicated-cache.py -euc /tmp/EU`
+
+It listens for message sent to _cached.&lt;EXEC&gt;_ and expects the body of the request to be a JSON document:  
 ```
   {
     "fileType":"weblog",
@@ -120,7 +155,7 @@ It listens for message sent to _cached.EXEC_ and expects the body of the request
 ```
 where _fileType_ can be _weblog_, _productsdir_, ...
 
-It will then replicate the file or directory from the _cachedAt_ executive to JAO using the _XXCACHE_ spec given on the command line.
+It will then replicate the file or directory from the _cachedAt_ executive to JAO using the _XXCACHE_ spec given on the command line.  
 If the file type is Weblog, the zipped file is expanded and can be served to a browser by an embedded HTTP server, visiting for instance  `http://localhost:8000/weblogs/weblog-X1-X1-Xa1-2018-07-19T07:10:03.781`
 
 ### xtss.py
@@ -151,6 +186,7 @@ A **background thread** listens on selector `pipeline.report.JAO` for requests t
 }
 ```
 When the message arrives a new entry is created in the `pipeline-reports` database.
+
 
 In the **foreground**, a text-based user interface allows rudimentary QA2 review of a Pipeline execution. Once an OUS is selected its state is set to _Reviewing_ and the user can examine the Pipeline report and the Weblog. If the QA2 flag is set to _Fail_ the OUS state is reset to _ReadyForProcessing_.
 
