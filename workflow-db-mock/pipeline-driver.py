@@ -96,7 +96,11 @@ def wrapPipeline( progID, ousUID, recipe ):
 	print( ">>> PipelineDriver: Replicating dir name:", repCacheDir )
 	copyAndReplaceDir( productsDir, repCacheDir )
 
-	message = '{"fileType":"productsdir", "cachedAt":"%s", "name": "%s"}' % (location,productsBasedir)
+	# message = '{"fileType":"productsdir", "cachedAt":"%s", "name": "%s"}' % (location,productsBasedir)
+	message = {}
+	message["fileType"] = "productsdir"
+	message["cachedAt"] = location
+	message["name"]     = productsBasedir
 	selector = "cached.JAO"
 	mq.send( message, selector )
 
@@ -107,7 +111,12 @@ def wrapPipeline( progID, ousUID, recipe ):
 	print( ">>> PipelineDriver: weblog: copying", weblog, "to", replicatedCache )
 	shutil.copy( weblog, replicatedCache )
 
-	message = '{"fileType":"weblog", "cachedAt":"%s", "name": "%s"}' % (location, os.path.basename( weblog ))
+	# message = '{"fileType":"weblog", "cachedAt":"%s", "name": "%s"}' % (location, os.path.basename( weblog ))
+	message = {}
+	message["fileType"] = "weblog"
+	message["cachedAt"] = location
+	message["name"]     = os.path.basename( weblog )
+
 	selector = "cached.JAO"
 	mq.send( message, selector )
 	if replicatedCache != "JAO":
@@ -129,7 +138,7 @@ def wrapPipeline( progID, ousUID, recipe ):
 			"productsDir": "%s"
 		}
 		''' % (ousUID, timestamp, replicatedCache, plReport, productsBasedir)
-	message = message.replace( '\n','')
+	message = json.loads( message )		# convert to a Python dict
 	selector = "pipeline.report.JAO"
 	mq.send( message, selector )
 	

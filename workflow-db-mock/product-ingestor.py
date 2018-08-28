@@ -62,10 +62,9 @@ def callback( message ):
 	"""
 
 	print( ">>> message:", message )
-	request = dbdrwutils.jsonToObj( message )
-	ousUID = request.ousUID
-	timestamp = request.timestamp
-	productsDir = request.productsDir
+	ousUID = message["ousUID"]
+	timestamp = message["timestamp"]
+	productsDir = message["productsDir"]
 
 	setSubstate( ousUID, 'IngestionTriggered' )
 
@@ -111,7 +110,7 @@ parser = argparse.ArgumentParser( description='Product ingestor mock-up' )
 parser.add_argument( dest="cache", help="Absolute pathname of the replicating cache dir" )
 args=parser.parse_args()
 
-print(' [*] Waiting for messages matching %s' % (select) )
+print(' [*] Waiting for messages matching', select )
 mq.listen( callback )
 
 

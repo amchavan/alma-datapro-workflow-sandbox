@@ -45,8 +45,8 @@ location = os.environ.get( 'DRAWS_LOCATION' )
 if location == None:
     raise RuntimeError( "DRAWS_LOCATION env variable is not defined" )
 
-xtss   = ExecutorClient( 'localhost', 'msgq', 'xtss' )
-mq     = MqConnection( 'localhost', 'msgq' )
+xtss = ExecutorClient( 'localhost', 'msgq', 'xtss' )
+mq   = MqConnection( 'localhost', 'msgq' )
 
 # This is the program's text-based UI
 # Loop forever:
@@ -86,8 +86,12 @@ while True:
 	dbdrwutils.setExecutive( xtss, ousUID, location )
 
 	# Launch the Pipeline Driver on Torque/Maui (pretending it listens to messages)
-	msgTemplate = '{ "ousUID" : "%s", "recipe" : "%s", "progID" : "%s" }'
-	message = msgTemplate % (ousUID, ous["substate"], ous["progID"])
+	message = {}
+	message['ousUID'] = ousUID
+	message['recipe'] = ous["substate"]
+	message['progID'] = ous["progID"]
+	# msgTemplate = '{ "ousUID" : "%s", "recipe" : "%s", "progID" : "%s" }'
+	# message = msgTemplate % (ousUID, ous["substate"], ous["progID"])
 	torque = "pipeline.process." + location
 	dbdrwutils.sendMsgToSelector( message, torque, mq )
 

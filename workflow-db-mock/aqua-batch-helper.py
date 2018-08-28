@@ -11,10 +11,14 @@ import dbdrwutils
 # TODO
 
 recipes = [
+    
     "ManualCalibration",
-    "ManualImaging",
-    "ManualSingleDish",
-    "ManualCombination",
+    # Most manual recipes commented out because we don't want
+    # too many of them in this mockup
+#    "ManualImaging",
+#    "ManualSingleDish",
+#    "ManualCombination",
+
     "PipelineCalibration",
     "PipelineImaging",
     "PipelineSingleDish",

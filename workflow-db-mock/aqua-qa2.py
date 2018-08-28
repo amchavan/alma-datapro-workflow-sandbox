@@ -87,12 +87,11 @@ def callback( message ):
 	"""
 
 	# print( ">>> message:", message )
-	request = dbdrwutils.jsonToObj( message )
-	ousUID = request.ousUID
-	source = request.source	
-	encodedReport = request.report
-	timestamp = request.timestamp
-	productsDir = request.productsDir
+	ousUID        = message["ousUID"]
+	source        = message["source"]
+	encodedReport = message["report"]
+	timestamp     = message["timestamp"]
+	productsDir   = message["productsDir"]
 	# report = dbdrwutils.b64decode( encodedReport )
 	# print( ">>> report:", report )
 	
@@ -177,6 +176,10 @@ while True:
 	selector = "ingest.JAO"
 	message = '{"ousUID" : "%s", "timestamp" : "%s", "productsDir" : "%s"}' % \
 		(ousUID, timestamp, productsDir)
+	message = {}
+	message["ousUID"]      = ousUID
+	message["timestamp"]   = timestamp
+	message["productsDir"] = productsDir
 	mq.send( message, selector )
 
 	# Wait some, mainly for effect

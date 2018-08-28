@@ -4,7 +4,6 @@ import argparse
 import sys
 
 sys.path.insert(0, "../shared")
-from dbmsgq import MqConnection
 from dbcon import DbConnection
 import dbdrwutils
 
@@ -24,18 +23,18 @@ progID = args.progID
 dbName  = "status-entities"
 baseUrl = "http://localhost:5984" # CouchDB
 dbcon = DbConnection( baseUrl )
-mq = MqConnection( 'localhost', 'msgq' )
 
 # If we have one already, delete it
-retcode,ousStatus = dbcon.findOne( dbName, ousUID )
+retcode,ous = dbcon.findOne( dbName, ousUID )
 if retcode == 200:
-    dbcon.delete( dbName, ousUID, ousStatus["_rev"] )
+    dbcon.delete( dbName, ousUID, ous["_rev"] )
 
 # Prepare a new record and write it
-ousStatus = {}
-ousStatus['entityId'] = ousUID
-ousStatus['progID'] = progID
-ousStatus['state'] = "ReadyForProcessing"
-ousStatus['flags'] = {}
-ousStatus['timestamp'] = dbdrwutils.nowISO()
-dbcon.save( dbName, ousUID, ousStatus )
+ous = {}
+ous['entityId'] = ousUID
+ous['progID'] = progID
+ous['state'] = "ReadyForProcessing"
+ous['flags'] = {}
+ous['timestamp'] = dbdrwutils.nowISO()
+r,t = dbcon.save( dbName, ousUID, ous )
+print( ">>> retcode:", r )

@@ -108,13 +108,12 @@ def xtss( body ):
         For 'set' operations, returns 201 (created) if all was well.
         For 'get' operations, returns .
     """
-    print(" [*] request: " + body )
-    request = dbdrwutils.jsonToObj( body )
-    operation = request.operation
+    print(" [*] request: ", body )
+    operation = body["operation"]
 
     if operation.startswith( "set-" ):
-        ousUID = request.ousUID
-        value = request.value
+        ousUID = body["ousUID"]
+        value = body["value"]
 
     if operation == "set-state":
         retcode = setState( ousUID=ousUID, state=value )
@@ -129,14 +128,14 @@ def xtss( body ):
         return retcode
 
     elif operation == "clear-exec":
-        ousUID = request.ousUID
+        ousUID = body["ousUID"]
         retcode = clearExecutive( ousUID=ousUID )
         return retcode
 
     elif operation == "get-ouss-by-state-substate":
         # Currently unused
-        state = request.state
-        substate = request.substate
+        state = body["state"]
+        substate = body["substate"]
         retcode,ouss = findByStateSubstate( state, substate )
         if retcode != 200:
             return retcode

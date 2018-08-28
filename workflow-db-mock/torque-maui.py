@@ -21,8 +21,7 @@ def runPipelineDriver( progID, ousUID, recipe ):
 	return completed.returncode
 
 def processRunPipelineMessage( message ):
-	request = dbdrwutils.jsonToObj( message )
-	runPipelineDriver( request.progID, request.ousUID, request.recipe )
+	runPipelineDriver( message["progID"], message["ousUID"], message["recipe"] )
 
 def callback( message ):
 	"""

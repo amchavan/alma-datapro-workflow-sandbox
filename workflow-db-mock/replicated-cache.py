@@ -120,14 +120,13 @@ def callback( message ):
         }
     """
     print( ">>> message:", message )
-    request = dbdrwutils.jsonToObj( message )
 
-    if request.fileType == "weblog":
-        processWeblog( location, request.name, request.cachedAt )
-    elif request.fileType == "productsdir":
-        processProductsDir( location, request.name, request.cachedAt )
+    if message["fileType"] == "weblog":
+        processWeblog( location, message["name"], message["cachedAt"] )
+    elif message["fileType"] == "productsdir":
+        processProductsDir( location, message["name"], message["cachedAt"] )
     else:
-        raise RuntimeError( "Unsupported fileType: " + request.fileType )
+        raise RuntimeError( "Unsupported fileType: " + message["fileType"] )
 
     return None
 

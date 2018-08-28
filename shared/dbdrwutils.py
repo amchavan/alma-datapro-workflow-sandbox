@@ -25,55 +25,60 @@ def sendMsgToSelector( msg, selector, queue ):
     queue.send( msg, selector )
     print(" [x] Sent %r to %r" % (msg, selector))
 
-def broadcastStateChange( ousUID, state, queue ):
-    msg = "%s %s" % (ousUID, state)
-    selector = stateChangeSelector % state
-    sendMsgToSelector( msg, selector, queue )
-
-# def broadcastRecipeChange( queue, ousUID, recipe ):
-#     msg = "%s %s" % (ousUID, recipe)
-#     selector = recipeChangeSelector % recipe
-#     sendMsgToSelector( msg, selector, queue )
-
-# def broadcastPipelineProcess( queue, progID, ousUID, recipe, executive ):
-#     msg = '{"progID":"%s", "ousUID":"%s", "recipe":"%s"}' % (progID, ousUID, recipe)
-#     selector = "pipeline.process.%s" % executive
-#     sendMsgToSelector( msg, selector, queue )
-
 def clearExecutive( xtss, ousUID ):
     "Clear an OUS executive via the XTSS"
 
-    request = '{"operation":"clear-exec", "ousUID":"%s", "value":""}' % (ousUID)
+    # request = '{"operation":"clear-exec", "ousUID":"%s", "value":""}' % (ousUID)
+    request = {}
+    request['operation'] = 'clear-exec'
+    request['ousUID']    = ousUID
+    request['value']     = None
     print(" [x] Requesting %r" % request)
     response = xtss.call( request )
-    print(" [.] response: %s" % response)
+    if response != 201:
+        print(" [.] response: %s" % response)
     return response
 
 def setExecutive( xtss, ousUID, executive ):
     "Set an OUS executive via the XTSS"
 
-    request = '{"operation":"set-exec", "ousUID":"%s", "value":"%s"}' % (ousUID, executive)
+    # request = '{"operation":"set-exec", "ousUID":"%s", "value":"%s"}' % (ousUID, executive)
+    request = {}
+    request['operation'] = 'set-exec'
+    request['ousUID']    = ousUID
+    request['value']     = executive
     print(" [x] Requesting %r" % request)
     response = xtss.call( request )
-    print(" [.] response: %s" % response)
+    if response != 201:
+        print(" [.] response: %s" % response)
     return response
 
 def setState( xtss, ousUID, state ):
     "Set an OUS state via the XTSS"
 
-    request = '{"operation":"set-state", "ousUID":"%s", "value":"%s"}' % (ousUID,state)
+    # request = '{"operation":"set-state", "ousUID":"%s", "value":"%s"}' % (ousUID,state)
+    request = {}
+    request['operation'] = 'set-state'
+    request['ousUID']    = ousUID
+    request['value']     = state
     print(" [x] Requesting %r" % request)
     response = xtss.call( request )
-    print(" [.] response: %s" % response)
+    if response != 201:
+        print(" [.] response: %s" % response)
     return response
 
-def setSubstate( xtss, ousUID, state ):
+def setSubstate( xtss, ousUID, substate ):
     "Set an OUS substate via the XTSS"
 
-    request = '{"operation":"set-substate", "ousUID":"%s", "value":"%s"}' % (ousUID,state)
+    # request = '{"operation":"set-substate", "ousUID":"%s", "value":"%s"}' % (ousUID,substate)
+    request = {}
+    request['operation'] = 'set-substate'
+    request['ousUID']    = ousUID
+    request['value']     = substate
     print(" [x] Requesting %r" % request)
     response = xtss.call( request )
-    print(" [.] response: %s" % response)
+    if response != 201:
+        print(" [.] response: %s" % response)
     return response
 
 def zipDirectory( dirname, workingDirectory ):
