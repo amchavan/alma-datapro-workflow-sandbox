@@ -7,6 +7,11 @@ ALL_DATABASES="msgq ngas pipeline-reports status-entities products-metadata deli
 BASE_URL="http://localhost:5984"
 CREDS="-u admin:admin"
 
+if [ -z "$DRW_EU_CACHE" -o -z "$DRW_JAO_CACHE" ] ; then
+	echo "Env variables DRW_EU_CACHE and/or DRW_JAO_CACHE are not defined, exiting"
+	exit
+fi
+
 for database in ${ALL_DATABASES}; do
 	echo "Recreating ${database}"
 	curl ${CREDS} -X DELETE ${BASE_URL}/${database}
