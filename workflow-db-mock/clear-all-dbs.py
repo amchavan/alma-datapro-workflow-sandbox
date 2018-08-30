@@ -11,8 +11,6 @@ import requests
 ##
 #############################################################################
 
-# TODO: add user credentials to requests
-
 r = requests.get( "http://localhost:5984/_all_dbs" )
 # print( r )
 allDatabases=json.loads(r.text)
