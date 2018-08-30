@@ -1,7 +1,7 @@
 # Data Reduction Workflow System mockup
 
 This is a mockup of the Data Reduction Workflow System (DRAWS) as shown [here](https://drive.google.com/file/d/1ZOBstezIVuuSk9BTgO9LrMb2INlfKTbj/view?usp=sharing)
-and [here](https://drive.google.com/file/d/11dwEzQyKbKvUbyV__czR1KUtYUBSSo7k/view?usp=sharing), showing that it can be implemented as an asynchronous message-based system. It's based on a pipeline of components communicating via a messages-passing bus, including a module (simulating the XTSS) implementing an RPC-like executor.
+and [here](https://drive.google.com/file/d/11dwEzQyKbKvUbyV__czR1KUtYUBSSo7k/view?usp=sharing), to experiment whether it can be implemented as an asynchronous message-based system. It's based on a pipeline of components communicating via a messages-passing bus, including a module (simulating the XTSS) implementing an RPC-like executor.
 
 This version implements stages _ReadyForProcessing_, _Processing_,
 _ProcessingProblem_, _ReadyForReview_, _Reviewing_, _Verified_, _DeliveryInProgress_, _Delivered_ of the
@@ -11,16 +11,13 @@ _ProcessingProblem_, _ReadyForReview_, _Reviewing_, _Verified_, _DeliveryInProgr
 
 ## Prerequisites
 
-* [Python 3.7.x](https://www.python.org/downloads/)
+* [Python 3.x](https://www.python.org/downloads/)
+  * :new: **NOTE** You'll need to make sure the Python 3.x executable is accessible as `python3` &mdash; that may require for instance to createe a symbolic link:  
+  `cd /usr/bin & sudo link python3.6 python3`
 * A running instance of [CouchDB](couchdb.apache.org)
-* The [Requests](http://docs.python-requests.org/en/master) Python package to communicate with the database
-
-<!-- 
-For this module, and in contrast to what is listed
-[here](../README.md), you will not need the
-[Pika package](https://pika.readthedocs.io/en/0.11.2/) or
-[RabbitMQ 3.7.x](https://www.rabbitmq.com/)
--->
+* Python packages:
+  * [Requests](http://docs.python-requests.org/en/master) to communicate with CouchDB via HTTP
+  * [Flask](http://flask.pocoo.org/) for the Web dashboard
 
 ## Modules
 
@@ -54,8 +51,6 @@ curl -X PUT http://localhost:5984/products-metadata
 curl -X PUT http://localhost:5984/delivery-status
 ```
 
-
-
 ### launcher.py
 
 Infrastructure component, creates status entities.  
@@ -72,7 +67,7 @@ If needed, it creates (or resets) a status entity for the OUS in the _ReadyForPr
 Mock of AQUA Batch Helper. Usage:  
 `./aqua-batch-helper.py`  
 
-A **background thread** polls the database for instances of _ReadyForProcessing_ state with no substate. When one is found a Pipeline recipe is selected (in some random way) and assigned.
+A **background thread** polls the database for instances of _ReadyForProcessing_ state with no substate. When one is found a Pipeline or manual recipe is selected (in some random way) and assigned; note that OUSs with a manual recipe are not processed by the mockup.
 
 ### dra.py
 Mock of Data Reducer Assignment tool. Usage:  
@@ -112,7 +107,7 @@ where _progID_ is the the ObsProgram ID (something like _2015.1.00657.S_), _ousU
 For instance:    
 `./pipeline-driver.py 2015.1.00657.S uid://X1/X1/Xb2 PipelineCalibration`
 
-The script depends on the value of environment variables DRAWS_LOCATION (one of _EA_, _EU_, _JAO_, _NA_) and DRAWS_REPLICATED_CACHE, the absolute pathname of the local replicated cache directory.
+The script depends on the value of environment variables DRAWS_LOCATION (one of _EA_, _EU_, _JAO_, _NA_) and DRAWS_LOCAL_CACHE, the absolute pathname of the local replicated cache directory.
 
 When a message arrives:
 * Sets the OUS to _Processing_
@@ -158,7 +153,7 @@ replicated-cache.py [-eac EACACHE] [--euc EUCACHE] [--nac NACACHE] [-p PORT]
 ```
 where PORT is the port number of the embedded Web server (default is 8000), EACACHE is the `rsync` location of the EA cache directory,  _username@host:dir_ (or simply _dir_);  EUCACHE for the EU cache dir and NACACHE for the NA cache directory. 
 
-The script depends on the value of environment variables DRAWS_LOCATION (one of _EA_, _EU_, _JAO_, _NA_) and DRAWS_REPLICATED_CACHE, the absolute pathname of the local replicated cache directory. 
+The script depends on the value of environment variables DRAWS_LOCATION (one of _EA_, _EU_, _JAO_, _NA_) and DRAWS_LOCAL_CACHE, the absolute pathname of the local replicated cache directory. 
 
 Note that parameters _eac_, _euc_ and _nac_ are only meaningful if DRAWS_LOCATION=JAO; that is, if we are mocking the JAO installation of the replicated cache, which needs to know about the Executives' installations.
 
