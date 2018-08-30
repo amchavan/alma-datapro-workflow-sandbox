@@ -10,13 +10,23 @@ import dbdrwutils
 ## Send an abitrary message to a selector/queue
 ## Example:
 ##  ./send-message.py pipeline.report.JAO \
-##      '"ousUID" : "uid://X1/X1/Xaf",  "source" : "EU",  "report" : "Cjw/eG1sIHZlcnNpb2...",  "timestamp" : "2018-07-19T08:50:10.228", "productsDir": "2015.1.00657.S_2018_07_19T08_50_10.228"'
-##
+##      ousUID=uid://X1/X1/Xaf source=EU report=Cjw/eG1sIHZlcnNpb2... timestamp=2018-07-19T08:50:10.228
 
 parser = argparse.ArgumentParser( description='Sends an arbitrary message' )
 parser.add_argument( dest="selector", help="Selector to send the message to" )
-parser.add_argument( dest="message",  help="Message (JSON text)" )
+parser.add_argument( dest="keyValuePairs",  help="Message, key=value pairs", nargs='*' )
 args = parser.parse_args()
 
+message = {}
+for keyValuePair in args.keyValuePairs:
+	keyValue = keyValuePair.split( "=" )
+	# print( keyValue )
+	key = keyValue[0]
+	value = keyValue[1]
+	message[key] = value
+	# print( key, "=", value )
+
+# print( "Sending", message, "to", args.selector )
+
 mq = MqConnection( 'localhost', 'msgq' )
-dbdrwutils.sendMsgToSelector( args.message, args.selector, mq )
+dbdrwutils.sendMsgToSelector( message, args.selector, mq )
