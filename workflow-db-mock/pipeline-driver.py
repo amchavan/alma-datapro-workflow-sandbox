@@ -155,9 +155,9 @@ if location == None:
     raise RuntimeError( "DRAWS_LOCATION env variable is not defined" )
 
 # Make sure we know where the local replicated cache directory is
-replicatedCache = os.environ.get( 'DRAWS_REPLICATED_CACHE' )
+replicatedCache = os.environ.get( 'DRAWS_LOCAL_CACHE' )
 if replicatedCache == None:
-    raise RuntimeError( "DRAWS_REPLICATED_CACHE env variable is not defined" )
+    raise RuntimeError( "DRAWS_LOCAL_CACHE env variable is not defined" )
 
 parser = argparse.ArgumentParser( description='Pipeline Driver mock-up' )
 parser.add_argument( dest="progID", help="ID of the project containing the OUS" )

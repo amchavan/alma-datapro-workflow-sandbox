@@ -33,7 +33,7 @@ def findReadyForProcessingNoSubstate():
 	selector = {
 	   "selector": {
 			"state": "ReadyForProcessing",
-			"substate": { "$exists": False }
+			"substate": { "$or": [{ "$eq": None }, { "$eq": "" }]}
        }
 	}
 	retcode,ouss = dbconn.find( "status-entities", selector )
@@ -64,8 +64,8 @@ def setRecipes():
         ous = findReadyForProcessingNoSubstate()
         if ous != None:
             ous["substate"] = computeRecipe( ous )
-            print( ">>> saving ", ous )
             dbconn.save( "status-entities", ous["_id"], ous )
+            print( ">>> OUS:", ous["_id"], "recipe:", ous["substate"] )
         
         time.sleep( 5 )
 	

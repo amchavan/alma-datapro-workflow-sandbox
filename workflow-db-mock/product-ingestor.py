@@ -69,7 +69,7 @@ def callback( message ):
 	setSubstate( ousUID, 'IngestionTriggered' )
 
 	# Locate the data products in the replicated cache dir
-	dataProductsDir = os.path.join( args.cache, productsDir, "SOUS", "GOUS", encode(ousUID), "products" )
+	dataProductsDir = os.path.join( localCache, productsDir, "SOUS", "GOUS", encode(ousUID), "products" )
 	dataProdNames = os.listdir( dataProductsDir )
 	time.sleep( 5 )	# pretend this actually takes time
 
@@ -106,9 +106,10 @@ xtss   = ExecutorClient( 'localhost', 'msgq', 'xtss' )
 select = "ingest.JAO"
 mq     = MqConnection( 'localhost', 'msgq',  select )
 
-parser = argparse.ArgumentParser( description='Product ingestor mock-up' )
-parser.add_argument( dest="cache", help="Absolute pathname of the replicating cache dir" )
-args=parser.parse_args()
+# Make sure we know where the local replicated cache directory is
+localCache = os.environ.get( 'DRAWS_LOCAL_CACHE' )
+if localCache == None:
+    raise RuntimeError( "DRAWS_LOCAL_CACHE env variable is not defined" )
 
 print(' [*] Waiting for messages matching', select )
 mq.listen( callback )

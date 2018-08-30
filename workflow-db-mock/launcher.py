@@ -34,6 +34,7 @@ ous = {}
 ous['entityId'] = ousUID
 ous['progID'] = progID
 ous['state'] = "ReadyForProcessing"
+ous['substate'] = None
 ous['flags'] = {}
 ous['timestamp'] = dbdrwutils.nowISO()
 r,t = dbcon.save( dbName, ousUID, ous )

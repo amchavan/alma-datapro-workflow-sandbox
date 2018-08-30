@@ -41,9 +41,9 @@ def replicate( source, destination ):
     if os.path.isdir( source ):
         # The source is a directory, we must do some extra work
         basename = os.path.basename( source )
-        source += "/"
+        # source += "/"
         cmd.append( "-r" )
-        destination += ("/" + basename)
+        # destination += ("/" + basename)
     cmd.append( source )
     cmd.append( destination )
     print( ">>> rsync: from:", source, "to:", destination )
@@ -67,7 +67,7 @@ def replicateIfNeeded( my_exec, name, cachedAt ):
     else:
         raise RuntimeError( "Unknown executive: " + cachedAt )
     if location == None:
-        raise RuntimeError( "Unknown remote location for files cached at " + cachedAt )
+        raise RuntimeError( "Remote location is None for files cached at " + cachedAt )
 
     # Get the file or directory over here
     rep_from = os.path.join( location, name )
@@ -141,9 +141,9 @@ if location == None:
     raise RuntimeError( "DRAWS_LOCATION env variable is not defined" )
 
 # Make sure we know where the local replicated cache directory is
-lcache = os.environ.get( 'DRAWS_REPLICATED_CACHE' )
+lcache = os.environ.get( 'DRAWS_LOCAL_CACHE' )
 if lcache == None:
-    raise RuntimeError( "DRAWS_REPLICATED_CACHE env variable is not defined" )
+    raise RuntimeError( "DRAWS_LOCAL_CACHE env variable is not defined" )
 
 parser = argparse.ArgumentParser( description='Replicated cache' )
 parser.add_argument( "--eacache",    "-eac",  dest="eacache",  help="Absolute pathname or rsync location of the EA cache dir" )
