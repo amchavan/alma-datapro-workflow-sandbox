@@ -66,7 +66,8 @@ def clearFlag( ousUID, name ):
         flags = ousStatus['flags']
     else:
         flags = {}
-    del flags[name]
+    if name in flags:
+        del flags[name]
     return setField( ousUID, 'flags', flags )
 
 def findByStateSubstate( state, substate ):
