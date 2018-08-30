@@ -72,7 +72,7 @@ while True:
 			dataProducts = delStatus['dataProducts']
 			allReplicated = True
 			for dataProduct in dataProducts:
-				print( ">>> found", dataProduct )
+				# print( ">>> found", dataProduct )
 				if (not ngas.check( dataProduct )):
 					allReplicated = False
 					break
@@ -84,6 +84,7 @@ while True:
 				dbdrwutils.setSubstate( xtss, ousUID, "" )
 				dbdrwutils.clearExecutive( xtss, ousUID )
 				time.sleep( 5 )	# Pretend this actually took some time
+				print( ">>> OUS", ousUID, "is now Delivered" )
 
 	dbdrwutils.incrementalSleep( startTime )
 
