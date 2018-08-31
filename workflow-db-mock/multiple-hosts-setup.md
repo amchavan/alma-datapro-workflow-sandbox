@@ -133,7 +133,7 @@ The following steps should be performed after getting back to jao-host:
   ```
 
 
-
+<!--
 ### Checking that all is OK
 
 Now you can go to the AQUA/QA2 terminal, hit the Return key a couple of times if needed, and see that uid://X1/X1/Xb0 is in the list of "OUSs ready to be reviewed". Copy and paste that UID at the "Please enter..." prompt and you should be presented with the Pipeline repot (raw XML text) and the URL of the Weblog. Paste that into a Browser tab and you should see the 'Weblog' for that Pipeline execution.  
@@ -179,3 +179,4 @@ If you made it this far and everything was OK you may try to pretend you are wat
 ```
 
 Note that the step from _ReadyForReview_ to _Reviewing_ is manual and requires AQUA/QA2 (see above). After that, [P]ass or [S]emipass OUSs should proceed automatically until  reaching _Delivered_.
+-->
