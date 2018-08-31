@@ -174,14 +174,16 @@ def doOusStatusTable( ousStatuses ):
 	return ousTable
 
 def extractExec( ousStatus ):
-	flags = ousStatus['flags']
-	flag = 'PL_PROCESSING_EXECUTIVE'
-	if flag in flags:
-		return flags[flag]
-	else:
-		return ''
-		
+	flag = 'flags'
+	if not flag in ousStatus:
+		return ""
 
+	flags = ousStatus[flag]
+	flag = 'PL_PROCESSING_EXECUTIVE'
+	if not flag in flags:
+		return ""
+	
+	return flags[flag]
 
 def doPipelineReports( pipelineReports ):
 	pipelineReports = sorted( pipelineReports, key=compareByTimestamp, reverse=True )
