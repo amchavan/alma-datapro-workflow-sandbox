@@ -25,7 +25,7 @@ htmlTemplate = """
 		  <meta http-equiv="refresh" content="1" >	<!-- Refresh every few secs -->
 		  <title>Dashboard</title>
 		  <style>
-		  	body { font-family: Verdana }
+		  	body { font-family: Helvetica }
 			th { text-align: left; }
 			td { padding: 5px; }
 			caption { font-size: larger; font-style: italic; font-weight: bold;}
