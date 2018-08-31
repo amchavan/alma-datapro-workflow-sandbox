@@ -40,10 +40,17 @@ def findReadyForPipelineProcessing():
 baseUrl = "http://localhost:5984" # CouchDB
 dbconn  = DbConnection( baseUrl )
 
-# Make sure we know where we are
-location = os.environ.get( 'DRAWS_LOCATION' )
+parser = argparse.ArgumentParser( description='Data Reducer Assignment tool mockup' )
+parser.add_argument( "--assign-to", "-a",  dest="location",  help="Location where Pipeline jobs should run" )
+args=parser.parse_args()
+
+location = args.location
+
+# Make sure we know where we should assign Pipeline jobs
 if location == None:
-    raise RuntimeError( "DRAWS_LOCATION env variable is not defined" )
+	location = os.environ.get( 'DRAWS_LOCATION' )
+	if location == None:
+		raise RuntimeError( "DRAWS_LOCATION env variable is not defined and -a option not given" )
 
 xtss = ExecutorClient( 'localhost', 'msgq', 'xtss' )
 mq   = MqConnection( 'localhost', 'msgq' )
