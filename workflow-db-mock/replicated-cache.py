@@ -34,24 +34,20 @@ def unzip( zipfile, dir="." ):
     print( ">>> unzip: in:", dir, "subprocess returned:", completed )
     return completed.returncode
 
-def replicate( source, destination ):
+def replicate( source, destination, what ):
     "Unconditionally replicate a source file or directory to a destination dir"
     
     cmd = ["rsync"]
-    if os.path.isdir( source ):
-        # The source is a directory, we must do some extra work
-        basename = os.path.basename( source )
-        # source += "/"
+    if what == "dir":
         cmd.append( "-r" )
-        # destination += ("/" + basename)
     cmd.append( source )
     cmd.append( destination )
-    print( ">>> rsync: from:", source, "to:", destination )
+    print( ">>> rsync:", cmd )
     completed = subprocess.run( cmd )
     print( ">>> rsync: subprocess returned:", completed )
     return completed.returncode
 
-def replicateIfNeeded( my_exec, name, cachedAt ):
+def replicateIfNeeded( my_exec, name, cachedAt, what ):
     if cachedAt == my_exec:
         return
 
@@ -72,15 +68,15 @@ def replicateIfNeeded( my_exec, name, cachedAt ):
     # Get the file or directory over here
     rep_from = os.path.join( location, name )
     rep_to   = lcache
-    retcode  = replicate( rep_from, rep_to )
+    retcode  = replicate( rep_from, rep_to, what )
     if retcode != 0:
-        raise RuntimeError( "replicate %s %s: failed: errno: %d" % (rep_from, rep_to, retcode) )
+        raise RuntimeError( "replicate from %s to %s (%s): failed: errno: %d" % (rep_from, rep_to, what, retcode) )
 
 def processWeblog( my_exec, filename, cachedAt ):
     print( ">>> processWeblog: my_exec: %s, filename: %s, cachedAt: %s" % ( my_exec, filename, cachedAt ))
 
     # Bring the Weblog over to our local cache, if needed
-    replicateIfNeeded( my_exec, filename, cachedAt )
+    replicateIfNeeded( my_exec, filename, cachedAt, "file" )
 
     # Now expand the weblog
     retcode = unzip( filename, lcache )
@@ -100,7 +96,7 @@ def processWeblog( my_exec, filename, cachedAt ):
 def processProductsDir( my_exec, dirname, cachedAt ):
     print( ">>> processProductsDir: my_exec: %s, dirname: %s, cachedAt: %s" % ( my_exec, dirname, cachedAt ))
     # Bring the Weblog over, if needed
-    replicateIfNeeded( my_exec, dirname, cachedAt )
+    replicateIfNeeded( my_exec, dirname, cachedAt, "dir" )
     return
 
 def callback( message ):
