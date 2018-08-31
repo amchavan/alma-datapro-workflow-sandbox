@@ -4,6 +4,7 @@ import os
 import sys
 import random
 import time
+import argparse
 sys.path.insert(0, "../shared")
 from dbmsgq import MqConnection, ExecutorClient
 from dbcon import DbConnection
@@ -69,7 +70,7 @@ while True:
 	print('------------------------------------------')
 	print()
 
-	print( "OUSs ready for processing")
+	print( "ReadyForProcessing OUSs")
 	ouss = findReadyForPipelineProcessing()
 	if (ouss == None or len( ouss ) == 0):
 		print( "(none)" )
@@ -82,7 +83,7 @@ while True:
 			ousMap[entityId] = ous
 
 	print()
-	ousUID = input( 'Please enter an OUS UID: ' )
+	ousUID = input( 'Please enter an OUS UID, will be processed at %s: ' % location )
 	if not (ousUID in ousMap):
 		print( "No OUS with UID='%s'" % (ousUID) )
 		continue
