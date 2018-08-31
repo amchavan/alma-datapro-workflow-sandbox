@@ -71,8 +71,8 @@ A **background thread** polls the database for instances of _ReadyForProcessing_
 
 ### dra.py
 Mock of Data Reducer Assignment tool. Usage:  
-`./dra.py`  
-Depends on the value of the DRAWS_LOCATION environment variable, one of _EA_, _EU_, _JAO_ and _NA_.
+`./dra.py [-a location]`  
+If the `-a` option is not given, it epends on the value of the DRAWS_LOCATION environment variable. In either case, the value should be one of _EA_, _EU_, _JAO_ and _NA_.
 
 This is an interactive application. A text-based user interface allows rudimentary assignment of an OUS to an executive/location for Pipeline processing. _ReadyForProcessing_ OUSs with no substate (PL recipe) are displayed: when one is selected it transitions to the _Processing_ state and it's assigned to the current location (by setting the PL_PROCESSING_EXECUTIVE flag).
 
@@ -302,4 +302,4 @@ where _exec_ is one of EA, EU, JAO or NA. The module listens to queue _pipe_, se
 
 ## Running the mockup
 
-See the setup instructions for a [single host](single-host-setup.md) or [multiple hosts](multiple-host-setup.md).
+See the setup instructions for a [single host](single-host-setup.md) or [multiple hosts](multiple-hosts-setup.md).
