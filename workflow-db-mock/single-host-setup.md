@@ -1,9 +1,9 @@
 # Data Reduction Workflow System mockup -- setup for a single host
 
-The following setup is for running the DRAWS mockup on a single machine, simulating:
-* DRA, Torque/Maui, Pipeline and the Pipeline Driver running at the EU ARC
-* a replicated cache, from EU to JAO
-* Oracle, XTSS, State System, AQUA/QA2, Product Ingestor, Data Tracker and NGAS (all remaining actors) running at JAO
+The following setup is for running the DRAWS mockup on a single machine:
+* DRA, Torque/Maui, Pipeline, Pipeline Driver and Data Tracker running at the EU ARC
+* The replicated cache transfering files from the ARC to JAO
+* Oracle, XTSS, State System, AQUA/QA2, Product Ingestor and NGAS (all remaining actors) running at JAO
 
 ## Environment
 
@@ -26,9 +26,9 @@ mkdir -p $DRAWS_JAO_CACHE/weblogs $DRAWS_EU_CACHE/weblogs
 
 ## Resetting all data
 
-If you need to restart from scratch, with no data in the caches or the database your best option is to run the `clear-all-dbs.py` script. _That script is highly destructive_ and will not ask for confirmation, use with care.
+If you need to restart from scratch, with no data in the database, the recommended option is to run the `clear-all-dbs.py` script. _That script is highly destructive_ and will not ask for confirmation, use with care.
 
-### Processes
+## Processes
 
 **NOTE** The following processes should be launched _in their own terminal_ (or terminal tab) from the `workflow-db-mock` directory.
 
@@ -76,8 +76,8 @@ Will add the substate/recipe field to the OUS. Make sure it's a Pipeline recipe 
 
 * `./data-tracker.py` launches the Data Tracker running at the EU ARC.
 
-
-### Checking that all is OK
+<!--
+## Checking that all is OK
 
 Now you can go to the AQUA/QA2 terminal, hit the Return key a couple of times if needed, and see that uid://X1/X1/Xb0 is in the list of "OUSs ready to be reviewed". Copy and paste that UID at the "Please enter..." prompt and you should be presented with the Pipeline repot (raw XML text) and the URL of the Weblog. Paste that into a Browser tab and you should see the 'Weblog' for that Pipeline execution.  
 The Dashboard tab should show the OUS in the _Reviewing_ state.
@@ -122,3 +122,4 @@ If you made it this far and everything was OK you may try to pretend you are wat
 ```
 
 Note that the step from _ReadyForReview_ to _Reviewing_ is manual and requires AQUA/QA2 (see above). After that, [P]ass or [S]emipass OUSs should proceed automatically until  reaching _Delivered_.
+-->
