@@ -1,0 +1,29 @@
+package alma.obops.draws.messages.examples;
+
+
+import static alma.obops.draws.messages.examples.ExampleUtils.*;
+import static alma.obops.draws.messages.examples.BasicSender.*;
+
+import alma.obops.draws.messages.CouchDbMessageBus;
+import alma.obops.draws.messages.MessageBus;
+import alma.obops.draws.messages.MessageConsumer;
+import alma.obops.draws.messages.MessageQueue;
+
+/**
+ * Example receiver, logs the message it receives (a single message)
+ */
+public class BasicReceiver {
+
+	public static void main( String[] args ) throws Exception {
+		
+		MessageBus bus = new CouchDbMessageBus( COUCHDB_URL, COUCHDB_USERNAME, COUCHDB_PASSWORD, MESSAGE_BUS_NAME );	
+		MessageQueue queue = bus.messageQueue( QUEUE_NAME );
+		MessageConsumer mc = (message) -> {
+			System.out.println( ">>> Received: " + message );
+		};
+		
+		// Listen for a single message and pass it on to the consumer; will timeout
+		// if no message can be read
+		queue.listen( mc, 10000, false, true );
+	}
+}
