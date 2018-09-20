@@ -62,7 +62,3 @@ Launch client and server as follows:
 java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar Calculator &
 java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar CalculatorClient
 ```
-
-
-
-
