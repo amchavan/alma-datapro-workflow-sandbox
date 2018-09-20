@@ -24,10 +24,10 @@ All examples try to show something sensible on the console. Message listeners ty
 
 ### Configuration
 
-All examples assume that the CouchDB server is not secure and is accessible at `http://localhost:5984`. In oder to provide a different URL you'll need to provide a different `archive.couchdb.connection` property, for instance
+All examples assume that the CouchDB server is not secure and is accessible at `http://localhost:5984`. In oder to provide a different URL you'll need to provide a different `archive.couchdb.connection` property, for instance:
 
 ```bash
-java -jar ....jar -Darchive.couchdb.connection=http://ma24088.ads.eso.org:5984
+java -Darchive.couchdb.connection=http://ma24088.ads.eso.org:5984 ...
 ```
 
 If your server is secured you wiĺl need to provide username and password as well. Use properties `archive.couchdb.user` and `archive.couchdb.passwd` for that.
