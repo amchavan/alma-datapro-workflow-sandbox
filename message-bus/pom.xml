@@ -52,6 +52,8 @@
       </plugin>
 
 			<plugin>
+				<!-- Generate a standalone, executable fat jar 
+				     See https://www.baeldung.com/executable-jar-with-maven -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<executions>
