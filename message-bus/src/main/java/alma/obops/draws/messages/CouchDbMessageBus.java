@@ -11,31 +11,20 @@ public class CouchDbMessageBus implements MessageBus {
 	    
 	private String busName;
 	private CouchDBConnection dbServer;
-	private String dbURL;
 	private String ourIP;
-	
+
 	/**
 	 * Public constructor: establishes a link to the underlying CouchDB server and
-	 * creates all necessary tables. If the server is secured, this constructor
-	 * requires username and password of an admin user (or a user with enough
-	 * privileges to create tables).
+	 * creates all necessary tables.
 	 * 
-	 * @param dbURL
-	 *            URL of the CouchDB server
-	 * @param username
-	 *            Username of admin account on the CouchDB server
-	 * @param password
-	 *            Password of admin account on the CouchDB server
-	 * @param queueName
-	 *            Name of our message queue
+	 * @param dbServer  The CouchDB connection instance
+	 * @param busName   Name of our message bus
 	 */
-	public CouchDbMessageBus( String dbURL, String username, String password, String busName ) {
-		
-		this.dbURL = dbURL;
-		this.busName = busName;
-		
-		this.ourIP = ourIP();
-		this.dbServer = new CouchDBConnection( this.dbURL, username, password );
+	public CouchDbMessageBus( CouchDBConnection dbServer, String busName ) {
+		this.busName  = busName;
+		this.ourIP    = ourIP();
+		this.dbServer = dbServer;
+
 		try {
 			if( ! this.dbServer.dbExists( busName )) {
 				this.dbServer.dbCreate( busName );
@@ -44,6 +33,34 @@ public class CouchDbMessageBus implements MessageBus {
 		catch( Exception e ) {
 			throw new RuntimeException( e );
 		}
+	}
+
+	/**
+	 * Public constructor: establishes a link to the underlying CouchDB server and
+	 * creates all necessary tables. If the server is secured, this constructor
+	 * requires a configuration including username and password of an admin user (or
+	 * a user with enough privileges to create tables).
+	 * 
+	 * @param config  The CouchDB server configuration
+	 * @param busName Name of our message bus
+	 */
+	public CouchDbMessageBus( CouchDbConfig config, String busName ) {
+		this( new CouchDBConnection( config ), busName );
+	}
+
+	/**
+	 * Public constructor: establishes a link to the underlying CouchDB server and
+	 * creates all necessary tables. If the server is secured, this constructor
+	 * requires username and password of an admin user (or a user with enough
+	 * privileges to create tables).
+	 * 
+	 * @param dbURL     URL of the CouchDB server
+	 * @param username  Username of admin account on the CouchDB server
+	 * @param password  Password of admin account on the CouchDB server
+	 * @param busName   Name of our message bus
+	 */
+	public CouchDbMessageBus( String dbURL, String username, String password, String busName ) {
+		this( new CouchDbConfig( dbURL, username, password ), busName );
 	}
 
 

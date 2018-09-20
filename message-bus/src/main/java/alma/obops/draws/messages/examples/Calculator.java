@@ -4,6 +4,7 @@ import static alma.obops.draws.messages.examples.ExampleUtils.*;
 
 import java.io.IOException;
 
+import alma.obops.draws.messages.CouchDbConfig;
 import alma.obops.draws.messages.CouchDbMessageBus;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.Message;
@@ -14,14 +15,16 @@ import alma.obops.draws.messages.RequestProcessor;
 import alma.obops.draws.messages.TimeoutException;
 
 /**
- * A trivial calculator, supports sum, subtraction and multiplication of integers
+ * A trivial calculator, supports sum, subtraction and multiplication of
+ * integers
  */
 public class Calculator {
 
 	public static final String CALC_SELECTOR = "compute";
-	
-	/** 
-	 * A computation request message, e.g. <code>{"service":"sum", "a":"1", "b":"2"}</code>
+
+	/**
+	 * A computation request message, e.g.
+	 * <code>{"service":"sum", "a":"1", "b":"2"}</code>
 	 */
 	public static class ComputationMessage implements RequestMessage {
 
@@ -37,77 +40,77 @@ public class Calculator {
 		public ComputationMessage() {
 			// empty
 		}
-		
-		public ComputationMessage( String operation, String a, String b ) {
+
+		public ComputationMessage(String operation, String a, String b) {
 			this.operation = operation;
 			this.a = a;
 			this.b = b;
 		}
 	}
-	
+
 	/**
 	 * Describes a result, e.g. <code>{"value":"2"}</code><br>
 	 * Our calculator responds with this kind of message
 	 */
 	public static class ResultMessage implements Message {
 		public String value;
-		
-		public ResultMessage() {}
-		
-		public ResultMessage( int n ) {
-			value = String.valueOf( n );
+
+		public ResultMessage() {
 		}
-		
+
+		public ResultMessage(int n) {
+			value = String.valueOf(n);
+		}
+
 		@Override
 		public String toString() {
 			return "ResultMessage[value=" + value + "]";
 		}
 	}
-	
+
 	/** Implements our trivial calculator */
 	public static class CalculatorProcessor implements RequestProcessor {
 
 		@Override
 		public Message process(RequestMessage message) {
 
-			System.out.println( ">>> Received: " + message );
+			System.out.println(">>> Received: " + message);
 			ComputationMessage computation = (ComputationMessage) message;
-			
+
 			int result = 0;
-			
-			switch( computation.operation ) {
+
+			switch (computation.operation) {
 			case "+":
-				result = Integer.valueOf( computation.a ) + Integer.valueOf( computation.b );
+				result = Integer.valueOf(computation.a) + Integer.valueOf(computation.b);
 				break;
-				
+
 			case "-":
-				result = Integer.valueOf( computation.a ) - Integer.valueOf( computation.b );
+				result = Integer.valueOf(computation.a) - Integer.valueOf(computation.b);
 				break;
-				
+
 			case "*":
-				result = Integer.valueOf( computation.a ) * Integer.valueOf( computation.b );
+				result = Integer.valueOf(computation.a) * Integer.valueOf(computation.b);
 				break;
-				
+
 			default:
-				throw new RuntimeException( "Unsupported operation: '" + computation.operation + "'" );
+				throw new RuntimeException("Unsupported operation: '" + computation.operation + "'");
 			}
-			return new ResultMessage( result );
+			return new ResultMessage(result);
 		}
-		
+
 	}
 
-	public static void main(String[] args) throws IOException {		
-		
-		MessageBus messageBus = new CouchDbMessageBus( COUCHDB_URL, COUCHDB_USERNAME, COUCHDB_PASSWORD, MESSAGE_BUS_NAME );
-		MessageQueue queue = messageBus.messageQueue( CALC_SELECTOR );
+	public static void main(String[] args) throws IOException {
+		CouchDbConfig config = new CouchDbConfig();
+		MessageBus bus = new CouchDbMessageBus(config, MESSAGE_BUS_NAME);
+		MessageQueue queue = bus.messageQueue(CALC_SELECTOR);
 		RequestProcessor processor = new CalculatorProcessor();
-		Executor executor = new Executor( queue, processor, 5000 );
-		
+		Executor executor = new Executor(queue, processor, 5000);
+
 		try {
 			executor.run();
-		} 
-		catch( TimeoutException e ) {
-			System.out.println( ">>> Timed out: " + e.getMessage());
+		} catch (TimeoutException e) {
+			System.out.println(">>> Timed out: " + e.getMessage());
 		}
 	}
 }

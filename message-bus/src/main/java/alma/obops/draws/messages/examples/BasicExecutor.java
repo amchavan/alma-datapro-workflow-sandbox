@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.TimeZone;
 
+import alma.obops.draws.messages.CouchDbConfig;
 import alma.obops.draws.messages.CouchDbMessageBus;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.Message;
@@ -22,10 +23,10 @@ import alma.obops.draws.messages.TimeoutException;
 public class BasicExecutor {
 
 	public static final String DATETIME_QUEUE = "datetime";
-	
-	/** 
+
+	/**
 	 * A datetime request, e.g. <code>{"service":"datetime", "timezone":""}</code>
-	 * Our calculator expects messages of that form as requests.  
+	 * Our calculator expects messages of that form as requests.
 	 */
 	public static class DatetimeRequest implements RequestMessage {
 		public String timezone;
@@ -34,53 +35,52 @@ public class BasicExecutor {
 			// empty
 		}
 
-		public DatetimeRequest( String timezone ) {
+		public DatetimeRequest(String timezone) {
 			this.timezone = timezone;
 		}
 	}
-	
+
 	/**
 	 * Describes a result, e.g. <code>{"datetime":"2"}</code><br>
 	 * Our calculator responds with this kind of message
 	 */
 	public static class DatetimeResponse implements Message {
 		public String datetime;
-		
+
 		public DatetimeResponse() {
 			// empty
 		}
-		
-		public DatetimeResponse( String datetime ) {
+
+		public DatetimeResponse(String datetime) {
 			this.datetime = datetime;
 		}
 	}
-	
+
 	/** Implements this service's logic */
 	public static class DatetimeProcessor implements RequestProcessor {
 
 		@Override
-		public Message process( RequestMessage message ) {
+		public Message process(RequestMessage message) {
 
-			System.out.println( ">>> Received: " + message );
 			DatetimeRequest request = (DatetimeRequest) message;
-		    TimeZone tz = TimeZone.getTimeZone( request.timezone );
-		    Calendar c = Calendar.getInstance( tz );
-			return new DatetimeResponse( c.getTime().toString() );
-		}	
+			System.out.println(">>> Received request with TZ=" + request.timezone);
+			TimeZone tz = TimeZone.getTimeZone(request.timezone);
+			Calendar c = Calendar.getInstance(tz);
+			return new DatetimeResponse(c.getTime().toString());
+		}
 	}
 
-	public static void main(String[] args) throws IOException {		
-		
-		MessageBus messageBus = new CouchDbMessageBus( COUCHDB_URL, COUCHDB_USERNAME, COUCHDB_PASSWORD, MESSAGE_BUS_NAME );
-		MessageQueue queue = messageBus.messageQueue( DATETIME_QUEUE );
+	public static void main(String[] args) throws IOException {
+		CouchDbConfig config = new CouchDbConfig();
+		MessageBus bus = new CouchDbMessageBus(config, MESSAGE_BUS_NAME);
+		MessageQueue queue = bus.messageQueue(DATETIME_QUEUE);
 		RequestProcessor processor = new DatetimeProcessor();
-		Executor executor = new Executor( queue, processor, 5000 );
-		
+		Executor executor = new Executor(queue, processor, 5000);
+
 		try {
 			executor.run();
-		} 
-		catch( TimeoutException e ) {
-			System.out.println( ">>> Timed out: " + e.getMessage());
+		} catch (TimeoutException e) {
+			System.out.println(">>> Timed out: " + e.getMessage());
 		}
 	}
 }

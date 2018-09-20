@@ -27,7 +27,12 @@ public class CouchDBConnection {
 		this( baseURL, null, null );
 	}
 	
-	/** Constructor: create an interface to a secured CouchDB instance */
+	/** Constructor: create an interface to a CouchDB instance */
+	public CouchDBConnection( CouchDbConfig config ) {
+		this( config.getUrl(), config.getUsername(), config.getPassword() );
+	}
+	
+	/** Constructor: create an interface to a CouchDB instance */
 	public CouchDBConnection( String baseURL, String username, String password ) {
 		
 		this.baseURL = baseURL;
