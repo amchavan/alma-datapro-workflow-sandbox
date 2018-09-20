@@ -46,7 +46,8 @@ java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar BasicSende
 
 Classes `BasicExecutor` and `BasicExecutorClient` show how an RPC service (command/reply) can be implemented: the client asks for the current time in UT and the server returns that. You can launch a
 server and severl clients as follows:
-```
+
+```bash
 java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar BasicExecutor &
 java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar BasicExecutorClient
 java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar BasicExecutorClient
@@ -58,7 +59,8 @@ java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar BasicExecu
 The `Calculator` and `CalculatorClient` classes implement another RPC (command/reply) service. The server interprets a request like `{"service":"+","a":"1", "b":"2"}` as a *add 1 and 2 and return the result*; the client submits a number of requests. (The calculator has very limited capabilities!)
 
 Launch client and server as follows:
-```
+
+```bash
 java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar Calculator &
 java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar CalculatorClient
 ```
