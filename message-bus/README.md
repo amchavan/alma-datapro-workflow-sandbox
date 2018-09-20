@@ -37,6 +37,7 @@ See *CouchDbConfig.java* for more configuration options.
 ### Basic send and receive
 
 Classes `BasicSender` and `BasicReceiver` exchange a simple message. Launch them as follows:
+
 ```bash
 java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar BasicReceiver &
 java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar BasicSender
