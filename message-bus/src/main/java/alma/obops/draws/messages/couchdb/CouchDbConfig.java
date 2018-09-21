@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.obops.draws.messages.couchdb;
 
 import java.io.File;
 import java.util.Properties;

@@ -1,15 +1,13 @@
 package alma.obops.draws.messages.examples;
 
 import static alma.obops.draws.messages.examples.ExampleUtils.*;
-
-import alma.obops.draws.messages.CouchDbConfig;
-
 import static alma.obops.draws.messages.examples.BasicSender.*;
 
-import alma.obops.draws.messages.CouchDbMessageBus;
 import alma.obops.draws.messages.MessageBus;
 import alma.obops.draws.messages.MessageConsumer;
 import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.couchdb.CouchDbConfig;
+import alma.obops.draws.messages.couchdb.CouchDbMessageBus;
 
 /**
  * Example receiver, logs the message it receives (a single message)

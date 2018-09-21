@@ -5,12 +5,12 @@ import static alma.obops.draws.messages.examples.BasicExecutor.*;
 
 import java.io.IOException;
 
-import alma.obops.draws.messages.CouchDbConfig;
-import alma.obops.draws.messages.CouchDbMessageBus;
 import alma.obops.draws.messages.ExecutorClient;
 import alma.obops.draws.messages.MessageBus;
 import alma.obops.draws.messages.MessageConsumer;
 import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.couchdb.CouchDbConfig;
+import alma.obops.draws.messages.couchdb.CouchDbMessageBus;
 
 /**
  * Example client for basic executor defined in {@link #BasicExecutor}

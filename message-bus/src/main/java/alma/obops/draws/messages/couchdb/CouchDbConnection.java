@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.obops.draws.messages.couchdb;
 
 import static alma.obops.draws.messages.HttpUtils.*;
 
@@ -12,28 +12,31 @@ import org.apache.http.message.BasicHeader;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import alma.obops.draws.messages.DbConnection;
+import alma.obops.draws.messages.Record;
+
 /**
  * An interface to CouchDB
  * @author mchavan
  */
-public class CouchDBConnection {
+public class CouchDbConnection implements DbConnection {
 
 	private String baseURL;
 
 	private Header authHeader;
 
 	/** Constructor: create an interface to a non-secured CouchDB instance */
-	public CouchDBConnection( String baseURL ) {
+	public CouchDbConnection( String baseURL ) {
 		this( baseURL, null, null );
 	}
 	
 	/** Constructor: create an interface to a CouchDB instance */
-	public CouchDBConnection( CouchDbConfig config ) {
+	public CouchDbConnection( CouchDbConfig config ) {
 		this( config.getUrl(), config.getUsername(), config.getPassword() );
 	}
 	
 	/** Constructor: create an interface to a CouchDB instance */
-	public CouchDBConnection( String baseURL, String username, String password ) {
+	public CouchDbConnection( String baseURL, String username, String password ) {
 		
 		this.baseURL = baseURL;
 		this.authHeader = null;
@@ -284,5 +287,23 @@ public class CouchDBConnection {
 		String fmt = "save('%s',%s) failed: status=%d, '%s'";
 		String msg = String.format(fmt, dbName, record, status, readBody( response ));
 		throw new RuntimeException( msg );
+	}
+
+	@Override
+	public void delete(String dbName, Record record) throws IOException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public <T extends Record> T findOne(String dbName, Record rec) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void save(String dbName, Record record) throws IOException {
+		// TODO Auto-generated method stub
+		
 	}
 }

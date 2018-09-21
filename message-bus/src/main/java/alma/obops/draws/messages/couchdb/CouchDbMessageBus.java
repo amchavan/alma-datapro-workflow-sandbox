@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.obops.draws.messages.couchdb;
 
 import static alma.obops.draws.messages.MessageBus.*;
 
@@ -7,10 +7,16 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import alma.obops.draws.messages.Message;
+import alma.obops.draws.messages.MessageBus;
+import alma.obops.draws.messages.MessageConsumer;
+import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.TimeoutException;
+
 public class CouchDbMessageBus implements MessageBus {
 	    
 	private String busName;
-	private CouchDBConnection dbServer;
+	private CouchDbConnection dbServer;
 	private String ourIP;
 
 	/**
@@ -20,7 +26,7 @@ public class CouchDbMessageBus implements MessageBus {
 	 * @param dbServer  The CouchDB connection instance
 	 * @param busName   Name of our message bus
 	 */
-	public CouchDbMessageBus( CouchDBConnection dbServer, String busName ) {
+	public CouchDbMessageBus( CouchDbConnection dbServer, String busName ) {
 		this.busName  = busName;
 		this.ourIP    = ourIP();
 		this.dbServer = dbServer;
@@ -45,7 +51,7 @@ public class CouchDbMessageBus implements MessageBus {
 	 * @param busName Name of our message bus
 	 */
 	public CouchDbMessageBus( CouchDbConfig config, String busName ) {
-		this( new CouchDBConnection( config ), busName );
+		this( new CouchDbConnection( config ), busName );
 	}
 
 	/**
@@ -65,20 +71,20 @@ public class CouchDbMessageBus implements MessageBus {
 
 
 	@Override
-	public Envelope[] find( String query ) throws IOException {
+	public CouchDbEnvelope[] find( String query ) throws IOException {
 
-		Envelope[] records = 
-				(Envelope[]) dbServer.find( busName, Envelope[].class, query );		
+		CouchDbEnvelope[] records = 
+				(CouchDbEnvelope[]) dbServer.find( busName, CouchDbEnvelope[].class, query );		
 		return records;
 	}
 	
 	@Override
-	public Envelope findNext(String queueName) throws IOException {
+	public CouchDbEnvelope findNext(String queueName) throws IOException {
 		return findNext( queueName, 0 );
 	}
 	
 	@Override
-	public Envelope findNext(String queueName, int timeout) throws IOException, TimeoutException {
+	public CouchDbEnvelope findNext(String queueName, int timeout) throws IOException, TimeoutException {
 		
 		Date callTime = new Date();	// TODO -- add progressive waiting time
 		
@@ -93,10 +99,10 @@ public class CouchDbMessageBus implements MessageBus {
 				throw new TimeoutException( "After " + timeout + "msec" );
 			}
 			
-			Envelope[] messages = dbServer.find( busName, Envelope[].class, query );
+			CouchDbEnvelope[] messages = dbServer.find( busName, CouchDbEnvelope[].class, query );
 			if( messages.length > 0 ) {
 				Arrays.sort( messages );
-				Envelope ret = messages[0];
+				CouchDbEnvelope ret = messages[0];
 				ret.setConsumed( true );
 				dbServer.save( busName, ret );
 				return ret;
@@ -105,8 +111,8 @@ public class CouchDbMessageBus implements MessageBus {
 		}
 	}
 	
-	/** @return Our internal {@link CouchDBConnection} instance */
-	public CouchDBConnection getDbServer() {
+	/** @return Our internal {@link CouchDbConnection} instance */
+	public CouchDbConnection getDbServer() {
 		return dbServer;
 	}
 
@@ -150,7 +156,7 @@ public class CouchDbMessageBus implements MessageBus {
 	}
 
 	@Override
-	public Envelope send( String queueName, Message message ) {
+	public CouchDbEnvelope send( String queueName, Message message ) {
 
 		if( queueName == null || message == null ) {
 			throw new IllegalArgumentException( "Null arg" );
@@ -158,7 +164,7 @@ public class CouchDbMessageBus implements MessageBus {
 		
 		// Are we sending to a group?
 		if( ! queueName.endsWith( ".*" )) {
-			Envelope ret = sendOne( queueName, message );		// No, just send this message
+			CouchDbEnvelope ret = sendOne( queueName, message );		// No, just send this message
 			return ret;
 		}
 		
@@ -168,7 +174,7 @@ public class CouchDbMessageBus implements MessageBus {
 			if( recGroup == null ) {
 				throw new RuntimeException("Receiver group '" + queueName + "' not found");
 			}
-			Envelope ret = null;
+			CouchDbEnvelope ret = null;
 			for( String member: recGroup.getMembers() ) {
 				ret = sendOne( member, message );
 			}
@@ -180,11 +186,11 @@ public class CouchDbMessageBus implements MessageBus {
 	}
 
 	/**
-	 * Creates an {@link Envelope} (including meta-data) from the given
+	 * Creates an {@link CouchDbEnvelope} (including meta-data) from the given
 	 * {@link Message} and sends it.
 	 */
-	private Envelope sendOne( String queueName, Message message ) {
-		Envelope envelope = new Envelope( message, nowISO(), ourIP, queueName );
+	private CouchDbEnvelope sendOne( String queueName, Message message ) {
+		CouchDbEnvelope envelope = new CouchDbEnvelope( message, nowISO(), ourIP, queueName );
 		try {
 			dbServer.save( busName, envelope );
 			return envelope;
@@ -206,7 +212,7 @@ public class CouchDbMessageBus implements MessageBus {
 		}
 		
 		while( true ) {
-			Envelope msg = findNext( queueName, timeout );
+			CouchDbEnvelope msg = findNext( queueName, timeout );
 			consumer.consume( metadata ? msg : msg.getMessage() );
 			if( justOne ) {
 				break;

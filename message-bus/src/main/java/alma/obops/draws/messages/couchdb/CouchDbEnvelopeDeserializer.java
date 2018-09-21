@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.obops.draws.messages.couchdb;
 
 import java.io.IOException;
 
@@ -9,8 +9,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
+import alma.obops.draws.messages.Message;
+
 /**
- * We need a special Jackson deserializer for the {@link Envelope}, as the actual
+ * We need a special Jackson deserializer for the {@link CouchDbEnvelope}, as the actual
  * message is an embedded object of arbitrary type, for instance:
  * 
  * <pre>
@@ -34,23 +36,23 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
  */
 
 @SuppressWarnings("serial")
-class EnvelopeDeserializer extends StdDeserializer<Envelope> {
+class CouchDbEnvelopeDeserializer extends StdDeserializer<CouchDbEnvelope> {
 
-	public EnvelopeDeserializer() {
+	public CouchDbEnvelopeDeserializer() {
         this( null );
     }
  
-    public EnvelopeDeserializer(Class<?> vc) {
+    public CouchDbEnvelopeDeserializer(Class<?> vc) {
         super ( vc );
     }
     
     @Override
-    public Envelope deserialize( JsonParser jp, DeserializationContext ctxt ) 
+    public CouchDbEnvelope deserialize( JsonParser jp, DeserializationContext ctxt ) 
       throws IOException, JsonProcessingException {
   
         JsonNode node = jp.getCodec().readTree(jp);
         
-        Envelope record = new Envelope();
+        CouchDbEnvelope record = new CouchDbEnvelope();
         record.setId(                node.get( "_id" ).textValue() );
         record.setVersion(           node.get( "_rev" ).textValue() );
         record.setCreationTimestamp( node.get( "creationTimestamp" ).textValue() );

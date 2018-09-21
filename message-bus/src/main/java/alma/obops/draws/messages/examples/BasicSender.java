@@ -4,10 +4,10 @@ import static alma.obops.draws.messages.examples.ExampleUtils.*;
 
 import java.io.IOException;
 
-import alma.obops.draws.messages.CouchDbConfig;
-import alma.obops.draws.messages.CouchDbMessageBus;
 import alma.obops.draws.messages.MessageBus;
 import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.couchdb.CouchDbConfig;
+import alma.obops.draws.messages.couchdb.CouchDbMessageBus;
 
 /**
  * Example sender, sends a simple message. 

@@ -1,7 +1,10 @@
-package alma.obops.draws.messages;
+package alma.obops.draws.messages.couchdb;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import alma.obops.draws.messages.Record;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -9,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * 
  * @author mchavan, 07-Sep-2018
  */
-public abstract class CouchDbRecord {
+public abstract class CouchDbRecord implements Record {
 
 	/**
 	 * Record ID, mapped to the <code>_id</code> property.

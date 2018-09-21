@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.obops.draws.messages.couchdb;
 
 import java.io.IOException;
 import java.util.ArrayList;

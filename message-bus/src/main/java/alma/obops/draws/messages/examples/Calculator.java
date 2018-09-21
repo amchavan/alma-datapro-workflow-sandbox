@@ -4,8 +4,6 @@ import static alma.obops.draws.messages.examples.ExampleUtils.*;
 
 import java.io.IOException;
 
-import alma.obops.draws.messages.CouchDbConfig;
-import alma.obops.draws.messages.CouchDbMessageBus;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.Message;
 import alma.obops.draws.messages.MessageBus;
@@ -13,6 +11,8 @@ import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
 import alma.obops.draws.messages.TimeoutException;
+import alma.obops.draws.messages.couchdb.CouchDbConfig;
+import alma.obops.draws.messages.couchdb.CouchDbMessageBus;
 
 /**
  * A trivial calculator, supports sum, subtraction and multiplication of

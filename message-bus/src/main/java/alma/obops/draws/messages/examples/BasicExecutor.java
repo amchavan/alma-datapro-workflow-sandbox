@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.TimeZone;
 
-import alma.obops.draws.messages.CouchDbConfig;
-import alma.obops.draws.messages.CouchDbMessageBus;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.Message;
 import alma.obops.draws.messages.MessageBus;
@@ -15,6 +13,8 @@ import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
 import alma.obops.draws.messages.TimeoutException;
+import alma.obops.draws.messages.couchdb.CouchDbConfig;
+import alma.obops.draws.messages.couchdb.CouchDbMessageBus;
 
 /**
  * A basic executor, returns the current datetime in a given timezone.<br>

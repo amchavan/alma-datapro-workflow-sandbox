@@ -1,6 +1,6 @@
 package alma.obops.draws.messages;
 
-import alma.obops.draws.messages.CouchDbRecord;
+import alma.obops.draws.messages.couchdb.CouchDbRecord;
 
 public class TestUtils {
 

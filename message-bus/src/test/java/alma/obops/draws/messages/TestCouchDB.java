@@ -8,15 +8,17 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 
+import alma.obops.draws.messages.couchdb.CouchDbConnection;
+
 
 public class TestCouchDB {
 	
-	private CouchDBConnection db;
+	private CouchDbConnection db;
 	private final TestUtils.TestRecord jimi = new TestUtils.TestRecord( "Jimi Hendrix", 28, false );
 
 	@Before
 	public void setUp() throws IOException {
-		this.db = new CouchDBConnection( COUCHDB_URL, COUCHDB_USERNAME, COUCHDB_PASSWORD );
+		this.db = new CouchDbConnection( COUCHDB_URL, null, null );
 		db.dbDelete( TEST_DB_NAME );
 		db.dbCreate( TEST_DB_NAME );
 	}
