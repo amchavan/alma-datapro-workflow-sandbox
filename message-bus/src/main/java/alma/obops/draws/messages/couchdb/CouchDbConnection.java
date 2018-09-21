@@ -1,6 +1,6 @@
 package alma.obops.draws.messages.couchdb;
 
-import static alma.obops.draws.messages.HttpUtils.*;
+import static alma.obops.draws.messages.couchdb.HttpUtils.*;
 
 import java.io.IOException;
 import java.util.Base64;
@@ -105,7 +105,7 @@ public class CouchDbConnection implements DbConnection {
 	 *            deleting or you risk a status 409, "document update conflict" )
 	 * @throws IOException 
 	 */
-	public void delete( String dbName, CouchDbRecord record ) throws IOException {
+	public void delete( String dbName, Record record ) throws IOException {
 		delete( dbName, record.getId(), record.getVersion() );
 	}
 	
@@ -242,7 +242,7 @@ public class CouchDbConnection implements DbConnection {
 	 * @param rec		Object that should be refreshed
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends CouchDbRecord> T findOne( String dbName, CouchDbRecord rec ) throws IOException {
+	public <T extends Record> T findOne( String dbName, Record rec ) throws IOException {
 		return (T) findOne( dbName, rec.getClass(), rec.getId() );
 	}
 
@@ -256,25 +256,26 @@ public class CouchDbConnection implements DbConnection {
 	 * @param dbName	Name of the database
 	 * @param record	Object to be saved
 	 */
-	public void save( String dbName, CouchDbRecord record ) throws IOException {
+	public void save( String dbName, Record record ) throws IOException {
 		
 		if( isEmpty( dbName ) || record == null ) {
 			throw new IllegalArgumentException( "Null or empty arg" );
 		}
 
-		CouchDbRecord found = (CouchDbRecord) findOne( dbName, record.getClass(), record.getId() );
+		CouchDbRecord cdbrec = (CouchDbRecord) record;
+		CouchDbRecord found = (CouchDbRecord) findOne( dbName, cdbrec.getClass(), cdbrec.getId() );
 		if( found != null ) {
 			// Record exists already, need to retrieve its current version or
 			// we won't be able to update it
 			String version = found.getVersion();
-			record.setVersion( version );
+			cdbrec.setVersion( version );
 		}
 		
-		String id = urlEncode( record.getId().toString() );
+		String id = urlEncode( cdbrec.getId().toString() );
 		String url = baseURL + "/" + dbName + "/" + id;
 		
 		ObjectMapper mapper = new ObjectMapper();
-		String json = mapper.writeValueAsString( record );
+		String json = mapper.writeValueAsString( cdbrec );
 
 		HttpResponse response = httpPut( url, json, this.authHeader );
 		int status = response.getStatusLine().getStatusCode();
@@ -285,25 +286,7 @@ public class CouchDbConnection implements DbConnection {
 		}
 		
 		String fmt = "save('%s',%s) failed: status=%d, '%s'";
-		String msg = String.format(fmt, dbName, record, status, readBody( response ));
+		String msg = String.format(fmt, dbName, cdbrec, status, readBody( response ));
 		throw new RuntimeException( msg );
-	}
-
-	@Override
-	public void delete(String dbName, Record record) throws IOException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public <T extends Record> T findOne(String dbName, Record rec) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void save(String dbName, Record record) throws IOException {
-		// TODO Auto-generated method stub
-		
 	}
 }
