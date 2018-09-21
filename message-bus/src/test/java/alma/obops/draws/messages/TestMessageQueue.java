@@ -1,7 +1,11 @@
 package alma.obops.draws.messages;
 
-import static alma.obops.draws.messages.TestUtils.*;
-import static org.junit.Assert.*;
+import static alma.obops.draws.messages.TestUtils.COUCHDB_URL;
+import static alma.obops.draws.messages.TestUtils.MESSAGE_BUS_NAME;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
@@ -10,7 +14,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import alma.obops.draws.messages.TestUtils.TestMessage;
-import alma.obops.draws.messages.couchdb.CouchDbConnection;
 import alma.obops.draws.messages.couchdb.CouchDbMessageBus;
 
 public class TestMessageQueue {
@@ -23,7 +26,7 @@ public class TestMessageQueue {
 	@Before
 	public void aaa_setUp() throws IOException {
 		MessageBus messageBus = new CouchDbMessageBus( COUCHDB_URL, null, null, MESSAGE_BUS_NAME  );
-		CouchDbConnection db = ((CouchDbMessageBus) messageBus).getDbServer(); 
+		DbConnection db = ((CouchDbMessageBus) messageBus).getDbConnection(); 
 		db.dbDelete( MESSAGE_BUS_NAME );
 		db.dbCreate( MESSAGE_BUS_NAME );
 		this.queue = messageBus.messageQueue( QUEUE_NAME );

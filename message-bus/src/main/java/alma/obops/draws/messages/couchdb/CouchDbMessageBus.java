@@ -1,12 +1,15 @@
 package alma.obops.draws.messages.couchdb;
 
-import static alma.obops.draws.messages.MessageBus.*;
+import static alma.obops.draws.messages.MessageBus.nowISO;
+import static alma.obops.draws.messages.MessageBus.ourIP;
+import static alma.obops.draws.messages.MessageBus.sleep;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import alma.obops.draws.messages.DbConnection;
 import alma.obops.draws.messages.Message;
 import alma.obops.draws.messages.MessageBus;
 import alma.obops.draws.messages.MessageConsumer;
@@ -16,24 +19,24 @@ import alma.obops.draws.messages.TimeoutException;
 public class CouchDbMessageBus implements MessageBus {
 	    
 	private String busName;
-	private CouchDbConnection dbServer;
+	private DbConnection dbConn;
 	private String ourIP;
 
 	/**
 	 * Public constructor: establishes a link to the underlying CouchDB server and
 	 * creates all necessary tables.
 	 * 
-	 * @param dbServer  The CouchDB connection instance
-	 * @param busName   Name of our message bus
+	 * @param dbConn   The CouchDB connection instance
+	 * @param busName  Name of our message bus
 	 */
-	public CouchDbMessageBus( CouchDbConnection dbServer, String busName ) {
-		this.busName  = busName;
-		this.ourIP    = ourIP();
-		this.dbServer = dbServer;
+	public CouchDbMessageBus( DbConnection dbConn, String busName ) {
+		this.busName = busName;
+		this.ourIP   = ourIP();
+		this.dbConn  = dbConn;
 
 		try {
-			if( ! this.dbServer.dbExists( busName )) {
-				this.dbServer.dbCreate( busName );
+			if( ! this.dbConn.dbExists( busName )) {
+				this.dbConn.dbCreate( busName );
 			}
 		} 
 		catch( Exception e ) {
@@ -74,7 +77,7 @@ public class CouchDbMessageBus implements MessageBus {
 	public CouchDbEnvelope[] find( String query ) throws IOException {
 
 		CouchDbEnvelope[] records = 
-				(CouchDbEnvelope[]) dbServer.find( busName, CouchDbEnvelope[].class, query );		
+				(CouchDbEnvelope[]) dbConn.find( busName, CouchDbEnvelope[].class, query );		
 		return records;
 	}
 	
@@ -99,26 +102,26 @@ public class CouchDbMessageBus implements MessageBus {
 				throw new TimeoutException( "After " + timeout + "msec" );
 			}
 			
-			CouchDbEnvelope[] messages = dbServer.find( busName, CouchDbEnvelope[].class, query );
+			CouchDbEnvelope[] messages = dbConn.find( busName, CouchDbEnvelope[].class, query );
 			if( messages.length > 0 ) {
 				Arrays.sort( messages );
 				CouchDbEnvelope ret = messages[0];
 				ret.setConsumed( true );
-				dbServer.save( busName, ret );
+				dbConn.save( busName, ret );
 				return ret;
 			}
 			sleep( 1000 );
 		}
 	}
 	
-	/** @return Our internal {@link CouchDbConnection} instance */
-	public CouchDbConnection getDbServer() {
-		return dbServer;
+	/** @return Our internal {@link DbConnection} instance */
+	public DbConnection getDbConnection() {
+		return dbConn;
 	}
 
 	@Override
 	public List<String> groupMembers( String groupName ) throws IOException {
-		ReceiverGroup g = dbServer.findOne( busName, ReceiverGroup.class, groupName );
+		ReceiverGroup g = dbConn.findOne( busName, ReceiverGroup.class, groupName );
 		return g.getMembers();
 	}
 	
@@ -134,7 +137,7 @@ public class CouchDbMessageBus implements MessageBus {
 		
 		// First let's see if that group exists, otherwise we'll create it
 		try {
-			ReceiverGroup group = dbServer.findOne( busName, ReceiverGroup.class, groupName );
+			ReceiverGroup group = dbConn.findOne( busName, ReceiverGroup.class, groupName );
 			if( group == null ) {
 				// No group yet, let's create it first
 				group = new ReceiverGroup( groupName );
@@ -142,7 +145,7 @@ public class CouchDbMessageBus implements MessageBus {
 
 			// Now we add ourselves to the group  
 			group.add( queueName );
-			dbServer.save( busName, group );
+			dbConn.save( busName, group );
 		} 
 		catch (IOException e) {
 			throw new RuntimeException( e );
@@ -170,7 +173,7 @@ public class CouchDbMessageBus implements MessageBus {
 		
 		// We are sending to a group: loop over all recipients
 		try {
-			ReceiverGroup recGroup = this.dbServer.findOne( queueName, ReceiverGroup.class, queueName );
+			ReceiverGroup recGroup = this.dbConn.findOne( queueName, ReceiverGroup.class, queueName );
 			if( recGroup == null ) {
 				throw new RuntimeException("Receiver group '" + queueName + "' not found");
 			}
@@ -192,7 +195,7 @@ public class CouchDbMessageBus implements MessageBus {
 	private CouchDbEnvelope sendOne( String queueName, Message message ) {
 		CouchDbEnvelope envelope = new CouchDbEnvelope( message, nowISO(), ourIP, queueName );
 		try {
-			dbServer.save( busName, envelope );
+			dbConn.save( busName, envelope );
 			return envelope;
 		} 
 		catch ( Exception e ) {
