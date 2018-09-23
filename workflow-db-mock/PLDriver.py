@@ -101,6 +101,23 @@ class Template():
         with open('config') as f:
             self.config = json.load(f)
 
+    def check(self):
+        res = True
+        tmp = []
+        if 'pre-tasks' in self.config:
+            tmp += self.config['pre-tasks']
+        if 'post-tasks' in self.config:
+            tmp += self.config['post-tasks']
+        rep = {}
+        rep['pipeline'] = ['pipeline', {'name':'pipeline'}]
+        for t in tmp:
+            if t['name'] not in rep:
+                rep[t['name']] = [t['name']]
+            rep[t['name']].append(t)
+            if len(rep[t['name']]) > 2:
+                res = False
+        return rep, res
+
     #Dynamically load module and class.
     #Check that it is actually a class.
     #Check that it inherits from 'Task' class.
@@ -164,10 +181,10 @@ class Template():
         return tstats, result
 
     def preTasks(self, do=True):
-        return self.tasks('pre-tasks')
+        return self.tasks('pre-tasks', do)
 
     def postTasks(self, do=True):
-        return self.tasks('post-tasks')
+        return self.tasks('post-tasks', do)
 
 
 class PLDriver():
@@ -181,6 +198,10 @@ class PLDriver():
         res = True
         stats = {}
         try:
+            rep, res = self.temp.check()
+            for r in rep:
+                if len(rep[r]) > 2:
+                    print(rep[r][0])
             tstats, res = self.temp.preTasks(res)
             stats.update(tstats)
             ts = TaskStats('pipeline', 'pip')
