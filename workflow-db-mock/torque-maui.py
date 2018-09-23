@@ -68,7 +68,7 @@ parser.add_argument( "--max-concurrent-executions", "-x", \
 					 default=1 )
 args=parser.parse_args()
 
-pipelineDriverScript = "pipeline-driver.py"
+pipelineDriverScript = "pldriver.py"
 thisDirectory = os.getcwd()		# Assume the pipeline driver script is in this same directory
 pipelineDriverExecutable = thisDirectory + "/" + pipelineDriverScript
 

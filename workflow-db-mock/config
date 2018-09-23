@@ -1,0 +1,31 @@
+{
+	"pre-tasks": [
+	],
+	"post-tasks": [
+		{
+			"name": "APA",
+			"module": "APATask",
+			"class": "APAFunc"
+		},
+		{
+			"name": "APA2",
+			"module": "non-existant-task",
+			"class": "APAFunc"
+		},
+		{
+			"name": "APA3",
+			"module": "APATask",
+			"class": "NonExistantClass"
+		},
+		{
+			"name": "APA",
+			"module": "APATask",
+			"class": "APAFunc"
+		},
+		{
+			"name": "APA4",
+			"module": "PLDriver",
+			"class": "Task"
+		}
+	]
+}
