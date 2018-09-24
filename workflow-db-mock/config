@@ -1,26 +1,23 @@
 {
+	"config": [
+	],
 	"pre-tasks": [
+		{
+			"name": "EnvLoad",
+			"module": "EnvTask",
+			"class": "EnvLoader"
+		}
 	],
 	"post-tasks": [
+		{
+			"name": "EnvCheck",
+			"module": "EnvTask",
+			"class": "EnvChecker"
+		},
 		{
 			"name": "APA",
 			"module": "APATask",
 			"class": "APAFunc"
-		},
-		{
-			"name": "APA2",
-			"module": "non-existant-task",
-			"class": "APAFunc"
-		},
-		{
-			"name": "APA3",
-			"module": "APATask",
-			"class": "NonExistantClass"
-		},
-		{
-			"name": "APA4",
-			"module": "PLDriver",
-			"class": "Task"
 		}
 	]
 }
