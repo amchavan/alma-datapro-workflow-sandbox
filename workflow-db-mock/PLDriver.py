@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import sys
 import time
@@ -6,16 +8,15 @@ import inspect
 import argparse
 import tempfile
 import importlib
+import traceback
 import subprocess
 import collections
 sys.path.insert(0, "../shared")
 import dbdrwutils
 from dbmsgq import MqConnection, ExecutorClient
 
-import traceback
-
 #Interface for classes that wants to execute pre and post tasks.
-class Task():
+class Task:
     def __init__(self):
         self._params = None
     def execute(self, params):
@@ -320,6 +321,7 @@ class PLDriver():
         return res
 
 if __name__ == "__main__":
+    from PLDriver import PLDriver
     parser = argparse.ArgumentParser(description='Pipeline Driver mock-up')
     parser.add_argument(dest="progID", help="ID of the project containing the OUS")
     parser.add_argument(dest="ousUID", help="ID of the OUS that should be processed")

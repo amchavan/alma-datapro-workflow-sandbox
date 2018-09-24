@@ -1,21 +1,19 @@
-import time
-from PLDriver import Task
-
 import os
-import argparse
-import subprocess
-import datetime
-import tempfile
-import shutil
 import sys
+import time
 import json
 import base64
-import time
+import shutil
+import argparse
+import datetime
+import tempfile
+import subprocess
+from PLDriver import Task
+
 sys.path.insert(0, "../shared")
-from dbmsgq import MqConnection, ExecutorClient
 import dbdrwutils
+from dbmsgq import MqConnection, ExecutorClient
 from ngascon import NgasConnection
-from PLDriver import PLDriver
 
 #Specific APAFunc class inheriting from Task.
 #Pre or post tasks for the pipeline should be implemented in execute method.
