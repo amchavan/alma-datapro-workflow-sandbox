@@ -274,10 +274,6 @@ class PLDriver():
         try:
             rep, res = self._temp.check()
             res = res or cont
-            #print(rep)
-            for r in rep:
-                if len(rep[r]) > 2:
-                    print(rep[r][0]+": "+str(len(rep[r])-1))
             tstats, res = self._temp.preTasks(res, cont)
             res = res or cont
             stats.update(tstats)
