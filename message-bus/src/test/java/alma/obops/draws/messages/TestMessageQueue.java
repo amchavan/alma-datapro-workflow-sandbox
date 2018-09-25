@@ -13,6 +13,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import alma.obops.draws.messages.Envelope.State;
 import alma.obops.draws.messages.TestUtils.TestMessage;
 import alma.obops.draws.messages.couchdb.CouchDbMessageBus;
 
@@ -22,21 +23,24 @@ public class TestMessageQueue {
 	private static TestMessage testMessage; 	// needs to be static!
 	private MessageQueue queue = null;
 	private final TestMessage jimi = new TestMessage( "Jimi Hendrix", 28, false );
+	private TestMessage freddie = new TestMessage( "Freddie Mercury", 45, false );
+	private MessageBus messageBus;
 	
 	@Before
 	public void aaa_setUp() throws IOException {
-		MessageBus messageBus = new CouchDbMessageBus( COUCHDB_URL, null, null, MESSAGE_BUS_NAME  );
+		messageBus = new CouchDbMessageBus( COUCHDB_URL, null, null, MESSAGE_BUS_NAME  );
 		DbConnection db = ((CouchDbMessageBus) messageBus).getDbConnection(); 
 		db.dbDelete( MESSAGE_BUS_NAME );
 		db.dbCreate( MESSAGE_BUS_NAME );
 		this.queue = messageBus.messageQueue( QUEUE_NAME );
+		testMessage = null;			// reset every time
 	}
 	
 	@Test
 	public void construction() {
 		assertNotNull( queue );
 		assertEquals( QUEUE_NAME, queue.getName() );
-//		assertTrue( messageBus == queue.getMessageBus() );
+		assertTrue( messageBus == queue.getMessageBus() );
 	}
 
 	@Test
@@ -58,39 +62,44 @@ public class TestMessageQueue {
 		assertEquals( jimi, in.getMessage() );
 		
 		String s = "{ 'selector':{ '_id':{ '$gt':null }}}".replace( '\'', '\"' );
-		Envelope[] out = queue.find( s );
-		assertNotNull( out );
-		assertFalse( out.length == 0 );
-		Envelope outMessage = out[0];
-		System.out.println( outMessage );
-		assertEquals( jimi, outMessage.getMessage() );
+		Envelope[] found = queue.find( s );
+		assertNotNull( found );
+		assertFalse( found.length == 0 );
+		Envelope out = found[0];
+//		System.out.println( out );
+		
+		assertEquals( State.Sent, out.getState() );
+		assertNotNull( out.getSentTimestamp() );
+		assertEquals( jimi, out.getMessage() );
 	}
 
 	@Test
-	public void sendAndFindNext() throws Exception {
+	public void sendAndReceive() throws Exception {
 		queue.send( jimi );
 
-		Envelope out = queue.findNext();
+		Envelope out = queue.receive();
+//		System.out.println( ">>> sendAndReceive(): out=" + out );
+		
 		assertNotNull( out );
-		System.out.println( ">>> sendAndReceive(): out=" + out );
+		assertEquals( State.Received, out.getState() );
+		assertNotNull( out.getSentTimestamp() );
 		assertEquals( jimi, out.getMessage() );
+		assertEquals( out, out.getMessage().getEnvelope() );
 	}
 	
 	@Test
 	// Send and find on two separate threads
-	public void sendAndFindNextConcurrent() throws Exception {
-		TestMessage in = new TestMessage( "Freddie Mercury", 45, false );
-		
+	public void sendAndReceiveConcurrent() throws Exception {
 		Runnable sender = () -> {	
-			queue.send( in );
-			System.out.println( ">>> Sent: " + in );
+			queue.send( freddie );
+			System.out.println( ">>> Sent: " + freddie );
 		};
 		Thread senderT = new Thread( sender );
 		
 		Runnable receiver = () -> {	
 			try {
-				Envelope next = (Envelope) queue.findNext();
-				testMessage = (TestMessage) next.getMessage();
+				Envelope e = (Envelope) queue.receive();
+				testMessage  = (TestMessage) e.getMessage();
 			} 
 			catch ( Exception e ) {
 				throw new RuntimeException( e );
@@ -98,8 +107,6 @@ public class TestMessageQueue {
 			System.out.println( ">>> Received: " + testMessage );
 		};
 		Thread receiverT = new Thread( receiver );
-		
-		testMessage = null;
 		
 		// Now run the threads
 		receiverT.start();
@@ -109,19 +116,19 @@ public class TestMessageQueue {
 		receiverT.join();
 		
 		assertNotNull( testMessage );
-		assertEquals( in, testMessage );
+		assertEquals( freddie, testMessage );
+		assertEquals( State.Received, testMessage.getEnvelope().getState() );
+		assertNotNull( testMessage.getEnvelope().getReceivedTimestamp() );
 	}
 	
 	@Test
 	// Send and receive on two separate threads -- uses listenInThread()
 	public void sendAndListenInThread() throws Exception {
 		
-		TestMessage in = new TestMessage( "Freddie Mercury", 45, false );
-		
 		// Define a sender thread
 		Runnable sender = () -> {	
-			queue.send( in );
-			System.out.println( ">>> Sent: " + in );
+			queue.send( jimi );
+			System.out.println( ">>> Sent: " + jimi );
 		};
 		Thread senderT = new Thread( sender );
 		
@@ -130,10 +137,10 @@ public class TestMessageQueue {
 			testMessage = (TestMessage) message;
 			System.out.println( ">>> Received: " + message );
 		};
-		Thread receiverT = queue.listenInThread( mc, 3000, false, true );
-	
+
 		// Launch a listener with that consumer on a background thread
-		testMessage = null;
+		Thread receiverT = queue.listenInThread( mc, 3000, true );
+	
 		
 		// Wait a bit, then launch the sender
 		MessageBus.sleep( 1500 );
@@ -144,19 +151,19 @@ public class TestMessageQueue {
 		senderT.join();
 		receiverT.join();
 		assertNotNull( testMessage );
-		assertEquals( in, testMessage );
+		assertEquals( jimi, testMessage );
+		assertEquals( State.Consumed, testMessage.getEnvelope().getState() );
+		assertNotNull( testMessage.getEnvelope().getConsumedTimestamp() );
 	}
 
 	@Test
 	// Send and receive on two separate threads
 	public void sendAndReceiveSeparateThreads() throws Exception {
 		
-		TestMessage in = new TestMessage( "Freddie Mercury", 45, false );
-		
 		// Define a sender thread
 		Runnable sender = () -> {	
-			queue.send( in );
-			System.out.println( ">>> Sent: " + in );
+			queue.send( jimi );
+			System.out.println( ">>> Sent: " + jimi );
 		};
 		Thread senderT = new Thread( sender );
 		
@@ -169,7 +176,7 @@ public class TestMessageQueue {
 		// Define a sender thread
 		Runnable receiver = () -> {	
 			try {
-				queue.listen( mc, 3000, false, true );
+				queue.listen( mc, 3000, true );
 			} 
 			catch (IOException e) {
 				throw new RuntimeException( e );
@@ -178,7 +185,6 @@ public class TestMessageQueue {
 		Thread receiverT = new Thread( receiver );
 
 		// Launch a listener with that consumer on a background thread
-		testMessage = null;
 		receiverT.start();
 		
 		// Wait a bit, then launch the sender
@@ -190,6 +196,56 @@ public class TestMessageQueue {
 		senderT.join();
 		receiverT.join();
 		assertNotNull( testMessage );
-		assertEquals( in, testMessage );
+		assertEquals( jimi, testMessage );
+		assertEquals( State.Consumed, testMessage.getEnvelope().getState() );
+		assertNotNull( testMessage.getEnvelope().getConsumedTimestamp() );
+	}
+
+	@Test
+	public void sendAndLetExpire() throws Exception {
+		
+		MessageQueue queue = messageBus.messageQueue( QUEUE_NAME );
+		Envelope e = queue.send( jimi, 1000L );			
+		System.out.println( ">>> Sent: " + e );
+
+		e = queue.send( freddie );
+		System.out.println( ">>> Sent: " + e );
+
+		MessageBus.sleep( 1100 );	// Let the first message expire
+	
+		MessageConsumer mc = (message) -> {
+			testMessage = (TestMessage) message;
+			System.out.println( ">>> Received: " + message );
+		};
+		
+		try {
+			queue.listen( mc, 50, false );	// terminate after timeout
+		} 
+		catch( TimeoutException te ) {
+			// no-op, expected
+		}
+
+		assertNotNull( testMessage );
+		assertEquals( freddie, testMessage );
+		
+		String s = "{ 'selector':{ 'state':'Expired' }}".replace( '\'', '\"' );
+		Envelope[] found = queue.find( s );
+		assertEquals( 1, found.length );
+		assertEquals( State.Expired, found[0].getState() );
+		assertNotNull( found[0].getExpiredTimestamp() );
+		assertEquals( jimi, found[0].getMessage() );
+	}
+
+	@Test
+	public void sendLetExpireAndPurge() throws Exception {
+		
+		MessageQueue queue = messageBus.messageQueue( QUEUE_NAME );
+		queue.send( jimi, 1000L );	
+		queue.send( freddie, 1000L );
+	
+		MessageBus.sleep( 1100 );	// Let both messages expire
+	
+		int purged = messageBus.purgeExpiredMessages( QUEUE_NAME );
+		assertEquals( 2, purged );
 	}
 }

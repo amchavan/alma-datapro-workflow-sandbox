@@ -74,7 +74,7 @@ public class TestUtils {
 	}
 
 
-	public static class TestMessage implements Message {
+	public static class TestMessage extends AbstractMessage {
 		
 		public String name;
 		public int age;

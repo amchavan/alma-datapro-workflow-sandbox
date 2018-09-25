@@ -105,10 +105,10 @@ public class TestMessageBus {
 	}
 
 	@Test
-	public void sendAndFindNext() throws Exception {
+	public void sendAndReceive() throws Exception {
 		messageBus.send( QUEUE_NAME, jimi );
 
-		Envelope out = messageBus.findNext( QUEUE_NAME );
+		Envelope out = messageBus.receive( QUEUE_NAME );
 		assertNotNull( out );
 		System.out.println( ">>> sendAndReceive(): out=" + out );
 		assertEquals( jimi, out.getMessage() );
@@ -116,7 +116,7 @@ public class TestMessageBus {
 	
 	@Test
 	// Send and find on two separate threads
-	public void sendAndFindNextConcurrent() throws Exception {
+	public void sendAndreceiveNextConcurrent() throws Exception {
 		TestMessage in = new TestMessage( "Freddie Mercury", 45, false );
 		
 		Runnable sender = () -> {	
@@ -127,7 +127,7 @@ public class TestMessageBus {
 		
 		Runnable receiver = () -> {	
 			try {
-				Envelope next = (Envelope) messageBus.findNext( QUEUE_NAME );
+				Envelope next = (Envelope) messageBus.receive( QUEUE_NAME );
 				testMessage = (TestMessage) next.getMessage();
 			} 
 			catch ( Exception e ) {
@@ -172,7 +172,7 @@ public class TestMessageBus {
 		// Define a sender thread
 		Runnable receiver = () -> {	
 			try {
-				messageBus.listen( QUEUE_NAME, mc, 3000, false, true );
+				messageBus.listen( QUEUE_NAME, mc, 3000, true );
 			} 
 			catch (IOException e) {
 				throw new RuntimeException( e );
