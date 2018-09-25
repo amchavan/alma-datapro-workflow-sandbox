@@ -274,6 +274,7 @@ public class CouchDbConnection implements DbConnection {
 		String id = urlEncode( cdbrec.getId().toString() );
 		String url = baseURL + "/" + dbName + "/" + id;
 		
+		// Write our record to the database
 		ObjectMapper mapper = new ObjectMapper();
 		String json = mapper.writeValueAsString( cdbrec );
 

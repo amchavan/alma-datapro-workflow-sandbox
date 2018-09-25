@@ -4,6 +4,7 @@ import static alma.obops.draws.messages.examples.ExampleUtils.*;
 
 import java.io.IOException;
 
+import alma.obops.draws.messages.AbstractMessage;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.Message;
 import alma.obops.draws.messages.MessageBus;
@@ -26,7 +27,7 @@ public class Calculator {
 	 * A computation request message, e.g.
 	 * <code>{"service":"sum", "a":"1", "b":"2"}</code>
 	 */
-	public static class ComputationMessage implements RequestMessage {
+	public static class ComputationMessage extends AbstractMessage implements RequestMessage {
 
 		public String a;
 		public String b;
@@ -52,7 +53,7 @@ public class Calculator {
 	 * Describes a result, e.g. <code>{"value":"2"}</code><br>
 	 * Our calculator responds with this kind of message
 	 */
-	public static class ResultMessage implements Message {
+	public static class ResultMessage extends AbstractMessage {
 		public String value;
 
 		public ResultMessage() {

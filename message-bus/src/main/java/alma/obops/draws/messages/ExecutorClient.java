@@ -28,6 +28,6 @@ public class ExecutorClient {
 	public void call( RequestMessage request, MessageConsumer consumer, int timeout ) throws IOException {
 		Envelope envelope = queue.send( request );
 		MessageQueue responseQueue = queue.getMessageBus().messageQueue( envelope.getId() );
-		responseQueue.listen( consumer, timeout, false, true );
+		responseQueue.listen( consumer, timeout, true );
 	}
 }

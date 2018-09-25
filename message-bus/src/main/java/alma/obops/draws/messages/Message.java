@@ -6,5 +6,6 @@ package alma.obops.draws.messages;
  * @author mchavan, 12-Sep-2018
  */
 public interface Message {
-	// still empty
+	 public Envelope getEnvelope();
+	 public void setEnvelope( Envelope envelope );
 }

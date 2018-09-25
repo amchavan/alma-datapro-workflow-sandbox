@@ -1,11 +1,12 @@
 package alma.obops.draws.messages.examples;
 
-import static alma.obops.draws.messages.examples.ExampleUtils.*;
+import static alma.obops.draws.messages.examples.ExampleUtils.MESSAGE_BUS_NAME;
 
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.TimeZone;
 
+import alma.obops.draws.messages.AbstractMessage;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.Message;
 import alma.obops.draws.messages.MessageBus;
@@ -28,7 +29,7 @@ public class BasicExecutor {
 	 * A datetime request, e.g. <code>{"service":"datetime", "timezone":""}</code>
 	 * Our calculator expects messages of that form as requests.
 	 */
-	public static class DatetimeRequest implements RequestMessage {
+	public static class DatetimeRequest extends AbstractMessage implements RequestMessage  {
 		public String timezone;
 
 		public DatetimeRequest() {
@@ -44,7 +45,7 @@ public class BasicExecutor {
 	 * Describes a result, e.g. <code>{"datetime":"2"}</code><br>
 	 * Our calculator responds with this kind of message
 	 */
-	public static class DatetimeResponse implements Message {
+	public static class DatetimeResponse extends AbstractMessage {
 		public String datetime;
 
 		public DatetimeResponse() {

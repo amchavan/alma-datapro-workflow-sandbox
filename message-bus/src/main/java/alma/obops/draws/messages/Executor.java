@@ -65,7 +65,6 @@ public class Executor {
 	 * @throws IOException
 	 */
 	public void run() throws IOException {
-		queue.listen(consumer, timeout, true, // Ask for envelopes to be delivered, not messages
-				justOne);
+		queue.listen( consumer, timeout,  justOne );
 	}
 }

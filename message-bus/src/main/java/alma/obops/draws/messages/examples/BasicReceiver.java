@@ -24,6 +24,6 @@ public class BasicReceiver {
 
 		// Listen for a single message and pass it on to the consumer; will timeout
 		// if no message can be read
-		queue.listen(mc, 10000, false, true);
+		queue.listen(mc, 10000, true);
 	}
 }

@@ -2,6 +2,8 @@ package alma.obops.draws.messages;
 
 import java.io.IOException;
 
+import alma.obops.draws.messages.Envelope.State;
+
 /**
  * Allows messages to be sent and subscribed to. Depends on a {@link MessageBus}
  * providing the transport mechanism.
@@ -36,10 +38,26 @@ public class MessageQueue {
 
 	/**
 	 * Creates an {@link Envelope} (including meta-data) from the given
-	 * {@link Message} and sends it.
+	 * {@link Message} and sends to this queue. <br>
+	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
+	 * The {@link Message} instance is set to {@link State#Sent}.
 	 */
 	public Envelope send( Message message ) {
-		return messageBus.send( queueName, message);
+		return this.send( message, null );
+	}
+	
+	/**
+	 * Creates an {@link Envelope} (including meta-data) from the given
+	 * {@link Message} and sends to this queue. <br>
+	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
+	 * The {@link Message} instance is set to {@link State#Sent}.
+	 * 
+	 * @param timeToLive
+	 *            The time before this instance expires, in msec; if
+	 *            <code>null</code>, this instance never expires
+	 */
+	public Envelope send( Message message, Long timeToLive ) {
+		return messageBus.send( queueName, message, timeToLive );
 	}
 	
 	/**
@@ -67,8 +85,8 @@ public class MessageQueue {
 	 * 
 	 * @throws IOException 
 	 */
-	public Envelope findNext() throws IOException {
-		return messageBus.findNext( queueName );
+	public Envelope receive() throws IOException {
+		return messageBus.receive( queueName );
 	}
 	
 	/**
@@ -84,8 +102,8 @@ public class MessageQueue {
 	 * @throws TimeoutException		If waiting time exceeded the given timeout value
 	 * @throws IOException
 	 */
-	public Envelope findNext( int timeout ) throws IOException, TimeoutException {
-		return messageBus.findNext( queueName, timeout );
+	public Envelope receive( int timeout ) throws IOException, TimeoutException {
+		return messageBus.receive( queueName, timeout );
 	}
 
 	
@@ -107,23 +125,20 @@ public class MessageQueue {
 	 * 
 	 * @param consumer
 	 *            Callback function to process the message with
-//	 * @param condition
-//	 *            Boolean function to be invoked before starting to listen: if not
-//	 *            <code>null</code>will cause the thread to sleep if the condition
-//	 *            is false
+// * @param condition
+// * Boolean function to be invoked before starting to listen: if not
+// * <code>null</code>will cause the thread to sleep if the condition
+// * is false
 	 * @param timeout
-	 *            If timeout > 0 it represents the number of msec to wait for a
-	 *            message to arrive before timing out -- upon timeout a
-	 *            RuntimeException is thrown
-	 * @param metadata
-	 *            If <code>true</code>, pass the consumer an {@link Envelope}
-	 *            including all meta-data; otherwise a plain {@link Message}
+	 *            If timeout is not-<code>null</code> and positive it represents the
+	 *            number of msec to wait for a message to arrive before timing out,
+	 *            upon which a RuntimeException is thrown
 	 * @param justOne
 	 *            If <code>true</code>, return after the first message
-	 * @throws IOException 
+	 * @throws IOException
 	 */
-	public void listen( MessageConsumer consumer, int timeout, boolean metadata, boolean justOne ) throws IOException {
-		messageBus.listen( queueName, consumer, timeout, metadata, justOne );
+	public void listen( MessageConsumer consumer, Integer timeout, boolean justOne ) throws IOException {
+		this.messageBus.listen( queueName, consumer, timeout, justOne );
 	} 	
 	
 	/**
@@ -132,15 +147,7 @@ public class MessageQueue {
 	 * This method times out.<br>
 	 * This method is a wrapper around {@link #listen()}.
 	 */
-	public Thread listenInThread( MessageConsumer consumer, 
-								  int timeout, 
-								  boolean metadata, 
-								  boolean justOne ) {
-		
-		return messageBus.listenInThread( queueName, 
-										  consumer, 
-										  timeout, 
-										  metadata, 
-										  justOne );
+	public Thread listenInThread( MessageConsumer consumer, Integer timeout, boolean justOne ) {
+		return messageBus.listenInThread( queueName, consumer, timeout, justOne );
 	}
 }
