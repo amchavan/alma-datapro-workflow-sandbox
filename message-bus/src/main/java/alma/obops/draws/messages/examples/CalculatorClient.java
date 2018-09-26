@@ -26,21 +26,21 @@ public class CalculatorClient {
 		CouchDbConfig config = new CouchDbConfig();
 		MessageBus bus = new CouchDbMessageBus(config, MESSAGE_BUS_NAME);
 		MessageQueue queue = bus.messageQueue(CALC_SELECTOR);
-		ExecutorClient client = new ExecutorClient(queue);
 
 		MessageConsumer consumer = (message) -> {
 			String txt = request.a + " " + request.operation + " " + request.b + " = "
 					+ ((ResultMessage) message).value;
 			System.out.println(txt);
 		};
+		ExecutorClient client = new ExecutorClient(queue, consumer);
 
 		request = new ComputationMessage("+", "1", "2");
-		client.call(request, consumer);
+		client.call(request);
 
 		request = new ComputationMessage("-", "7", "4");
-		client.call(request, consumer);
+		client.call(request);
 
 		request = new ComputationMessage("*", "1", "3");
-		client.call(request, consumer);
+		client.call(request);
 	}
 }

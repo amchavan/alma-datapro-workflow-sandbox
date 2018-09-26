@@ -11,21 +11,23 @@ import java.io.IOException;
 public class ExecutorClient {
 
 	private MessageQueue queue;
+	private MessageConsumer consumer;
 	
 	/**
 	 * Public constructor
 	 * 
 	 * @param queue  Queue for sending request messages
 	 */
-	public ExecutorClient( MessageQueue queue ) {
+	public ExecutorClient( MessageQueue queue, MessageConsumer consumer ) {
 		this.queue = queue;
+		this.consumer = consumer;
 	}
 	
-	public void call( RequestMessage request, MessageConsumer consumer ) throws IOException {
-		call( request, consumer, 0 );
+	public void call( RequestMessage request ) throws IOException {
+		call( request, 0 );
 	}
 	
-	public void call( RequestMessage request, MessageConsumer consumer, int timeout ) throws IOException {
+	public void call( RequestMessage request, int timeout ) throws IOException {
 		Envelope envelope = queue.send( request );
 		MessageQueue responseQueue = queue.getMessageBus().messageQueue( envelope.getId() );
 		responseQueue.listen( consumer, timeout, true );

@@ -16,14 +16,13 @@ public class Executor {
 	private boolean justOne;
 
 	/**
-	 * A specialized consumer, it gets invoked with an {@link Envelope} as argument
-	 * because we need its message ID. Will invoke the processor on the included
-	 * {@link Message} and send the result of that to a queue named after the
+	 * A specialized consumer: will invoke the processor on the included
+	 * {@link RequestMessage} and send the result of that to a queue named after the
 	 * original message's ID.
 	 */
 	private MessageConsumer consumer = (message) -> {
-		Envelope envelope = (Envelope) message;
-		Message response = processor.process((RequestMessage) envelope.getMessage());
+		Envelope envelope = message.getEnvelope();
+		Message response = processor.process( (RequestMessage) message );
 		MessageQueue responseQueue = queue.getMessageBus().messageQueue(envelope.getId());
 		responseQueue.send(response);
 	};

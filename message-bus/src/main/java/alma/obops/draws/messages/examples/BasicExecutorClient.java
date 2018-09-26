@@ -21,12 +21,12 @@ public class BasicExecutorClient {
 		CouchDbConfig config = new CouchDbConfig();
 		MessageBus bus = new CouchDbMessageBus(config, MESSAGE_BUS_NAME);
 		MessageQueue queue = bus.messageQueue(DATETIME_QUEUE);
-		ExecutorClient client = new ExecutorClient(queue);
-		DatetimeRequest request = new DatetimeRequest("Etc/GMT");
 		MessageConsumer consumer = (message) -> {
 			System.out.println(((DatetimeResponse) message).datetime);
 		};
+		ExecutorClient client = new ExecutorClient( queue, consumer );
 
-		client.call(request, consumer);
+		DatetimeRequest request = new DatetimeRequest("Etc/GMT");
+		client.call( request );
 	}
 }

@@ -140,7 +140,7 @@ public class CouchDbMessageBus implements MessageBus {
 					return ret;
 				}
 			}
-			sleep( 1000 );
+			sleep( 1000 );	// TODO: make this dynamic
 		}
 	}
 	

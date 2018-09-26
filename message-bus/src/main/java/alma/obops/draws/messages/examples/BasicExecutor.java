@@ -80,7 +80,8 @@ public class BasicExecutor {
 
 		try {
 			executor.run();
-		} catch (TimeoutException e) {
+		} 
+		catch (TimeoutException e) {
 			System.out.println(">>> Timed out: " + e.getMessage());
 		}
 	}
