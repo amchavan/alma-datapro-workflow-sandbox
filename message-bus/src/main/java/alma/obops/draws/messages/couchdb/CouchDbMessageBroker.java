@@ -19,7 +19,6 @@ import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.Record;
-import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.SimpleEnvelope;
 import alma.obops.draws.messages.TimeLimitExceededException;
 

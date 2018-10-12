@@ -1,7 +1,6 @@
 package alma.obops.draws.messages.rabbitmq;
 
-import static alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker.LOGGING_MESSAGE_BUS;
-import static alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker.MESSAGE_STATE_ROUTING_KEY;
+import static alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker.*;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -18,7 +17,7 @@ import com.rabbitmq.client.DefaultConsumer;
 import alma.obops.draws.messages.SimpleEnvelope;
 
 @Component
-public class MessageLogListener implements Runnable {
+public class PersistenceListener implements Runnable {
 
 	private Consumer consumer;
 	private Channel channel;
@@ -99,9 +98,9 @@ public class MessageLogListener implements Runnable {
 		}
 	}
 	
-	public MessageLogListener( Channel channel, String exchangeName, PersistedEnvelopeRepository envelopeRepository ) throws IOException, TimeoutException {
+	public PersistenceListener( Channel channel, String exchangeName, PersistedEnvelopeRepository envelopeRepository ) throws IOException, TimeoutException {
 		this.channel = channel;
-		this.channel.queueBind( LOGGING_MESSAGE_BUS, exchangeName, "#" );
+		this.channel.queueBind( MESSAGE_PERSISTENCE_QUEUE, exchangeName, "#" );
 		this.consumer = new MessageLogConsumer( channel, envelopeRepository );
 	}
 	
@@ -109,7 +108,7 @@ public class MessageLogListener implements Runnable {
 	public void run() {
 		try {
 			boolean autoAck = true;
-			this.channel.basicConsume( LOGGING_MESSAGE_BUS, autoAck, this.consumer );
+			this.channel.basicConsume( MESSAGE_PERSISTENCE_QUEUE, autoAck, this.consumer );
 		} 
 		catch( IOException e ) {
 			throw new RuntimeException( e );

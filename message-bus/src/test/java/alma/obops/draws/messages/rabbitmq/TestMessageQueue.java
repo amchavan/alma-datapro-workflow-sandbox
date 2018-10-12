@@ -32,8 +32,7 @@ import alma.obops.draws.messages.TimeLimitExceededException;
 @AutoConfigureJdbc
 public class TestMessageQueue {
 
-	private static final String QUEUE_NAME = "Q";
-	private static final String QUEUE_NAME_2 = QUEUE_NAME + "2";
+	private static final String QUEUE_NAME = "test.queue";
 	private static final String EXCHANGE_NAME = "unit-test-exchange";
 
 	private final TestMessage jimi = new TestMessage( "Jimi Hendrix", 28, false );
@@ -80,6 +79,7 @@ public class TestMessageQueue {
 
 	@After
 	public void aaa_tearDown() throws Exception {
+		broker.deleteQueue( this.queue );
 	}
 	
 	@Test
@@ -242,6 +242,32 @@ public class TestMessageQueue {
 
 
 	@Test
+	public void send_Receive_Multiple() throws Exception {
+	
+		System.out.println( ">>> Send/Receive multiple ========================================" );
+		final int repeats = 10;
+		
+		for( int i = 0; i < repeats; i++ ) {
+			String queueName = QUEUE_NAME + i;
+			MessageQueue queue = broker.messageQueue( queueName );
+			TestMessage message = new TestMessage( null, i, true );
+			Envelope sent = queue.send( message );
+			System.out.println( ">>> sent: " + sent );
+		}
+		
+		
+		for( int i = repeats-1; i>=0 ; i-- ) {
+			String queueName = QUEUE_NAME + i;
+			MessageQueue queue = broker.messageQueue( queueName );
+			Envelope received = queue.receive( 2000L );
+			System.out.println( ">>> received: " + received );
+			TestMessage message = (TestMessage) received.getMessage();
+			assertEquals( i, message.age );
+			broker.deleteQueue( queue );
+		}
+	}
+
+	@Test
 	// Send and find on two separate threads
 	public void send_ReceiveConcurrent() throws Exception {
 		
@@ -277,6 +303,7 @@ public class TestMessageQueue {
 		assertNotNull( receivedMessage.getEnvelope().getReceivedTimestamp() );
 	}
 
+	
 	@Test
 	public void sendToGroup() throws Exception {
 
@@ -286,8 +313,9 @@ public class TestMessageQueue {
 		broker.drainLoggingQueue();
 
 		// Create the recipient group
-		final String groupName = "recipients.*";
-		MessageQueue queue2 = broker.messageQueue( QUEUE_NAME_2 );
+		String groupName = "recipients.*";
+		String queue2Name = QUEUE_NAME + "." + 2;
+		MessageQueue queue2 = broker.messageQueue( queue2Name );
 		MessageQueue group = broker.messageQueue( groupName );
 		
 		queue.joinGroup( groupName );
@@ -304,6 +332,9 @@ public class TestMessageQueue {
 		Envelope out2 = queue2.receive();
 		assertNotNull( out2 );
 		assertEquals( jimi, out2.getMessage() );
+
+		broker.deleteQueue( queue2 );
+		broker.deleteQueue( group );
 		
 		// Process all pending log messages because we need to 
 		// interrogate the database
@@ -327,42 +358,10 @@ public class TestMessageQueue {
 		
 		Envelope e1 = found.get(1).asSimpleEnvelope();
 		assertEquals( jimi, e1.getMessage() );
-		assertEquals( QUEUE_NAME_2, e1.getQueueName()  );
+		assertEquals( queue2Name, e1.getQueueName()  );
 	}
 
-	
 	private void setReceivedMessage( Message message ) {
 		this.receivedMessage = message;
-	}
-
-	@SuppressWarnings("unused")
-	@Test
-	public void send_Receive_Multiple() throws Exception {
-	
-		System.out.println( ">>> Send/Receive multiple ========================================" );
-		final String queueName1 = QUEUE_NAME + "_1";
-		final String queueName2 = QUEUE_NAME + "_2";
-		final String queueName3 = QUEUE_NAME + "_3";
-
-		MessageQueue queue1 = broker.messageQueue( queueName1 );
-		MessageQueue queue2 = broker.messageQueue( queueName2 );
-		MessageQueue queue3 = broker.messageQueue( queueName3 );
-
-		Envelope sent1 = queue1.send( brian );
-		Envelope sent2 = queue2.send( jimi );
-		Envelope sent3 = queue3.send( freddie );
-
-		Envelope received1 = queue1.receive( 2000L );
-		System.out.println( ">>> received1: " + received1 );
-		
-		Envelope received2 = queue2.receive( 2000L );
-		System.out.println( ">>> received2: " + received2 );
-		
-		Envelope received3 = queue3.receive( 2000L );
-		System.out.println( ">>> received3: " + received3 );
-
-		assertEquals( brian,   received1.getMessage() );
-		assertEquals( jimi,    received2.getMessage() );
-		assertEquals( freddie, received3.getMessage() );
 	}
 }

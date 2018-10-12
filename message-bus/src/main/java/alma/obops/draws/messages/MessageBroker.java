@@ -85,6 +85,11 @@ public interface MessageBroker {
 	}
 	
 	/**
+	 * Delete a queue and all its messages. Use with care.
+	 */
+	public void deleteQueue( MessageQueue queue );
+
+	/**
 	 * Look for group members.
 	 * 
 	 * @param groupName
@@ -96,7 +101,7 @@ public interface MessageBroker {
 	 * @throws IOException 
 	 */
 	public List<String> groupMembers( String groupName  ) throws IOException;
-
+	
 	/**
 	 * Add a queue to a group: messages sent to the group will be passed on to
 	 * that queue as well.
@@ -106,7 +111,7 @@ public interface MessageBroker {
 	 *            with '<code>.*</code>', e.g. <code>state.changes.*</code>
 	 */
 	public void joinGroup( String queueName, String groupName  );
-	
+
 	/**
 	 * Listen for messages matching the queue name and process them as
 	 * they come in.<br>
@@ -134,17 +139,6 @@ public interface MessageBroker {
 						boolean justOne ) throws IOException;
 
 	/**
-	 * Start a background thread listening for messages matching the
-	 * queue name and processing them as they come in.<br>
-	 * This method times out.<br>
-	 * This method is a wrapper around {@link #listen()}.
-	 */
-	public Thread listenInThread( MessageQueue queue, 
-								  MessageConsumer consumer, 
-								  int timeout, 
-								  boolean justOne );
-
-	/**
 	 * Listen for messages matching the queue name and process them as
 	 * they come in.<br>
 	 * This method never returns.
@@ -161,10 +155,21 @@ public interface MessageBroker {
 //	public void listen( String queueName, MessageConsumer consumer ) throws IOException;
 
 	/**
+	 * Start a background thread listening for messages matching the
+	 * queue name and processing them as they come in.<br>
+	 * This method times out.<br>
+	 * This method is a wrapper around {@link #listen()}.
+	 */
+	public Thread listenInThread( MessageQueue queue, 
+								  MessageConsumer consumer, 
+								  int timeout, 
+								  boolean justOne );
+
+	/**
 	 * @return A {@link MessageQueue} with the given name
 	 */
 	public MessageQueue messageQueue( String queueName );
-
+		
 	/**
 	 * Find the next message of this queue: that is, the oldest
 	 * non-{@link State#Received} message. That message will be set to
@@ -176,8 +181,8 @@ public interface MessageBroker {
 	 * 
 	 * @throws IOException
 	 */
-	public Envelope receive( MessageQueue queue ) throws IOException;
-		
+	public Envelope receive( MessageQueue queue ) throws IOException;	
+
 	/**
 	 * Find the next message of the queue, that is, the oldest
 	 * non-{@link State#Received} message. That message will be set to
@@ -197,12 +202,7 @@ public interface MessageBroker {
 	 *             If waiting time exceeded the given limit
 	 * @throws IOException
 	 */
-	public Envelope receive( MessageQueue queue, long timeLimit ) throws IOException, TimeLimitExceededException;	
-	
-    /**
-	 * @return A {@link MessageQueue} with the given name, where RPC responses are sent
-	 */
-	public MessageQueue rpcResponseMessageQueue( String queueName );
+	public Envelope receive( MessageQueue queue, long timeLimit ) throws IOException, TimeLimitExceededException;
 
 	/**
 	 * Creates an {@link Envelope} (including meta-data) from the given
@@ -233,7 +233,7 @@ public interface MessageBroker {
 	 *            timeToLive=0 this instance never expires
 	 */
 	public Envelope send( MessageQueue queue, Message message, long expireTime );
-
+	
 	/**
 	 * Creates an {@link Envelope} (including meta-data) from the given
 	 * {@link Message} and sends it to a queue.<br>
@@ -250,38 +250,4 @@ public interface MessageBroker {
 	 *            timeToLive=0 this instance never expires
 	 */
 	public Envelope sendOne( MessageQueue queue, Message message, long expireTime );
-
-	/**
-	 * Creates an {@link Envelope} (including meta-data) from the given
-	 * {@link RequestMessage} and sends it as an RPC request to a queue.<br>
-	 * The {@link Envelope} and {@link RequestMessage} instances reference each other.<br>
-	 * The {@link RequestMessage} instance is set to {@link State#Sent}.
-	 * 
-	 * @param queue
-	 *            Name of the queue should not end with
-	 *            <code>.*</code> (that is, it should not be a receiver group
-	 *            designator)
-	 *            
-	 * @param timeToLive
-	 *            Time interval before this instance expires, in msec; if
-	 *            timeToLive=0 this instance never expires
-	 */
-	public Envelope sendRpcRequest( MessageQueue queue, RequestMessage message, long timeToLive );
-	
-	/**
-	 * Creates an {@link Envelope} (including meta-data) from the given
-	 * {@link ResponseMessage} and sends it to the RPC callback queue.<br>
-	 * The {@link Envelope} and {@link ResponseMessage} instances reference each other.<br>
-	 * The {@link ResponseMessage} instance is set to {@link State#Sent}.
-	 * 
-	 * @param queue
-	 *            Name of the queue should not end with
-	 *            <code>.*</code> (that is, it should not be a receiver group
-	 *            designator)
-	 *            
-	 * @param timeToLive
-	 *            Time interval before this instance expires, in msec; if
-	 *            timeToLive=0 this instance never expires
-	 */
-	public Envelope sendRpcResponse( MessageQueue queue, ResponseMessage message, long timeToLive );
 }

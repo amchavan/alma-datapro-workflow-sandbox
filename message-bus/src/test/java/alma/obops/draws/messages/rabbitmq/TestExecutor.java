@@ -1,31 +1,30 @@
 package alma.obops.draws.messages.rabbitmq;
 
 import static alma.obops.draws.messages.TestUtils.RABBITMQ_URL;
-import static alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import alma.obops.draws.messages.AbstractMessage;
-import alma.obops.draws.messages.Envelope;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.ExecutorClient;
-import alma.obops.draws.messages.Message;
 import alma.obops.draws.messages.MessageConsumer;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
+import alma.obops.draws.messages.ResponseMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
 
 public class TestExecutor {
 
-	private static final String QUEUE_NAME = "executorQ";
+	private static final String QUEUE_NAME = "test.executor.queue";
 	private static final String EXCHANGE_NAME = "unit-test-exchange";
 	static Integer doubled = null; 			// needs to be static!
 	private RabbitMqMessageBroker broker = null;
@@ -47,7 +46,7 @@ public class TestExecutor {
 	}
 
 	// Response: a doubled number
-	public static class DoubleResponse extends AbstractMessage {
+	public static class DoubleResponse extends AbstractMessage implements ResponseMessage {
 		public int doubled;
 
 		public DoubleResponse() {
@@ -59,7 +58,7 @@ public class TestExecutor {
 	public static class Doubler implements RequestProcessor {
 
 		@Override
-		public Message process( RequestMessage message ) {
+		public ResponseMessage process( RequestMessage message ) {
 
 			DoubleRequest request = (DoubleRequest) message;
 			System.out.println( ">>> Received request with number=" + request.number );
@@ -77,20 +76,12 @@ public class TestExecutor {
 		this.queue = broker.messageQueue( QUEUE_NAME );
 
 		broker.drainLoggingQueue();
-		broker.drainQueue( MAIN_MESSAGE_BUS );
-		
-		// Drain the queue 
-		while( true ) {
-			Envelope envelope;
-			try {
-				envelope = queue.receive( 1000L );
-			}
-			catch ( TimeLimitExceededException e1) {
-				// no-op, expected when the queue is empty;
-				break;
-			}
-			System.out.println( ">>> Draining: found: " +  envelope.getMessage() );
-		}
+		broker.drainQueue( this.queue );
+	}
+
+	@After
+	public void aaa_tearDown() throws Exception {
+		broker.deleteQueue( this.queue );
 	}
 
 	@Test

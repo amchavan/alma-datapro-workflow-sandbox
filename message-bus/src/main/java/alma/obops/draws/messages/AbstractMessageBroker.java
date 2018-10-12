@@ -13,6 +13,11 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	}
 
 	@Override
+	public void deleteQueue(MessageQueue queue) {
+		// no-op
+	}
+
+	@Override
 	public Thread listenInThread( MessageQueue queue, MessageConsumer consumer, int timeout, boolean justOne) {
 		
 		Runnable receiver = () -> {	
@@ -40,11 +45,6 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	@Override
 	public Envelope receive( MessageQueue queue ) throws IOException {
 		return receive( queue, 0 );
-	}
-	
-	@Override
-	public MessageQueue rpcResponseMessageQueue( String queueName ) {
-		return messageQueue( queueName );
 	}
 
 	@Override
@@ -82,15 +82,5 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 		catch ( Exception e ) {
 			throw new RuntimeException( e );
 		}
-	}
-
-	@Override
-	public Envelope sendRpcRequest( MessageQueue queue, RequestMessage message, long timeToLive ) {
-		return sendOne( queue, message, timeToLive );
-	}
-
-	@Override
-	public Envelope sendRpcResponse( MessageQueue queue, ResponseMessage message, long timeToLive ) {
-		return sendOne( queue, message, timeToLive );
 	}
 }

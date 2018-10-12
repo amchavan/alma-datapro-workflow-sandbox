@@ -1,16 +1,16 @@
 package alma.obops.draws.messages.examples;
 
-import static alma.obops.draws.messages.examples.ExampleUtils.*;
+import static alma.obops.draws.messages.examples.ExampleUtils.MESSAGE_BUS_NAME;
 
 import java.io.IOException;
 
 import alma.obops.draws.messages.AbstractMessage;
 import alma.obops.draws.messages.Executor;
-import alma.obops.draws.messages.Message;
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
+import alma.obops.draws.messages.ResponseMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.couchdb.CouchDbConfig;
 import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
@@ -53,7 +53,7 @@ public class Calculator {
 	 * Describes a result, e.g. <code>{"value":"2"}</code><br>
 	 * Our calculator responds with this kind of message
 	 */
-	public static class ResultMessage extends AbstractMessage {
+	public static class ResultMessage extends AbstractMessage implements ResponseMessage {
 		public String value;
 
 		public ResultMessage() {
@@ -73,7 +73,7 @@ public class Calculator {
 	public static class CalculatorProcessor implements RequestProcessor {
 
 		@Override
-		public Message process(RequestMessage message) {
+		public ResponseMessage process(RequestMessage message) {
 
 			System.out.println(">>> Received: " + message);
 			ComputationMessage computation = (ComputationMessage) message;

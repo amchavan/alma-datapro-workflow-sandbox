@@ -2,7 +2,7 @@ package alma.obops.draws.messages.couchdb;
 
 import static alma.obops.draws.messages.TestUtils.COUCHDB_URL;
 import static alma.obops.draws.messages.TestUtils.MESSAGE_BUS_NAME;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
@@ -13,14 +13,13 @@ import alma.obops.draws.messages.AbstractMessage;
 import alma.obops.draws.messages.DbConnection;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.ExecutorClient;
-import alma.obops.draws.messages.Message;
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
+import alma.obops.draws.messages.ResponseMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
-import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
 
 public class TestExecutor {
 
@@ -43,7 +42,7 @@ public class TestExecutor {
 	}
 
 	// Response: a doubled number
-	public static class DoubleResponse extends AbstractMessage {
+	public static class DoubleResponse extends AbstractMessage implements ResponseMessage {
 		public int doubled;
 
 		public DoubleResponse() {
@@ -59,7 +58,7 @@ public class TestExecutor {
 	public static class Doubler implements RequestProcessor {
 
 		@Override
-		public Message process(RequestMessage message) {
+		public ResponseMessage process(RequestMessage message) {
 
 			DoubleRequest request = (DoubleRequest) message;
 			System.out.println( ">>> Received request with number=" + request.number );

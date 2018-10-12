@@ -23,7 +23,7 @@ public class Executor {
 	private MessageConsumer consumer = (message) -> {
 		Message response = processor.process( (RequestMessage) message );
 		Envelope envelope = message.getEnvelope();
-		MessageQueue responseQueue = queue.getMessageBroker().rpcResponseMessageQueue( envelope.getId() );
+		MessageQueue responseQueue = queue.getMessageBroker().messageQueue( envelope.getId() );
 		queue.getMessageBroker().sendOne( responseQueue, response, 0 );
 	};
 

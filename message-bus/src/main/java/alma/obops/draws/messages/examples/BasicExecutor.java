@@ -8,11 +8,11 @@ import java.util.TimeZone;
 
 import alma.obops.draws.messages.AbstractMessage;
 import alma.obops.draws.messages.Executor;
-import alma.obops.draws.messages.Message;
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
+import alma.obops.draws.messages.ResponseMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.couchdb.CouchDbConfig;
 import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
@@ -45,7 +45,7 @@ public class BasicExecutor {
 	 * Describes a result, e.g. <code>{"datetime":"2"}</code><br>
 	 * Our calculator responds with this kind of message
 	 */
-	public static class DatetimeResponse extends AbstractMessage {
+	public static class DatetimeResponse extends AbstractMessage implements ResponseMessage {
 		public String datetime;
 
 		public DatetimeResponse() {
@@ -61,7 +61,7 @@ public class BasicExecutor {
 	public static class DatetimeProcessor implements RequestProcessor {
 
 		@Override
-		public Message process(RequestMessage message) {
+		public ResponseMessage process(RequestMessage message) {
 
 			DatetimeRequest request = (DatetimeRequest) message;
 			System.out.println(">>> Received request with TZ=" + request.timezone);

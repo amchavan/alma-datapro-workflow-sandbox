@@ -28,9 +28,10 @@ public class ExecutorClient {
 	}
 	
 	public void call( RequestMessage request, int timeout ) throws IOException {
-		Envelope envelope = queue.sendRpcRequest( request );
+		Envelope envelope = queue.send( request );
 		final String correlationId = envelope.getId();
-		MessageQueue responseQueue = queue.getMessageBroker().rpcResponseMessageQueue( correlationId );
+		MessageQueue responseQueue = queue.getMessageBroker().messageQueue( correlationId );
 		responseQueue.listen( consumer, timeout, true );
+		responseQueue.delete();		// response queues are used only once
 	}
 }

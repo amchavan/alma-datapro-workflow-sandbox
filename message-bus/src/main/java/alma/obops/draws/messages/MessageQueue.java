@@ -45,19 +45,6 @@ public class MessageQueue {
 	public Envelope send( Message message ) {
 		return this.send( message, 0 );
 	}
-
-	/**
-	 * Creates an {@link Envelope} (including meta-data) from the given
-	 * {@link Message} and sends to this queue. <br>
-	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
-	 * The {@link Message} instance is set to {@link State#Sent}.
-	 * 
-	 * @param correlationId 
-	 *            Identifier for the response message
-	 */
-	public Envelope sendRpcRequest( RequestMessage message ) {
-		return this.sendRpcRequest( message, 0 );
-	}
 	
 	/**
 	 * Creates an {@link Envelope} (including meta-data) from the given
@@ -74,20 +61,12 @@ public class MessageQueue {
 	}
 	
 	/**
-	 * Creates an {@link Envelope} (including meta-data) from the given
-	 * {@link Message} and sends to this queue. <br>
-	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
-	 * The {@link Message} instance is set to {@link State#Sent}.
+	 * Delete this queue and all its messages
 	 * 
-	 * @param timeToLive
-	 *            The time before this instance expires, in msec; if
-	 *            <code>null</code>, this instance never expires
-	 * 
-	 * @param correlationId
-	 *            Identifier for the response message
+	 * @throws IOException 
 	 */
-	public Envelope sendRpcRequest( RequestMessage message, long timeToLive ) {
-		return messageBroker.sendRpcRequest( this, message, timeToLive );
+	public void delete() throws IOException {
+		messageBroker.deleteQueue( this );
 	}
 	
 	/**
