@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.obops.draws.messages.couchdb;
 
 import static alma.obops.draws.messages.TestUtils.COUCHDB_URL;
 import static alma.obops.draws.messages.TestUtils.MESSAGE_BUS_NAME;
@@ -13,29 +13,36 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import alma.obops.draws.messages.DbConnection;
+import alma.obops.draws.messages.Envelope;
+import alma.obops.draws.messages.MessageBroker;
+import alma.obops.draws.messages.MessageConsumer;
+import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.TestUtils.TestMessage;
 import alma.obops.draws.messages.couchdb.CouchDbEnvelope;
-import alma.obops.draws.messages.couchdb.CouchDbMessageBus;
+import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
 
-public class TestMessageBus {
+public class TestMessageBroker {
 
 	private static final String QUEUE_NAME = "Q";
 	private static TestMessage testMessage; 	// needs to be static!
-	private MessageBus messageBus = null;
+	private CouchDbMessageBroker messageBus = null;
 	private final TestMessage jimi = new TestMessage( "Jimi Hendrix", 28, false );
 	private DbConnection db;
+	private MessageQueue queue;
 	
 	@Before
 	public void aaa_setUp() throws IOException {
-		messageBus = new CouchDbMessageBus( COUCHDB_URL, null, null, MESSAGE_BUS_NAME  );
-		db = ((CouchDbMessageBus) messageBus).getDbConnection(); 
+		messageBus = new CouchDbMessageBroker( COUCHDB_URL, null, null, MESSAGE_BUS_NAME  );
+		queue = new MessageQueue( QUEUE_NAME, messageBus );
+		db = ((CouchDbMessageBroker) messageBus).getDbConnection(); 
 		db.dbDelete( MESSAGE_BUS_NAME );
 		db.dbCreate( MESSAGE_BUS_NAME );
 	}
 
 	@Test
 	public void messageRecordConstructorGeneratesID() {
-		Envelope mr = new CouchDbEnvelope( null, null, null, null );
+		Envelope mr = new CouchDbEnvelope( jimi, null, null, 0 );
 		assertNotNull( mr.getId() );
 		System.out.println( mr.getId() );
 	}
@@ -61,7 +68,7 @@ public class TestMessageBus {
 	
 	@Test
 	public void messageQueueConstructorGeneratesDbConnection() {
-		DbConnection db = ((CouchDbMessageBus) messageBus).getDbConnection();
+		DbConnection db = ((CouchDbMessageBroker) messageBus).getDbConnection();
 		assertNotNull( db );
 	}
 	
@@ -70,19 +77,19 @@ public class TestMessageBus {
 		MessageQueue queue = messageBus.messageQueue( QUEUE_NAME );
 		assertNotNull( queue );
 		assertEquals( QUEUE_NAME, queue.getName() );
-		assertTrue( messageBus == queue.getMessageBus() );
+		assertTrue( messageBus == queue.getMessageBroker() );
 	}
 	
 	@Test
 	public void nowISO() {
-		String nowISO = MessageBus.nowISO();
+		String nowISO = MessageBroker.nowISO();
 		assertNotNull( nowISO );
 		System.out.println( nowISO );
 	}
 
 	@Test
 	public void ourIP() {
-		String ourIP = MessageBus.ourIP();
+		String ourIP = MessageBroker.ourIP();
 		assertNotNull( ourIP );
 		assertFalse( ourIP.equals( "0.0.0.0" ));
 		System.out.println( ">>> our IP: " + ourIP );		
@@ -91,7 +98,7 @@ public class TestMessageBus {
 	
 	@Test
 	public void sendAndFind() throws Exception {
-		Envelope in = messageBus.send( QUEUE_NAME, jimi );
+		Envelope in = messageBus.send( queue, jimi );
 		assertNotNull( in );
 		assertEquals( jimi, in.getMessage() );
 		
@@ -106,9 +113,9 @@ public class TestMessageBus {
 
 	@Test
 	public void sendAndReceive() throws Exception {
-		messageBus.send( QUEUE_NAME, jimi );
+		messageBus.send( queue, jimi );
 
-		Envelope out = messageBus.receive( QUEUE_NAME );
+		Envelope out = messageBus.receive( queue );
 		assertNotNull( out );
 		System.out.println( ">>> sendAndReceive(): out=" + out );
 		assertEquals( jimi, out.getMessage() );
@@ -120,14 +127,14 @@ public class TestMessageBus {
 		TestMessage in = new TestMessage( "Freddie Mercury", 45, false );
 		
 		Runnable sender = () -> {	
-			messageBus.send( QUEUE_NAME, in );
+			messageBus.send( queue, in );
 			System.out.println( ">>> Sent: " + in );
 		};
 		Thread senderT = new Thread( sender );
 		
 		Runnable receiver = () -> {	
 			try {
-				Envelope next = (Envelope) messageBus.receive( QUEUE_NAME );
+				Envelope next = (Envelope) messageBus.receive( queue );
 				testMessage = (TestMessage) next.getMessage();
 			} 
 			catch ( Exception e ) {
@@ -141,7 +148,7 @@ public class TestMessageBus {
 		
 		// Now run the threads
 		receiverT.start();
-		MessageBus.sleep( 2000 );
+		MessageBroker.sleep( 2000 );
 		senderT.start();
 		senderT.join();
 		receiverT.join();
@@ -158,7 +165,7 @@ public class TestMessageBus {
 		
 		// Define a sender thread
 		Runnable sender = () -> {	
-			messageBus.send( QUEUE_NAME, in );
+			messageBus.send( queue, in );
 			System.out.println( ">>> Sent: " + in );
 		};
 		Thread senderT = new Thread( sender );
@@ -172,7 +179,7 @@ public class TestMessageBus {
 		// Define a sender thread
 		Runnable receiver = () -> {	
 			try {
-				messageBus.listen( QUEUE_NAME, mc, 3000, true );
+				messageBus.listen( queue, mc, 3000, true );
 			} 
 			catch (IOException e) {
 				throw new RuntimeException( e );
@@ -185,7 +192,7 @@ public class TestMessageBus {
 		receiverT.start();
 		
 		// Wait a bit, then launch the sender
-		MessageBus.sleep( 1500 );
+		MessageBroker.sleep( 1500 );
 		senderT.start();
 		
 		// Wait for the threads to be done, then check that they 

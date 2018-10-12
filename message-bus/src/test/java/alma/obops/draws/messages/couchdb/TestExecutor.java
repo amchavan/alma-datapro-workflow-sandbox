@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.obops.draws.messages.couchdb;
 
 import static alma.obops.draws.messages.TestUtils.COUCHDB_URL;
 import static alma.obops.draws.messages.TestUtils.MESSAGE_BUS_NAME;
@@ -9,13 +9,24 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 
-import alma.obops.draws.messages.couchdb.CouchDbMessageBus;
+import alma.obops.draws.messages.AbstractMessage;
+import alma.obops.draws.messages.DbConnection;
+import alma.obops.draws.messages.Executor;
+import alma.obops.draws.messages.ExecutorClient;
+import alma.obops.draws.messages.Message;
+import alma.obops.draws.messages.MessageBroker;
+import alma.obops.draws.messages.MessageConsumer;
+import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.RequestMessage;
+import alma.obops.draws.messages.RequestProcessor;
+import alma.obops.draws.messages.TimeLimitExceededException;
+import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
 
 public class TestExecutor {
 
 	private static final String QUEUE_NAME = "DOUBLER_Q";
 	static Integer globalDoubled = null; 			// needs to be static!
-	private MessageBus messageBus = null;
+	private MessageBroker broker = null;
 	private MessageQueue queue;
 
 	// Request: double a number
@@ -75,16 +86,16 @@ public class TestExecutor {
 	
 	@Before
 	public void aaa_setUp() throws IOException {
-		messageBus = new CouchDbMessageBus( COUCHDB_URL, null, null, MESSAGE_BUS_NAME  );
-		queue = messageBus.messageQueue( QUEUE_NAME );
+		broker = new CouchDbMessageBroker( COUCHDB_URL, null, null, MESSAGE_BUS_NAME  );
+		queue = broker.messageQueue( QUEUE_NAME );
 		
-		DbConnection db = ((CouchDbMessageBus) messageBus).getDbConnection(); 
+		DbConnection db = ((CouchDbMessageBroker) broker).getDbConnection(); 
 		db.dbDelete( MESSAGE_BUS_NAME );
 		db.dbCreate( MESSAGE_BUS_NAME );
 	}
 
 	@Test
-	public void doubler() throws Exception {
+	public void testDoubler() throws Exception {
 
 		RequestProcessor processor = new Doubler();
 		Executor executor = new Executor( queue, processor, 5000 );
@@ -95,7 +106,7 @@ public class TestExecutor {
 			try {
 				executor.run();
 			} 
-			catch (TimeoutException e) {
+			catch (TimeLimitExceededException e) {
 				System.out.println(">>> Timed out: " + e.getMessage());
 			} 
 			catch (Exception e) {

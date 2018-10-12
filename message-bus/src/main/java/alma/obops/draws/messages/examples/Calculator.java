@@ -7,13 +7,13 @@ import java.io.IOException;
 import alma.obops.draws.messages.AbstractMessage;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.Message;
-import alma.obops.draws.messages.MessageBus;
+import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
-import alma.obops.draws.messages.TimeoutException;
+import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.couchdb.CouchDbConfig;
-import alma.obops.draws.messages.couchdb.CouchDbMessageBus;
+import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
 
 /**
  * A trivial calculator, supports sum, subtraction and multiplication of
@@ -103,14 +103,14 @@ public class Calculator {
 
 	public static void main(String[] args) throws IOException {
 		CouchDbConfig config = new CouchDbConfig();
-		MessageBus bus = new CouchDbMessageBus(config, MESSAGE_BUS_NAME);
+		MessageBroker bus = new CouchDbMessageBroker(config, MESSAGE_BUS_NAME);
 		MessageQueue queue = bus.messageQueue(CALC_SELECTOR);
 		RequestProcessor processor = new CalculatorProcessor();
 		Executor executor = new Executor(queue, processor, 5000);
 
 		try {
 			executor.run();
-		} catch (TimeoutException e) {
+		} catch (TimeLimitExceededException e) {
 			System.out.println(">>> Timed out: " + e.getMessage());
 		}
 	}

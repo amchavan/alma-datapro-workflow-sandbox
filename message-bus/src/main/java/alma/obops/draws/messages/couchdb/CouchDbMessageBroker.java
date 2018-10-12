@@ -1,24 +1,29 @@
 package alma.obops.draws.messages.couchdb;
 
-import static alma.obops.draws.messages.MessageBus.now;
-import static alma.obops.draws.messages.MessageBus.nowISO;
-import static alma.obops.draws.messages.MessageBus.ourIP;
-import static alma.obops.draws.messages.MessageBus.sleep;
+import static alma.obops.draws.messages.MessageBroker.now;
+import static alma.obops.draws.messages.MessageBroker.nowISO;
+import static alma.obops.draws.messages.MessageBroker.ourIP;
+import static alma.obops.draws.messages.MessageBroker.sleep;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import alma.obops.draws.messages.AbstractMessageBroker;
 import alma.obops.draws.messages.DbConnection;
+import alma.obops.draws.messages.Envelope;
 import alma.obops.draws.messages.Envelope.State;
 import alma.obops.draws.messages.Message;
-import alma.obops.draws.messages.MessageBus;
+import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
 import alma.obops.draws.messages.MessageQueue;
-import alma.obops.draws.messages.TimeoutException;
+import alma.obops.draws.messages.Record;
+import alma.obops.draws.messages.RequestMessage;
+import alma.obops.draws.messages.SimpleEnvelope;
+import alma.obops.draws.messages.TimeLimitExceededException;
 
-public class CouchDbMessageBus implements MessageBus {
+public class CouchDbMessageBroker extends AbstractMessageBroker implements MessageBroker {
 	    
 	private String busName;
 	private DbConnection dbConn;
@@ -31,7 +36,7 @@ public class CouchDbMessageBus implements MessageBus {
 	 * @param dbConn   The CouchDB connection instance
 	 * @param busName  Name of our message bus
 	 */
-	public CouchDbMessageBus( DbConnection dbConn, String busName ) {
+	public CouchDbMessageBroker( DbConnection dbConn, String busName ) {
 		this.busName = busName;
 		this.ourIP   = ourIP();
 		this.dbConn  = dbConn;
@@ -55,7 +60,7 @@ public class CouchDbMessageBus implements MessageBus {
 	 * @param config  The CouchDB server configuration
 	 * @param busName Name of our message bus
 	 */
-	public CouchDbMessageBus( CouchDbConfig config, String busName ) {
+	public CouchDbMessageBroker( CouchDbConfig config, String busName ) {
 		this( new CouchDbConnection( config ), busName );
 	}
 
@@ -70,49 +75,48 @@ public class CouchDbMessageBus implements MessageBus {
 	 * @param password  Password of admin account on the CouchDB server
 	 * @param busName   Name of our message bus
 	 */
-	public CouchDbMessageBus( String dbURL, String username, String password, String busName ) {
+	public CouchDbMessageBroker( String dbURL, String username, String password, String busName ) {
 		this( new CouchDbConfig( dbURL, username, password ), busName );
 	}
 
 
-	@Override
-	public CouchDbEnvelope[] find( String query ) throws IOException {
+	/**
+	 * Search for messages; selector includes the query parameters. Returned
+	 * messages are not consumed.
+	 * 
+	 * @param query
+	 *            A JSON selector like
+	 *            <pre>{ "selector": { "message": { "$exists": true }}}</pre>
+	 *            It's important that the selector restricts the result set to
+	 *            include only messages, as in this example.
+	 * 
+	 *            See also http://docs.couchdb.org/en/2.1.1/api/database/find.html
+	 * 
+	 * @return A possibly empty array of documents
+	 */
+	public SimpleEnvelope[] find( String query ) throws IOException {
 
-		CouchDbEnvelope[] envelopes = 
-				(CouchDbEnvelope[]) dbConn.find( busName, CouchDbEnvelope[].class, query );
+		SimpleEnvelope[] envelopes = 
+				(SimpleEnvelope[]) dbConn.find( busName, SimpleEnvelope[].class, query );
 
-//		// Message classes are not serialized so we need to restore them here
-//		for( CouchDbEnvelope envelope : envelopes) {
-//			Message message = envelope.getMessage();
-//			if( message != null ) {
-//				envelope.setMessageClass( message.getClass().getName() );
-//			}
-//		}
 		return envelopes;
 	}
 	
 	@Override
-	public CouchDbEnvelope receive(String queueName) throws IOException {
-		return receive( queueName, 0 );
-	}
-	
-	@Override
 	// TODO -- add progressive waiting time
-	public CouchDbEnvelope receive( String queueName, int timeout ) throws IOException, TimeoutException {
+	public SimpleEnvelope receive( MessageQueue queue, long timeLimit ) throws IOException, TimeLimitExceededException {
 				
-		Date callTime = now();	
-		String query = "{ 'selector':  { '$and': [ { 'queueName': { '$regex' : '" 
-				+ queueName
-				+ "' }}, { 'state': 'Sent' } ] }}";
-		query = query.replace( '\'', '\"' );
+		Date callTime = now();
+		String queryFmt = "{'selector': {'$and': [{'queueName':'%s'}, {'state':'Sent'}]}}";		
+		String query = String.format(queryFmt, queue.getName() ).replace( '\'', '\"' );
 		
 		while( true ) {
 			
 			// Did we time out?
 			Date now = now();
-			if( timeout > 0 && (now.getTime() - callTime.getTime()) > timeout ) {
+			if( timeLimit > 0 && (now.getTime() - callTime.getTime()) > timeLimit ) {
 				// YES, throw an exception and exit
-				throw new TimeoutException( "After " + timeout + "msec" );
+				throw new TimeLimitExceededException( "After " + timeLimit + "msec" );
 			}
 			
 			// No timeout, let's try again
@@ -136,7 +140,7 @@ public class CouchDbMessageBus implements MessageBus {
 					// YES, return that as "Received"
 					ret.setState( State.Received );
 					ret.setReceivedTimestamp( nowISO() );
-					dbConn.save( busName, ret );
+					dbConn.save( busName, new CouchDbEnvelope( ret ));
 					return ret;
 				}
 			}
@@ -151,8 +155,16 @@ public class CouchDbMessageBus implements MessageBus {
 
 	@Override
 	public List<String> groupMembers( String groupName ) throws IOException {
+		if( groupName == null || (!groupName.endsWith( ".*" ))) {
+			throw new IllegalArgumentException( "Invalid group name: " + groupName );
+		}
+
 		ReceiverGroup g = dbConn.findOne( busName, ReceiverGroup.class, groupName );
-		return g.getMembers();
+		if( g != null ) {
+			return g.getMembers();
+		}
+		
+		return null;
 	}
 	
 	@Override
@@ -183,52 +195,8 @@ public class CouchDbMessageBus implements MessageBus {
 	}
 
 	@Override
-	public MessageQueue messageQueue(String queueName) {
-		MessageQueue ret = new MessageQueue( queueName, this );
-		return ret;
-	}
-
-	@Override
-	public CouchDbEnvelope send( String queueName, Message message ) {
-		return send( queueName, message, null );
-	}
-
-	@Override
-	public CouchDbEnvelope send( String queueName, Message message, Long timeToLive ) {
-
-		if( queueName == null || message == null ) {
-			throw new IllegalArgumentException( "Null arg" );
-		}
-		
-		// Are we sending to a group?
-		if( ! queueName.endsWith( ".*" )) {
-			CouchDbEnvelope ret = sendOne( queueName, message, timeToLive );		// No, just send this message
-			return ret;
-		}
-		
-		// We are sending to a group: loop over all recipients
-		try {
-			ReceiverGroup recGroup = this.dbConn.findOne( queueName, ReceiverGroup.class, queueName );
-			if( recGroup == null ) {
-				throw new RuntimeException("Receiver group '" + queueName + "' not found");
-			}
-			CouchDbEnvelope ret = null;
-			for( String member: recGroup.getMembers() ) {
-				ret = sendOne( member, message, timeToLive );
-			}
-			return ret;
-		} 
-		catch ( Exception e ) {
-			throw new RuntimeException( e );
-		}
-	}
-
-	/**
-	 * Creates an {@link CouchDbEnvelope} (including meta-data) from the given
-	 * {@link Message} and sends it.
-	 */
-	private CouchDbEnvelope sendOne( String queueName, Message message, Long timeToLive ) {
-		CouchDbEnvelope envelope = new CouchDbEnvelope( message, ourIP, queueName, timeToLive );
+	public Envelope sendOne( MessageQueue queue, Message message, long timeToLive ) {
+		CouchDbEnvelope envelope = new CouchDbEnvelope( message, ourIP, queue.getName(), timeToLive );
 		envelope.setSentTimestamp( nowISO() );
 		envelope.setState( State.Sent );
 		envelope.setMessageClass( message.getClass().getName() );
@@ -243,24 +211,27 @@ public class CouchDbMessageBus implements MessageBus {
 	}
 
 	@Override
-	public void listen( String queueName, 
+	// TODO: pull this up to AbstractMessageBroker, need to harmonize
+	//       with RabbitMqMessageBroker -- only difference is how 
+	//		 envelope state changes are persisted
+	public void listen( MessageQueue queue, 
 						MessageConsumer consumer, 
 						int timeout, 
 						boolean justOne ) throws IOException {
 		
-		if( queueName == null || consumer == null ) {
+		if( queue == null || consumer == null ) {
 			throw new IllegalArgumentException( "Null arg" );
 		}
 		
 		while( true ) {
 			
 			// Receive the next message, consume it, and mark it as such
-			CouchDbEnvelope envelope = receive( queueName, timeout );
+			SimpleEnvelope envelope = receive( queue, timeout );
 			consumer.consume( envelope.getMessage() );
 			
 			envelope.setState( State.Consumed );
 			envelope.setConsumedTimestamp( nowISO() );
-			dbConn.save( busName, envelope );
+			dbConn.save( busName, new CouchDbEnvelope( envelope ));
 			
 			if( justOne ) {
 				break;
@@ -268,34 +239,17 @@ public class CouchDbMessageBus implements MessageBus {
 		}
 	}
 
-
-	@Override
-	public Thread listenInThread( String queueName, MessageConsumer consumer, int timeout,
-			boolean justOne) {
-		
-		Runnable receiver = () -> {	
-			try {
-				this.listen( queueName, consumer, timeout, justOne );
-			}
-			catch ( TimeoutException e ) {
-				// ignore
-			}
-			catch ( Exception e ) {
-				throw new RuntimeException( e );
-			}
-		};
-		Thread t = new Thread( receiver );
-		t.start();
-		return t;
-	}
-
-	@Override
+	/**
+	 * Mark as {@link State#Expired} all {@link Envelope} instances in the given
+	 * queue for which {@link Envelope#getTimeToLive()} returns 0.<br>
+	 * 
+	 * @return The number of expired messages
+	 * @throws IOException 
+	 */
 	public int purgeExpiredMessages( String queueName ) throws IOException {
 		
-		String query = "{ 'selector':  { '$and': [ { 'queueName': { '$regex' : '" 
-				+ queueName
-				+ "' }}, { 'state': 'Sent' } ] }}";
-		query = query.replace( '\'', '\"' );
+		String queryFmt = "{'selector': {'$and': [{'queueName':'%s'}, {'state':'Sent'}]}}";		
+		String query = String.format(queryFmt, queueName ).replace( '\'', '\"' );
 		
 		CouchDbEnvelope[] envelopes = dbConn.find( busName, CouchDbEnvelope[].class, query );
 		int ret = 0;
@@ -309,10 +263,10 @@ public class CouchDbMessageBus implements MessageBus {
 		return ret;
 	}
 
-	private void purgeExpiredMessage(CouchDbEnvelope envelope) throws IOException {
-		envelope.setState( State.Expired );
-		envelope.setExpiredTimestamp( nowISO() );
-		dbConn.save( busName, envelope );
-		System.out.println( ">>> Expired: " + envelope );
+	private void purgeExpiredMessage( SimpleEnvelope envelope ) throws IOException {
+		envelope .setState( State.Expired );
+		envelope .setExpiredTimestamp( nowISO() );
+		dbConn.save( busName, (Record) envelope  );
+		System.out.println( ">>> Expired: " + envelope  );
 	}
 }

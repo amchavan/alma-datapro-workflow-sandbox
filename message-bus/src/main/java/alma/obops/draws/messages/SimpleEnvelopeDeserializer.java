@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.couchdb;
+package alma.obops.draws.messages;
 
 import java.io.IOException;
 
@@ -11,8 +11,6 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import alma.obops.draws.messages.Envelope.State;
-import alma.obops.draws.messages.Message;
-import alma.obops.draws.messages.SimpleEnvelope;
 
 /**
  * We need a special Jackson deserializer for the {@link SimpleEnvelope}, as the
@@ -38,37 +36,33 @@ import alma.obops.draws.messages.SimpleEnvelope;
  */
 
 @SuppressWarnings("serial")
-public class CouchDbEnvelopeDeserializer extends StdDeserializer<CouchDbEnvelope> {
+public class SimpleEnvelopeDeserializer extends StdDeserializer<SimpleEnvelope> {
 
-	public CouchDbEnvelopeDeserializer() {
+	public SimpleEnvelopeDeserializer() {
         this( null );
     }
  
-    public CouchDbEnvelopeDeserializer(Class<?> vc) {
+    public SimpleEnvelopeDeserializer(Class<?> vc) {
         super ( vc );
     }
     
     @Override
-    public CouchDbEnvelope deserialize( JsonParser jp, DeserializationContext ctxt ) 
+    public SimpleEnvelope deserialize( JsonParser jp, DeserializationContext ctxt ) 
       throws IOException, JsonProcessingException {
 
         ObjectMapper mapper = (ObjectMapper) jp.getCodec();
         ObjectNode root = (ObjectNode) mapper.readTree(jp);
         
-        CouchDbEnvelope envelope = new CouchDbEnvelope();
+        SimpleEnvelope envelope = new SimpleEnvelope();
         
         JsonNode etNode = root.get( "expireTime" );
 		Long expireTime = (etNode == null || etNode.isNull()) ? null : etNode.longValue();
 
 		String messageClass = root.get( "messageClass" ).textValue();
         State state = State.valueOf( root.get( "state" ).textValue() );
-    	
-        JsonNode revNode = root.get( "_rev" );
-		String revision = (revNode == null || revNode.isNull()) ? null : revNode.textValue();
 		
 		envelope.setExpireTime(        expireTime );
         envelope.setId(                root.get( "_id" ).textValue() );
-        envelope.setVersion(           revision );
 		envelope.setSentTimestamp(     root.get( "sentTimestamp" ).textValue() );
         envelope.setReceivedTimestamp( root.get( "receivedTimestamp" ).textValue() );
         envelope.setConsumedTimestamp( root.get( "consumedTimestamp" ).textValue() );

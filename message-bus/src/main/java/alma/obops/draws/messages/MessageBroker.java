@@ -15,7 +15,7 @@ import alma.obops.draws.messages.Envelope.State;
  * Describes the functions implementing the message passing machinery.
  * @author mchavan
  */
-public interface MessageBus {
+public interface MessageBroker {
 
 	/** All timestamps are in Universal Time (UT) */
     public static final TimeZone UT = TimeZone.getTimeZone( "Etc/GMT" );
@@ -75,7 +75,7 @@ public interface MessageBus {
 	 * A simple wrapper around {@link Thread#sleep(long)}, swallows the dreaded
 	 * {@link InterruptedException}
 	 */
-	public static void sleep(int msec) {
+	public static void sleep( long msec ) {
 		try {
 			Thread.sleep( msec );
 		}
@@ -84,22 +84,6 @@ public interface MessageBus {
 		}
 	}
 	
-	/**
-	 * Search for messages; selector includes the query parameters. Returned
-	 * messages are not consumed.
-	 * 
-	 * @param query
-	 *            A JSON selector like
-	 *            <pre>{ "selector": { "message": { "$exists": true }}}</pre>
-	 *            It's important that the selector restricts the result set to
-	 *            include only messages, as in this example.
-	 * 
-	 *            See also http://docs.couchdb.org/en/2.1.1/api/database/find.html
-	 * 
-	 * @return A possibly empty array of documents
-	 */
-	public Envelope[] find( String query ) throws IOException;
-
 	/**
 	 * Look for group members.
 	 * 
@@ -144,7 +128,7 @@ public interface MessageBus {
 	 * @param justOne
 	 *            If <code>true</code>, return after the first message
 	 */
-	public void listen( String queueName, 
+	public void listen( MessageQueue queue, 
 						MessageConsumer consumer, 
 						int timeout, 
 						boolean justOne ) throws IOException;
@@ -155,7 +139,7 @@ public interface MessageBus {
 	 * This method times out.<br>
 	 * This method is a wrapper around {@link #listen()}.
 	 */
-	public Thread listenInThread( String queueName, 
+	public Thread listenInThread( MessageQueue queue, 
 								  MessageConsumer consumer, 
 								  int timeout, 
 								  boolean justOne );
@@ -180,45 +164,45 @@ public interface MessageBus {
 	 * @return A {@link MessageQueue} with the given name
 	 */
 	public MessageQueue messageQueue( String queueName );
-	
-	/**
-	 * Mark as {@link State#Expired} all {@link Envelope} instances in the given
-	 * queue for which {@link Envelope#getTimeToLive()} returns 0.<br>
-	 * 
-	 * @return The number of expired messages
-	 * @throws IOException 
-	 */
-	public int purgeExpiredMessages( String queueName ) throws IOException;	
-	
+
 	/**
 	 * Find the next message of this queue: that is, the oldest
 	 * non-{@link State#Received} message. That message will be set to
 	 * {@link State#Received}, unless its time-to-live is down to zero, in
-	 * which case it's set to {@linkplain State#Expired}.
+	 * which case it's set to {@linkplain State#Expired}.<br>
+	 * This method will block indefinitely until a message is received.
 	 * 
 	 * @return An {@link Envelope} wrapping a user {@link Message}.
 	 * 
 	 * @throws IOException
 	 */
-	public Envelope receive( String queueName ) throws IOException;	
+	public Envelope receive( MessageQueue queue ) throws IOException;
+		
+	/**
+	 * Find the next message of the queue, that is, the oldest
+	 * non-{@link State#Received} message. That message will be set to
+	 * {@link State#Received}, unless its time-to-live is down to zero, in which
+	 * case it's set to {@linkplain State#Expired}.<br>
+	 * This method will block until a message is received or the time limit is
+	 * exceeded.
+	 * 
+	 * @param timeLimit
+	 *            If greater than 0 it represents the number of msec to wait for a
+	 *            message to arrive before timing out: upon timeout a
+	 *            {@link TimeLimitExceededException} is thrown.
+	 * 
+	 * @return An {@link Envelope} wrapping a user {@link Message}.
+	 * 
+	 * @throws TimeLimitExceededException
+	 *             If waiting time exceeded the given limit
+	 * @throws IOException
+	 */
+	public Envelope receive( MessageQueue queue, long timeLimit ) throws IOException, TimeLimitExceededException;	
 	
     /**
-	 * Find the next message of this queue, that is, the oldest
-	 * non-{@link State#Received} message. That message will be set to
-	 * {@link State#Received}, unless its time-to-live is down to zero, in
-	 * which case it's set to {@linkplain State#Expired}.
-	 * 
-	 * @param timeout
-	 *            If timeout > 0 it represents the number of msec to wait for a
-	 *            message to arrive before timing out: upon timeout a
-	 *            {@link TimeoutException} is thrown.
-	 * 
-	 * @return An {@link Envelope} wrapping a user {@link Message}.
-	 * 
-	 * @throws TimeoutException		If waiting time exceeded the given timeout value
-	 * @throws IOException
+	 * @return A {@link MessageQueue} with the given name, where RPC responses are sent
 	 */
-	public Envelope receive( String queueName, int timeout ) throws IOException, TimeoutException;
+	public MessageQueue rpcResponseMessageQueue( String queueName );
 
 	/**
 	 * Creates an {@link Envelope} (including meta-data) from the given
@@ -226,12 +210,12 @@ public interface MessageBus {
 	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
 	 * The {@link Message} instance is set to {@link State#Sent}.
 	 * 
-	 * @param queueName
-	 *            Name of the queue to send it to. If it ends with <code>.*</code>
+	 * @param queue
+	 *            If the queue name ends with <code>.*</code>
 	 *            it is interpreted as a group ID and the message is sent to all
 	 *            group members
 	 */
-	public Envelope send( String queueName, Message message );
+	public Envelope send( MessageQueue queue, Message message );
 
 	/**
 	 * Creates an {@link Envelope} (including meta-data) from the given
@@ -239,14 +223,65 @@ public interface MessageBus {
 	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
 	 * The {@link Message} instance is set to {@link State#Sent}.
 	 * 
-	 * @param queueName
-	 *            Name of the queue to send it to. If it ends with <code>.*</code>
+	 * @param queue
+	 *            If the queue name ends with <code>.*</code>
 	 *            it is interpreted as a group ID and the message is sent to all
 	 *            group members
 	 * 
+	 * @param expireTime
+	 *            Time interval before this instance expires, in msec; if
+	 *            timeToLive=0 this instance never expires
+	 */
+	public Envelope send( MessageQueue queue, Message message, long expireTime );
+
+	/**
+	 * Creates an {@link Envelope} (including meta-data) from the given
+	 * {@link Message} and sends it to a queue.<br>
+	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
+	 * The {@link Message} instance is set to {@link State#Sent}.
+	 * 
+	 * @param queue
+	 *            Name of the queue should not end with
+	 *            <code>.*</code> (that is, it should not be a receiver group
+	 *            designator)
+	 * 
+	 * @param expireTime
+	 *            Time interval before this instance expires, in msec; if
+	 *            timeToLive=0 this instance never expires
+	 */
+	public Envelope sendOne( MessageQueue queue, Message message, long expireTime );
+
+	/**
+	 * Creates an {@link Envelope} (including meta-data) from the given
+	 * {@link RequestMessage} and sends it as an RPC request to a queue.<br>
+	 * The {@link Envelope} and {@link RequestMessage} instances reference each other.<br>
+	 * The {@link RequestMessage} instance is set to {@link State#Sent}.
+	 * 
+	 * @param queue
+	 *            Name of the queue should not end with
+	 *            <code>.*</code> (that is, it should not be a receiver group
+	 *            designator)
+	 *            
 	 * @param timeToLive
-	 *            The time before this instance expires, in msec; if
-	 *            <code>null</code>, this instance never expires
+	 *            Time interval before this instance expires, in msec; if
+	 *            timeToLive=0 this instance never expires
 	 */
-	public Envelope send( String queueName, Message message, Long timeToLive );
+	public Envelope sendRpcRequest( MessageQueue queue, RequestMessage message, long timeToLive );
+	
+	/**
+	 * Creates an {@link Envelope} (including meta-data) from the given
+	 * {@link ResponseMessage} and sends it to the RPC callback queue.<br>
+	 * The {@link Envelope} and {@link ResponseMessage} instances reference each other.<br>
+	 * The {@link ResponseMessage} instance is set to {@link State#Sent}.
+	 * 
+	 * @param queue
+	 *            Name of the queue should not end with
+	 *            <code>.*</code> (that is, it should not be a receiver group
+	 *            designator)
+	 *            
+	 * @param timeToLive
+	 *            Time interval before this instance expires, in msec; if
+	 *            timeToLive=0 this instance never expires
+	 */
+	public Envelope sendRpcResponse( MessageQueue queue, ResponseMessage message, long timeToLive );
 }

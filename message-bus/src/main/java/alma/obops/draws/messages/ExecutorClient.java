@@ -28,8 +28,9 @@ public class ExecutorClient {
 	}
 	
 	public void call( RequestMessage request, int timeout ) throws IOException {
-		Envelope envelope = queue.send( request );
-		MessageQueue responseQueue = queue.getMessageBus().messageQueue( envelope.getId() );
+		Envelope envelope = queue.sendRpcRequest( request );
+		final String correlationId = envelope.getId();
+		MessageQueue responseQueue = queue.getMessageBroker().rpcResponseMessageQueue( correlationId );
 		responseQueue.listen( consumer, timeout, true );
 	}
 }

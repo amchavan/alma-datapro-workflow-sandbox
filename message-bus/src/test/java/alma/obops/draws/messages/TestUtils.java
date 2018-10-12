@@ -1,15 +1,22 @@
 package alma.obops.draws.messages;
 
+import alma.obops.draws.messages.AbstractMessage;
 import alma.obops.draws.messages.couchdb.CouchDbRecord;
 
 public class TestUtils {
 
-	public static final String TEST_DB_NAME = "test-message-bus";
-	public static final String MESSAGE_BUS_NAME = TEST_DB_NAME;
+	// General constants
+	public static final String MESSAGE_BUS_NAME = "test-message-bus";
+	
+	// CouchDB constants
+	public static final String TEST_DB_NAME = MESSAGE_BUS_NAME;
 	public static final String COUCHDB_URL = "http://localhost:5984";
 	public static final String COUCHDB_USERNAME = "admin";
 	public static final String COUCHDB_PASSWORD = "admin";
 	public static final String SELECTOR = "look.at.this";
+	
+	// RabbitMQ constants
+	public static final String RABBITMQ_URL = "localhost";
 	
 	public static class TestRecord extends CouchDbRecord {
 		static int nextID = 0;

@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.obops.draws.messages.couchdb;
 
 import static alma.obops.draws.messages.TestUtils.*;
 import static org.junit.Assert.*;
@@ -8,6 +8,7 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 
+import alma.obops.draws.messages.TestUtils;
 import alma.obops.draws.messages.couchdb.CouchDbConnection;
 
 

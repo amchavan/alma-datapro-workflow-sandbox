@@ -16,15 +16,15 @@ public class Executor {
 	private boolean justOne;
 
 	/**
-	 * A specialized consumer: will invoke the processor on the included
+	 * This {@link Executor}'s consumer: will invoke the processor on the given
 	 * {@link RequestMessage} and send the result of that to a queue named after the
 	 * original message's ID.
 	 */
 	private MessageConsumer consumer = (message) -> {
-		Envelope envelope = message.getEnvelope();
 		Message response = processor.process( (RequestMessage) message );
-		MessageQueue responseQueue = queue.getMessageBus().messageQueue(envelope.getId());
-		responseQueue.send(response);
+		Envelope envelope = message.getEnvelope();
+		MessageQueue responseQueue = queue.getMessageBroker().rpcResponseMessageQueue( envelope.getId() );
+		queue.getMessageBroker().sendOne( responseQueue, response, 0 );
 	};
 
 	/**

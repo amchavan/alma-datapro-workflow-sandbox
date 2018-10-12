@@ -6,11 +6,11 @@ import static alma.obops.draws.messages.examples.BasicExecutor.*;
 import java.io.IOException;
 
 import alma.obops.draws.messages.ExecutorClient;
-import alma.obops.draws.messages.MessageBus;
+import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.couchdb.CouchDbConfig;
-import alma.obops.draws.messages.couchdb.CouchDbMessageBus;
+import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
 
 /**
  * Example client for basic executor defined in {@link #BasicExecutor}
@@ -19,7 +19,7 @@ public class BasicExecutorClient {
 
 	public static void main(String[] args) throws IOException {
 		CouchDbConfig config = new CouchDbConfig();
-		MessageBus bus = new CouchDbMessageBus(config, MESSAGE_BUS_NAME);
+		MessageBroker bus = new CouchDbMessageBroker(config, MESSAGE_BUS_NAME);
 		MessageQueue queue = bus.messageQueue(DATETIME_QUEUE);
 		MessageConsumer consumer = (message) -> {
 			System.out.println(((DatetimeResponse) message).datetime);

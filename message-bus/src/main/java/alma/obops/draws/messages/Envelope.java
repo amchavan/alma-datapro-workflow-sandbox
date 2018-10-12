@@ -4,25 +4,13 @@ package alma.obops.draws.messages;
  * An {@link Envelope} includes a {@link Message} providing metadata like
  * forwarding information, timestamp, etc.
  */
-public interface Envelope extends Record {
+public interface Envelope {
 	
 	/**
 	 * The state of this {@linkplain Envelope} -- or rather, of the enclosed
 	 * {@linkplain Message}
 	 */
-	public enum State { Sent, Received, Consumed, Expired };
-	
-	/**
-	 * @return When the message was sent: date/time string in ISO format, e.g.
-	 *         <code>2018-09-18T13:48:31</code>
-	 */
-	public String getSentTimestamp();
-	
-	/**
-	 * @return When the message was received (that is, read from the queue):
-	 *         date/time string in ISO format, e.g. <code>2018-09-18T13:48:31</code>
-	 */
-	public String getReceivedTimestamp();
+	public enum State { Sent, Received, Consumed, Expired }
 	
 	/**
 	 * @return When the message was processed in some form by the receiver:
@@ -36,13 +24,7 @@ public interface Envelope extends Record {
 	 */
 	public String getExpiredTimestamp();
 	
-	/**
-	 * @return The time before this instance expires, in msec. If it's 0, this
-	 *         instance has expired. If it's negative, this instance never
-	 *         expires or has been read already.<br>
-	 *         Only messages that haven't been received can expire.
-	 */
-	public long getTimeToLive();
+	public String getId();
 	
 	/**
 	 * @return The message we're carrying
@@ -63,12 +45,32 @@ public interface Envelope extends Record {
 	public String getQueueName();
 	
 	/**
-	 * @param message The message to carry
+	 * @return When the message was received (that is, read from the queue):
+	 *         date/time string in ISO format, e.g. <code>2018-09-18T13:48:31</code>
 	 */
-	public void setMessage( Message message );
+	public String getReceivedTimestamp();
+	
+	/**
+	 * @return When the message was sent: date/time string in ISO format, e.g.
+	 *         <code>2018-09-18T13:48:31</code>
+	 */
+	public String getSentTimestamp();
 	
 	/**
 	 * @return The current state of this instance
 	 */
 	public State getState();
+	
+	/**
+	 * @return The time before this instance expires, in msec. If it's 0, this
+	 *         instance has expired. If it's negative, this instance never
+	 *         expires or has been read already.<br>
+	 *         Only messages that haven't been received can expire.
+	 */
+	public long getTimeToLive();
+	
+	/**
+	 * @param message The message to carry
+	 */
+	public void setMessage( Message message );
 }
