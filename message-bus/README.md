@@ -1,6 +1,6 @@
-# A Java Implementation of the Message Bus
+# Two Java Implementations of the Message Broker
 
-This Eclipe project implements a simple CouchDB-based message bus in Java.
+This Eclipe project implements defines two Java implementations of the message broker, based on [CouchDB](couchdb.apache.org) and (RabbitMQ)[https://www.rabbitmq.com/].
 See this project's [class diagram](https://drive.google.com/file/d/18PNkMJEVu6y0roKZO_e_AKoYD0TLoPNn) for more info.
 
 ## Prerequisites
