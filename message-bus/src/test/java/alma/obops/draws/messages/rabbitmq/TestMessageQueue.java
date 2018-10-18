@@ -60,26 +60,13 @@ public class TestMessageQueue {
 		// Drain any existing messages in the logging queue
 		broker.drainLoggingQueue();
 		
-		// Drain the queue 
-		while( true ) {
-			Envelope e;
-			try {
-				e = queue.receive( 1000L );
-			}
-			catch ( TimeLimitExceededException e1) {
-				// no-op, expected when the queue is empty;
-				break;
-			}
-			System.out.println( ">>> Draining: found: " +  e.getMessage() );
-		}
-		
 		envelopeRepository.deleteAll();
 		groupRepository.deleteAll();
 	}
 
 	@After
 	public void aaa_tearDown() throws Exception {
-		broker.deleteQueue( this.queue );
+		this.queue.delete();
 	}
 	
 	@Test
@@ -188,20 +175,20 @@ public class TestMessageQueue {
 
 	@Test
 	public void send_Receive() throws IOException, InterruptedException {
-		
-//		Thread receiverThread = new Thread( receiver );
-//		receiverThread.start();
+
+		String queue2Name = QUEUE_NAME;// + "." + 99;
+		MessageQueue queue = broker.messageQueue( queue2Name );
+
 		queue.send( jimi );
 		Envelope out = queue.receive();
-//		receiverThread.join();
-		
-//		System.out.println( ">>> sendAndReceive(): out=" + out );
 		
 		assertNotNull( out );
 		assertEquals( State.Received, out.getState() );
-		assertNotNull( out.getSentTimestamp() );
+		assertNotNull( out.getReceivedTimestamp() );
 		assertEquals( jimi, out.getMessage() );
 		assertEquals( out, out.getMessage().getEnvelope() );
+		
+		queue.delete();
 	}
 
 	@Test
@@ -313,10 +300,11 @@ public class TestMessageQueue {
 		broker.drainLoggingQueue();
 
 		// Create the recipient group
-		String groupName = "recipients.*";
+		String groupName = "test.recipients.*";
+		MessageQueue group = broker.messageQueue( groupName );
+		
 		String queue2Name = QUEUE_NAME + "." + 2;
 		MessageQueue queue2 = broker.messageQueue( queue2Name );
-		MessageQueue group = broker.messageQueue( groupName );
 		
 		queue.joinGroup( groupName );
 		queue2.joinGroup( groupName );

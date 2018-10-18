@@ -53,7 +53,8 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 //	private Channel messageLogChannel;
 	private PersistenceListener messageLogListener;
 	private String exchangeName;
-	private Channel mainChannel;
+	private Channel channel;
+
 	private RecipientGroupRepository groupRepository;
 	
 	public RabbitMqMessageBroker( String baseURL, 
@@ -66,10 +67,10 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		this.groupRepository = groupRepository;
 		
 		// Declare the main channel and queues
-		this.mainChannel = makeChannelAndExchange( baseURL, exchangeName );
-		this.mainChannel.queueDeclare( MESSAGE_PERSISTENCE_QUEUE,  true, false, false, null );
+		this.channel = makeChannelAndExchange( baseURL, exchangeName );
+		this.channel.queueDeclare( MESSAGE_PERSISTENCE_QUEUE,  true, false, false, null );
 		
-		this.messageLogListener = new PersistenceListener( this.mainChannel, exchangeName, envelopeRepository );
+		this.messageLogListener = new PersistenceListener( this.channel, exchangeName, envelopeRepository );
 	}
 
 	/**
@@ -84,7 +85,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	 */
 	void drainQueue( String queueName ) {
 		try {
-			this.mainChannel.queuePurge( queueName );
+			this.channel.queuePurge( queueName );
 		} 
 		catch (IOException e) {
 			throw new RuntimeException( e );
@@ -97,7 +98,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	 */
 	public void deleteQueue( MessageQueue queue ) {
 		try {
-			this.mainChannel.queueDelete( queue.getName() );
+			this.channel.queueDelete( queue.getName() );
 		} 
 		catch( IOException e ) {
 			throw new RuntimeException( e );
@@ -107,6 +108,11 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	
 	public String getBaseURL() {
 		return this.baseURL;
+	}
+	
+	// For testing only
+	Channel getChannel() {
+		return channel;
 	}
 
 	public Runnable getMessageLogListener() {
@@ -187,6 +193,108 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		}
 	}
 
+//	/**
+//	 * Wait until a message arrives, set its state to {@link State#Received} or
+//	 * {@link State#Expired}.
+//	 * 
+//	 * @param timeLimit
+//	 *            If greater than 0 it represents the number of msec to wait for a
+//	 *            message to arrive before timing out: upon timeout a
+//	 *            {@link TimeLimitExceededException} is thrown.
+//	 * 
+//	 * @return The message we received.
+//	 */
+//	// This does not work, no time to understand why -- amchavan, 18-Oct-2018
+//	@SuppressWarnings("unused")
+//	private Envelope receiveOneEXPERIMENTAL( MessageQueue queue, long timeLimit ) {
+//		
+//		OneReceiver receiver1 = new OneReceiver( channel, queue, timeLimit );
+//		SimpleEnvelope receivedEnvelope = (SimpleEnvelope) receiver1.receive();
+//		
+//		// See if the message has expired
+//		String now = nowISO();
+//		final long timeToLive = receivedEnvelope.getTimeToLive();
+//		if( timeToLive != 0 ) {
+//			receivedEnvelope.setState( State.Received );
+//			receivedEnvelope.setReceivedTimestamp( now );
+//		}
+//		else {
+//			receivedEnvelope.setState( State.Expired );
+//			receivedEnvelope.setExpiredTimestamp( now );
+//		}
+//				
+//		// Signal the state change to the message log as well
+//		try {
+//			sendNewStateEvent( receivedEnvelope.getId(), receivedEnvelope.getState(), now );
+//		} 
+//		catch (IOException e) {
+//			throw new RuntimeException( e );
+//		}
+//		return receivedEnvelope;
+//	}
+	
+	private void sendNewStateEvent( String id, State state, String timestamp ) throws IOException {
+		String stateChange = id + "@" + state.toString() + "@" + timestamp;
+		this.channel.basicPublish( this.exchangeName, 
+				                  	   MESSAGE_STATE_ROUTING_KEY, 
+				                 	   null, 
+				                 	   stateChange.getBytes() );
+	}
+	
+	@Override
+	public Envelope sendOne( MessageQueue queue, Message message, long expireTime ) {
+
+		try {
+			SimpleEnvelope envelope = new SimpleEnvelope( message, this.ourIP, queue.getName(), expireTime );
+			envelope.setSentTimestamp( nowISO() );
+			envelope.setState( State.Sent );
+			envelope.setMessageClass( message.getClass().getName() );
+			envelope.setExpireTime( expireTime );
+			message.setEnvelope( envelope );
+			ObjectMapper mapper = new ObjectMapper();
+			String json = mapper.writeValueAsString( envelope );
+			
+			AMQP.BasicProperties properties = 
+					new AMQP.BasicProperties.Builder()
+						.deliveryMode( 2 )			// persisted delivery
+//						.correlationId( addCorrelationId ? envelope.getId() : null )
+//						.replyTo( addCorrelationId ? CALLBACK_MESSAGE_BUS : null )
+						.build();
+			String routingKey = queue.getName();	// The API calls "queue" what RabbitMQ calls "routing key"
+			this.channel.basicPublish( exchangeName, routingKey, properties, json.getBytes() );
+//			this.mainChannel.close();
+//			this.mainChannel.getConnection().close();
+			return envelope;
+		} 
+		catch( IOException|TimeLimitExceededException e ) {
+			throw new RuntimeException( e );
+		}
+	}
+	
+	@Override
+	public MessageQueue messageQueue( String queueName ) {
+		MessageQueue ret = new MessageQueue( queueName, this );
+
+		try {
+			this.channel.queueDeclare( queueName, 
+					                       true, 			// durable
+					                       false, 			// non-exclusive
+					                       false, 	// auto-deleting?
+					                       null 			// no extra properties
+					                       );
+			String routingKey = queueName;
+			this.channel.queueBind( queueName, exchangeName, routingKey );
+		} 
+		catch( IOException e ) {
+			throw new RuntimeException( e );
+		}
+		return ret;
+	}
+	
+	void drainLoggingQueue() {
+		drainQueue( MESSAGE_PERSISTENCE_QUEUE );
+	}
+	
 	/**
 	 * Wait until a message arrives, set its state to {@link State#Received} or
 	 * {@link State#Expired}.
@@ -206,9 +314,9 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			
 			// Loop until we receive a message
 			while( true ) {
-
+	
 				boolean autoAck = true;
-				response = this.mainChannel.basicGet( queue.getName(), autoAck );
+				response = this.channel.basicGet( queue.getName(), autoAck );
 				if( response != null ) {
 					break;
 				}
@@ -246,67 +354,5 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			throw new RuntimeException( e );
 		}
 		return receivedEnvelope;
-	}
-	
-	private void sendNewStateEvent( String id, State state, String timestamp ) throws IOException {
-		String stateChange = id + "@" + state.toString() + "@" + timestamp;
-		this.mainChannel.basicPublish( this.exchangeName, 
-				                  	   MESSAGE_STATE_ROUTING_KEY, 
-				                 	   null, 
-				                 	   stateChange.getBytes() );
-	}
-	
-	@Override
-	public Envelope sendOne( MessageQueue queue, Message message, long expireTime ) {
-
-		try {
-			SimpleEnvelope envelope = new SimpleEnvelope( message, this.ourIP, queue.getName(), expireTime );
-			envelope.setSentTimestamp( nowISO() );
-			envelope.setState( State.Sent );
-			envelope.setMessageClass( message.getClass().getName() );
-			envelope.setExpireTime( expireTime );
-			message.setEnvelope( envelope );
-			ObjectMapper mapper = new ObjectMapper();
-			String json = mapper.writeValueAsString( envelope );
-			
-			AMQP.BasicProperties properties = 
-					new AMQP.BasicProperties.Builder()
-						.deliveryMode( 2 )			// persisted delivery
-//						.correlationId( addCorrelationId ? envelope.getId() : null )
-//						.replyTo( addCorrelationId ? CALLBACK_MESSAGE_BUS : null )
-						.build();
-			String routingKey = queue.getName();	// The API calls "queue" what RabbitMQ calls "routing key"
-			this.mainChannel.basicPublish( exchangeName, routingKey, properties, json.getBytes() );
-//			this.mainChannel.close();
-//			this.mainChannel.getConnection().close();
-			return envelope;
-		} 
-		catch( IOException|TimeLimitExceededException e ) {
-			throw new RuntimeException( e );
-		}
-	}
-	
-	@Override
-	public MessageQueue messageQueue( String queueName ) {
-		MessageQueue ret = new MessageQueue( queueName, this );
-
-		try {
-			this.mainChannel.queueDeclare( queueName, 
-					                       true, 			// durable
-					                       false, 			// non-exclusive
-					                       false, 			// not auto-deleting
-					                       null 			// no extra properties
-					                       );
-			String routingKey = queueName;
-			this.mainChannel.queueBind( queueName, exchangeName, routingKey );
-		} 
-		catch( IOException e ) {
-			throw new RuntimeException( e );
-		}
-		return ret;
-	}
-	
-	void drainLoggingQueue() {
-		drainQueue( MESSAGE_PERSISTENCE_QUEUE );
 	}
 }

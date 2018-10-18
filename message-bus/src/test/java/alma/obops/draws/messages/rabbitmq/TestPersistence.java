@@ -27,8 +27,6 @@ public class TestPersistence {
 	private static final String GROUP_NAME = "g";
 	private static final String QUEUE_NAME = "Q";
 	private static final String ORIGIN_IP = "0.0.0.0";
-	private static final TestMessage freddie = new TestMessage( "Freddie Mercury", 45, false );
-	private static final TestMessage    jimi = new TestMessage( "Jimi Hendrix", 28, false );
 
     @Autowired 
     RecipientGroupRepository recipientGroupRepository;
@@ -38,8 +36,11 @@ public class TestPersistence {
     
 	@Test
 	public void envelope() {
-		SimpleEnvelope envelope1 = new SimpleEnvelope( freddie, ORIGIN_IP, QUEUE_NAME, 0 );
-		envelope1.setState( State.Sent );
+		TestMessage janis = new TestMessage( "Janis Joplin", 27, false );
+		TestMessage  jimi = new TestMessage( "Jimi Hendrix", 28, false );
+		
+		SimpleEnvelope envelope1 = new SimpleEnvelope( janis, ORIGIN_IP, QUEUE_NAME, 0 );
+		envelope1.setState( State.Expired );
 		PersistedEnvelope pe = PersistedEnvelope.convert( envelope1 );
 		PersistedEnvelope saved = envelopeRepository.save( pe );
 		assertNotNull( saved.id );
@@ -54,14 +55,14 @@ public class TestPersistence {
 		assertTrue( out1.isPresent() );
 		Optional<PersistedEnvelope> out2 = envelopeRepository.findByEnvelopeId( envelope2.getId() );
 		assertTrue( out2.isPresent() );
-		List<PersistedEnvelope> found1 = envelopeRepository.findByState( State.Sent.toString() );
-		assertTrue( found1.size() == 1 );
+		List<PersistedEnvelope> found1 = envelopeRepository.findByState( State.Expired.toString() );
+		assertTrue( found1.size() > 0 );
 		List<PersistedEnvelope> found2 = envelopeRepository.findByState( State.Received.toString() );
-		assertTrue( found2.size() == 1 );
+		assertTrue( found2.size() > 0 );
 
 		Iterable<PersistedEnvelope> all = envelopeRepository.findAll();
 		for (PersistedEnvelope p : all) {
-			System.out.println( ">>> p: " + p );
+			System.out.println( ">>> TestPersistence.envelope(): p: " + p );
 		}
 	}
 	
