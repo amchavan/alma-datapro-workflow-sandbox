@@ -1,12 +1,13 @@
 # Two Java Implementations of the Message Broker
 
-This Eclipe project implements defines two Java implementations of the message broker, based on [CouchDB](couchdb.apache.org) and (RabbitMQ)[https://www.rabbitmq.com/].
+This Eclipe project implements defines two Java implementations of the message broker, based on [CouchDB](couchdb.apache.org) and [RabbitMQ](https://www.rabbitmq.com).
 See this project's [class diagram](https://drive.google.com/file/d/18PNkMJEVu6y0roKZO_e_AKoYD0TLoPNn) for more info.
 
 ## Prerequisites
 
 * A Java 8 environment including Maven
 * A running instance of [CouchDB](couchdb.apache.org)
+* A running instance of [RabbitMQ](https://www.rabbitmq.com)
 
 ## Build
 
@@ -45,8 +46,7 @@ java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar BasicSende
 
 ### Basic execution
 
-Classes `BasicExecutor` and `BasicExecutorClient` show how an RPC service (command/reply) can be implemented: the client asks for the current time in UT and the server returns that. You can launch a
-server and severl clients as follows:
+Classes `BasicExecutor` and `BasicExecutorClient` show how an RPC service (command/reply) can be implemented: the client asks for the current time in UT and the server returns that. You can launch a server and several clients as follows:
 
 ```bash
 java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar BasicExecutor &
@@ -57,7 +57,7 @@ java -jar target/message-bus-0.0.1-SNAPSHOT-jar-with-dependencies.jar BasicExecu
 
 ### Calculator
 
-The `Calculator` and `CalculatorClient` classes implement another RPC (command/reply) service. The server interprets a request like `{"service":"+","a":"1", "b":"2"}` as a *add 1 and 2 and return the result*; the client submits a number of requests. (The calculator has very limited capabilities!)
+The `Calculator` and `CalculatorClient` classes implement another RPC (command/reply) service. The server interprets a request like `{"service":"+", "a":"1", "b":"2"}` as a *add 1 and 2 and return the result*; the client submits a number of requests. (The calculator has very limited capabilities!)
 
 Launch client and server as follows:
 
