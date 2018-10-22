@@ -31,7 +31,8 @@ public class ExecutorClient {
 		Envelope envelope = queue.send( request );
 		final String correlationId = envelope.getId();
 		MessageQueue responseQueue = queue.getMessageBroker().messageQueue( correlationId );
-		responseQueue.listen( consumer, timeout, true );
+		Envelope response = responseQueue.receive( timeout );
 		responseQueue.delete();		// response queues are used only once
+		this.consumer.consume( response.getMessage() );
 	}
 }

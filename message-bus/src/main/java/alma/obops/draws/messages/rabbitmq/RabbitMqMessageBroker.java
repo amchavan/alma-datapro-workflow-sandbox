@@ -16,6 +16,7 @@ import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.GetResponse;
 
 import alma.obops.draws.messages.AbstractMessageBroker;
@@ -32,7 +33,7 @@ import alma.obops.draws.messages.TimeLimitExceededException;
  * @author mchavan 27-Sep-2018
  */
 public class RabbitMqMessageBroker extends AbstractMessageBroker implements MessageBroker {
-
+	
 	/** How long to sleep before polling RabbitMQ for the next message */
 	private static final long WAIT_BETWEEN_POLLING_FOR_GET = 500L;
 	
@@ -48,15 +49,36 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		return channel;
 	}
 	
+	/** 
+	 * Set the envelope's state to {@link State#Received} or {@link State#Expired} 
+	 * depending on the envelope's time to live.
+	 */
+	public static String setReceivedEnvelopeState( SimpleEnvelope envelope )  {
+		// See if the message has expired
+		String now = nowISO();
+		long timeToLive = envelope.getTimeToLive();
+		if( timeToLive != 0 ) {
+			envelope.setState( State.Received );
+			envelope.setReceivedTimestamp( now );
+		}
+		else {
+			envelope.setState( State.Expired );
+			envelope.setExpiredTimestamp( now );
+		}
+		return now;
+	}
+	
 	private String baseURL;
 	private String ourIP;
-//	private Channel messageLogChannel;
 	private PersistenceListener messageLogListener;
 	private String exchangeName;
-	private Channel channel;
 
-	private RecipientGroupRepository groupRepository;
+	private Channel channel;
 	
+	private RecipientGroupRepository groupRepository;
+
+	private Date lastDeliveryTime;
+
 	public RabbitMqMessageBroker( String baseURL, 
 								  String exchangeName, 
 								  PersistedEnvelopeRepository envelopeRepository,
@@ -72,7 +94,25 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		
 		this.messageLogListener = new PersistenceListener( this.channel, exchangeName, envelopeRepository );
 	}
+	
+	/**
+	 * TODO
+	 */
+	public void deleteQueue( MessageQueue queue ) {
+		try {
+			this.channel.queueDelete( queue.getName() );
+		} 
+		catch( IOException e ) {
+			throw new RuntimeException( e );
+		}
+	}
 
+
+	void drainLoggingQueue() {
+		drainQueue( MESSAGE_PERSISTENCE_QUEUE );
+	}
+	
+	
 	/**
 	 * TODO
 	 */
@@ -92,24 +132,10 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		}
 	}
 
-
-	/**
-	 * TODO
-	 */
-	public void deleteQueue( MessageQueue queue ) {
-		try {
-			this.channel.queueDelete( queue.getName() );
-		} 
-		catch( IOException e ) {
-			throw new RuntimeException( e );
-		}
-	}
-	
-	
 	public String getBaseURL() {
 		return this.baseURL;
 	}
-	
+
 	// For testing only
 	Channel getChannel() {
 		return channel;
@@ -146,51 +172,6 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		RecipientGroup group = oGroup.isPresent() ? oGroup.get() : new RecipientGroup( groupName );
 		group.addMember( queueName );
 		groupRepository.save( group );
-	}
-
-	@Override
-	// TODO: pull this up to AbstractMessageBroker, need to harmonize
-	//       with CouchDbMessageBroker -- only difference is how 
-	//		 envelope state changes are persisted
-	public void listen( MessageQueue queue, MessageConsumer consumer, int timeout, boolean justOne ) throws IOException {
-		if( queue == null || consumer == null ) {
-			throw new IllegalArgumentException( "Null arg" );
-		}
-		
-		while( true ) {
-			
-			// Receive the next message, consume it, and mark it as such
-			SimpleEnvelope envelope = (SimpleEnvelope) receive( queue, timeout );
-
-//			System.out.println( ">>>>> queueName: " + queueName );
-//			System.out.println( ">>>>> envelope: " + envelope );
-//			System.out.println( ">>>>> message: " + envelope.getMessage() );
-			consumer.consume( envelope.getMessage() );
-
-			String now = nowISO();
-			envelope.setState( State.Consumed );
-			envelope.setConsumedTimestamp( now );
-						
-			// Signal the state change to the message log as well
-			sendNewStateEvent( envelope.getId(), envelope.getState(), now );
-			
-			if( justOne ) {
-				break;
-			}
-		}
-	}
-
-	@Override
-	public Envelope receive( MessageQueue queue, long timeLimit )
-			throws IOException, TimeLimitExceededException {
-		
-		// Wait for the first non-expired message we get, and return it
-		while( true ) {
-			Envelope receivedEnvelope = receiveOne( queue, timeLimit );
-			if( receivedEnvelope.getState() != State.Expired ) {
-				return (Envelope) receivedEnvelope;
-			}
-		}
 	}
 
 //	/**
@@ -233,41 +214,61 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 //		return receivedEnvelope;
 //	}
 	
-	private void sendNewStateEvent( String id, State state, String timestamp ) throws IOException {
-		String stateChange = id + "@" + state.toString() + "@" + timestamp;
-		this.channel.basicPublish( this.exchangeName, 
-				                  	   MESSAGE_STATE_ROUTING_KEY, 
-				                 	   null, 
-				                 	   stateChange.getBytes() );
-	}
-	
 	@Override
-	public Envelope sendOne( MessageQueue queue, Message message, long expireTime ) {
+	public void listen( MessageQueue queue, MessageConsumer consumer, int timeout ) throws IOException {
 
-		try {
-			SimpleEnvelope envelope = new SimpleEnvelope( message, this.ourIP, queue.getName(), expireTime );
-			envelope.setSentTimestamp( nowISO() );
-			envelope.setState( State.Sent );
-			envelope.setMessageClass( message.getClass().getName() );
-			envelope.setExpireTime( expireTime );
-			message.setEnvelope( envelope );
-			ObjectMapper mapper = new ObjectMapper();
-			String json = mapper.writeValueAsString( envelope );
-			
-			AMQP.BasicProperties properties = 
-					new AMQP.BasicProperties.Builder()
-						.deliveryMode( 2 )			// persisted delivery
-//						.correlationId( addCorrelationId ? envelope.getId() : null )
-//						.replyTo( addCorrelationId ? CALLBACK_MESSAGE_BUS : null )
-						.build();
-			String routingKey = queue.getName();	// The API calls "queue" what RabbitMQ calls "routing key"
-			this.channel.basicPublish( exchangeName, routingKey, properties, json.getBytes() );
-//			this.mainChannel.close();
-//			this.mainChannel.getConnection().close();
-			return envelope;
-		} 
-		catch( IOException|TimeLimitExceededException e ) {
-			throw new RuntimeException( e );
+		if( queue == null || consumer == null ) {
+			throw new IllegalArgumentException( "Null arg" );
+		}
+		
+		boolean autoAck = false;
+		lastDeliveryTime = new Date();
+		
+		DefaultConsumer rmqConsumer = new DefaultConsumer( channel ) {
+
+			@Override
+			public void handleDelivery( String consumerTag, 	
+										com.rabbitmq.client.Envelope envelope,
+										AMQP.BasicProperties properties, 
+										byte[] body ) throws IOException {
+
+				lastDeliveryTime = new Date();
+				
+				String json = new String( body, "UTF-8" );
+				ObjectMapper objectMapper = new ObjectMapper();
+				SimpleEnvelope receivedEnvelope = objectMapper.readValue( json, SimpleEnvelope.class );
+				
+				if( !autoAck ) {
+                    channel.basicAck(envelope.getDeliveryTag(), false);
+				}
+				
+				setReceivedEnvelopeState( receivedEnvelope );
+				if( receivedEnvelope.getState() != State.Expired ) {	
+					
+					consumer.consume( receivedEnvelope.getMessage() );
+	                
+					receivedEnvelope.setState( State.Consumed );
+					receivedEnvelope.setConsumedTimestamp( nowISO() );
+				}
+				
+				// Signal the state change to the message log as well
+				sendNewStateEvent( receivedEnvelope.getId(), receivedEnvelope.getState(), nowISO() );
+			}
+		};
+		
+		// Start waiting for delivered messages, then consume them
+		@SuppressWarnings("unused")
+		String consumerTag = this.channel.basicConsume( queue.getName(), autoAck, rmqConsumer );
+		
+		// Timeout loop: check if too much time has passed
+		while( true ) {
+			Date now = new Date();
+			if( timeout > 0 && (now.getTime() - lastDeliveryTime.getTime()) >= timeout ) {
+				// Timeout! 
+//				System.out.println( "Timeout!" );
+				throw new TimeLimitExceededException( "After " + timeout + "msec" );
+			}
+			MessageBroker.sleep( 100 );
 		}
 	}
 	
@@ -291,8 +292,17 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		return ret;
 	}
 	
-	void drainLoggingQueue() {
-		drainQueue( MESSAGE_PERSISTENCE_QUEUE );
+	@Override
+	public Envelope receive( MessageQueue queue, long timeLimit )
+			throws IOException, TimeLimitExceededException {
+		
+		// Wait for the first non-expired message we get, and return it
+		while( true ) {
+			Envelope receivedEnvelope = receiveOne( queue, timeLimit );
+			if( receivedEnvelope.getState() != State.Expired ) {
+				return (Envelope) receivedEnvelope;
+			}
+		}
 	}
 	
 	/**
@@ -335,17 +345,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			ObjectMapper objectMapper = new ObjectMapper();
 			receivedEnvelope = objectMapper.readValue( json, SimpleEnvelope.class );
 
-			// See if the message has expired
-			String now = nowISO();
-			final long timeToLive = receivedEnvelope.getTimeToLive();
-			if( timeToLive != 0 ) {
-				receivedEnvelope.setState( State.Received );
-				receivedEnvelope.setReceivedTimestamp( now );
-			}
-			else {
-				receivedEnvelope.setState( State.Expired );
-				receivedEnvelope.setExpiredTimestamp( now );
-			}
+			String now = setReceivedEnvelopeState( receivedEnvelope );
 					
 			// Signal the state change to the message log as well
 			sendNewStateEvent( receivedEnvelope.getId(), receivedEnvelope.getState(), now );
@@ -354,5 +354,43 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			throw new RuntimeException( e );
 		}
 		return receivedEnvelope;
+	}
+	
+	private void sendNewStateEvent( String id, State state, String timestamp ) throws IOException {
+		String stateChange = id + "@" + state.toString() + "@" + timestamp;
+		this.channel.basicPublish( this.exchangeName, 
+				                  	   MESSAGE_STATE_ROUTING_KEY, 
+				                 	   null, 
+				                 	   stateChange.getBytes() );
+	}
+
+	@Override
+	public Envelope sendOne( MessageQueue queue, Message message, long expireTime ) {
+
+		try {
+			SimpleEnvelope envelope = new SimpleEnvelope( message, this.ourIP, queue.getName(), expireTime );
+			envelope.setSentTimestamp( nowISO() );
+			envelope.setState( State.Sent );
+			envelope.setMessageClass( message.getClass().getName() );
+			envelope.setExpireTime( expireTime );
+			message.setEnvelope( envelope );
+			ObjectMapper mapper = new ObjectMapper();
+			String json = mapper.writeValueAsString( envelope );
+			
+			AMQP.BasicProperties properties = 
+					new AMQP.BasicProperties.Builder()
+						.deliveryMode( 2 )			// persisted delivery
+//						.correlationId( addCorrelationId ? envelope.getId() : null )
+//						.replyTo( addCorrelationId ? CALLBACK_MESSAGE_BUS : null )
+						.build();
+			String routingKey = queue.getName();	// The API calls "queue" what RabbitMQ calls "routing key"
+			this.channel.basicPublish( exchangeName, routingKey, properties, json.getBytes() );
+//			this.mainChannel.close();
+//			this.mainChannel.getConnection().close();
+			return envelope;
+		} 
+		catch( IOException|TimeLimitExceededException e ) {
+			throw new RuntimeException( e );
+		}
 	}
 }

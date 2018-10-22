@@ -119,24 +119,26 @@ public interface MessageBroker {
 	 * 
 	 * @param consumer
 	 *            Callback function to process the message with
-	 * @param selector
+	 * @param queue
 	 *            Defines what messages to listen to. If <code>null</code>, defaults
 	 *            to the value of this class' {@link #listenTo} field
-	 * @param condition
-	 *            Boolean function to be invoked before starting to listen: if not
-	 *            <code>null</code>will cause the thread to sleep if the condition
-	 *            is false
+// Parameter condition is not yet implemented
+//	 * @param condition
+//	 *            Boolean function to be invoked before starting to listen: if not
+//	 *            <code>null</code>will cause the thread to sleep if the condition
+//	 *            is false
 	 * @param timeout
 	 *            If timeout > 0 it represents the number of msec to wait for a
-	 *            message to arrive before timing out -- upon timeout a
-	 *            RuntimeException is thrown
-	 * @param justOne
-	 *            If <code>true</code>, return after the first message
+	 *            message to arrive before timing out: upon timeout a
+	 *            {@link TimeLimitExceededException} is thrown
+	 *            
+	 * @throws TimeLimitExceededException
+	 *             If waiting time exceeded the given limit
+	 * @throws IOException
 	 */
 	public void listen( MessageQueue queue, 
 						MessageConsumer consumer, 
-						int timeout, 
-						boolean justOne ) throws IOException;
+						int timeout ) throws IOException, TimeLimitExceededException;
 
 	/**
 	 * Listen for messages matching the queue name and process them as
@@ -162,8 +164,7 @@ public interface MessageBroker {
 	 */
 	public Thread listenInThread( MessageQueue queue, 
 								  MessageConsumer consumer, 
-								  int timeout, 
-								  boolean justOne );
+								  int timeout );
 
 	/**
 	 * @return A {@link MessageQueue} with the given name

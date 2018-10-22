@@ -179,7 +179,7 @@ public class TestMessageBroker {
 		// Define a sender thread
 		Runnable receiver = () -> {	
 			try {
-				messageBus.listen( queue, mc, 3000, true );
+				messageBus.listen( queue, mc, 3000 );
 			} 
 			catch (IOException e) {
 				throw new RuntimeException( e );

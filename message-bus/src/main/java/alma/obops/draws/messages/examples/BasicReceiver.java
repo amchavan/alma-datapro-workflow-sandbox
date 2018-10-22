@@ -1,6 +1,9 @@
 package alma.obops.draws.messages.examples;
 
 import static alma.obops.draws.messages.examples.ExampleUtils.*;
+
+import alma.obops.draws.messages.Envelope;
+
 import static alma.obops.draws.messages.examples.BasicSender.*;
 
 import alma.obops.draws.messages.MessageBroker;
@@ -24,6 +27,7 @@ public class BasicReceiver {
 
 		// Listen for a single message and pass it on to the consumer; will timeout
 		// if no message can be read
-		queue.listen(consumer, 10000, true);
+		Envelope received = queue.receive( 10000 );
+		consumer.consume( received.getMessage() );
 	}
 }

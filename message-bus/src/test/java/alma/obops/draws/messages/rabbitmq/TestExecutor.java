@@ -103,7 +103,7 @@ public class TestExecutor {
 		};
 		Thread doublerThread = new Thread( doublerRunnable );
 		doublerThread.start();
-
+		
 		// Define the client for that Executor
 		MessageConsumer consumer = (message) -> {
 			if( ! (message instanceof DoubleResponse) ) {
@@ -116,6 +116,7 @@ public class TestExecutor {
 			}
 			doubled = ((DoubleResponse) message).doubled;
 		};
+		
 		ExecutorClient client = new ExecutorClient( queue, consumer );
 
 		// Client sends a request to double 1
@@ -123,6 +124,8 @@ public class TestExecutor {
 		doubled = null;
 		request.number = 1;
 		client.call( request );
+
+//		MessageBroker.sleep( 1500 );	
 		assertNotNull( doubled );
 		System.out.println( ">>> Received reply with number: " + doubled );
 		assertEquals( 2, doubled.intValue() );

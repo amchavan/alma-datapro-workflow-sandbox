@@ -90,10 +90,10 @@ public class MessageQueue {
 	 * 
 	 * @return An {@link Envelope} wrapping a user {@link Message}.
 	 * 
-	 * @throws TimeLimitExceededException		If waiting time exceeded the given timeout value
+	 * @throws TimeLimitExceededException If waiting time exceeded the given timeout value
 	 * @throws IOException
 	 */
-	public Envelope receive( long timeout ) throws IOException, TimeLimitExceededException {
+	public Envelope receive( int timeout ) throws IOException, TimeLimitExceededException {
 		return messageBroker.receive( this, timeout );
 	}
 
@@ -116,20 +116,20 @@ public class MessageQueue {
 	 * 
 	 * @param consumer
 	 *            Callback function to process the message with
-// * @param condition
-// * Boolean function to be invoked before starting to listen: if not
-// * <code>null</code>will cause the thread to sleep if the condition
-// * is false
+	 *            
 	 * @param timeout
 	 *            If timeout is not-<code>null</code> and positive it represents the
-	 *            number of msec to wait for a message to arrive before timing out,
-	 *            upon which a RuntimeException is thrown
+	 *            number of msec to wait for a message to arrive before timing out;
+	 *            upon timeout a
+	 *            {@link TimeLimitExceededException} is thrown
 	 * @param justOne
 	 *            If <code>true</code>, return after the first message
+	 *            
 	 * @throws IOException
+	 * @throws TimeLimitExceededException If waiting time exceeded the given timeout value
 	 */
-	public void listen( MessageConsumer consumer, int timeout, boolean justOne ) throws IOException {
-		this.messageBroker.listen( this, consumer, timeout, justOne );
+	public void listen( MessageConsumer consumer, int timeout ) throws IOException, TimeLimitExceededException {
+		this.messageBroker.listen( this, consumer, timeout );
 	} 	
 	
 	@Override
@@ -143,7 +143,7 @@ public class MessageQueue {
 	 * This method times out.<br>
 	 * This method is a wrapper around {@link #listen()}.
 	 */
-	public Thread listenInThread( MessageConsumer consumer, int timeout, boolean justOne ) {
-		return messageBroker.listenInThread( this, consumer, timeout, justOne );
+	public Thread listenInThread( MessageConsumer consumer, int timeout ) {
+		return messageBroker.listenInThread( this, consumer, timeout );
 	}
 }

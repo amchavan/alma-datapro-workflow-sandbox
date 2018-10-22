@@ -18,11 +18,11 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	}
 
 	@Override
-	public Thread listenInThread( MessageQueue queue, MessageConsumer consumer, int timeout, boolean justOne) {
+	public Thread listenInThread( MessageQueue queue, MessageConsumer consumer, int timeout ) {
 		
 		Runnable receiver = () -> {	
 			try {
-				this.listen( queue, consumer, timeout, justOne );
+				this.listen( queue, consumer, timeout );
 			}
 			catch ( TimeLimitExceededException e ) {
 				// ignore

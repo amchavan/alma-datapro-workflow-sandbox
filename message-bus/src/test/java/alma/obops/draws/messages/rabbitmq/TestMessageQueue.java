@@ -3,7 +3,9 @@ package alma.obops.draws.messages.rabbitmq;
 import static alma.obops.draws.messages.TestUtils.RABBITMQ_URL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -82,14 +84,63 @@ public class TestMessageQueue {
 	}
 	
 	@Test
+	// Listens until it times out, then it tries to listen again and this time it does work
+	public void listenTimeout() throws Exception {
+		
+		// Define a consumer
+		MessageConsumer mc = (message) -> {
+			receivedMessage = (TestMessage) message;
+			System.out.println( ">>> Received: " + message );
+		};
+		
+		// First time around -- just timeout
+		receivedMessage = null;
+		try {
+			queue.listen( mc, 1000 );
+			MessageBroker.sleep( 2000 );
+		} 
+		catch( TimeLimitExceededException e ) {
+			// no-op, expected
+		}
+		catch( Exception e ) {
+			fail( e.getMessage() );
+		}
+		assertNull( receivedMessage );
+
+		// Second time around: send a message, retrieve, timeout
+		queue.send( jimi );
+		System.out.println( ">>> Sent: " + jimi );
+		
+		try {
+			queue.listen( mc, 1000 );
+			MessageBroker.sleep( 2000 );
+		} 
+		catch( TimeLimitExceededException e ) {
+			// no-op, expected
+		}
+		catch( Exception e ) {
+			fail( e.getMessage() );
+		}
+
+		// Wait for the threads to be done
+		MessageBroker.sleep( 500 );	
+		
+		assertNotNull( receivedMessage );
+		assertEquals(  jimi, receivedMessage );
+		assertEquals(  State.Consumed, receivedMessage.getEnvelope().getState() );
+		assertNotNull( receivedMessage.getEnvelope().getConsumedTimestamp() );
+	}
+	
+	@Test
 	public void send_LetExpire_Listen() throws Exception {
 
 		// Drain any existing messages in the logging queue
 		broker.drainLoggingQueue();
 		
-		Envelope e = queue.send( jimi, 1000L );				// jimi will expire
+		Envelope e;
+		
+		e = queue.send( jimi, 1000L );						// jimi will expire
 		System.out.println( ">>> Sent: " + e );
-	
 		e = queue.send( freddie );							// freddie will not expire
 		System.out.println( ">>> Sent: " + e );
 	
@@ -101,10 +152,13 @@ public class TestMessageQueue {
 		};
 		
 		try {
-			queue.listen( mc, 50, false );	// terminate after timeout
+			queue.listen( mc, 50 );	// terminate after timeout
 		} 
 		catch( TimeLimitExceededException te ) {
 			// no-op, expected
+		}
+		finally {
+			MessageBroker.sleep( 500L );	// Give some time to the background thread to catch up
 		}
 	
 		assertNotNull( receivedMessage );
@@ -114,8 +168,8 @@ public class TestMessageQueue {
 		// interrogate the database
 		Runnable messageLogListener = broker.getMessageLogListener();
 		Thread messageLogThread = new Thread( messageLogListener );
-		messageLogThread.start();
-		MessageBroker.sleep( 1000L );	// Give some time to the background thread to catch up
+		messageLogThread.start();			
+		MessageBroker.sleep( 500L );	// Give some time to the background thread to catch up
 		messageLogThread.join();
 		
 		for( PersistedEnvelope pe: envelopeRepository.findAll() ) {
@@ -137,7 +191,7 @@ public class TestMessageQueue {
 		assertNotNull( consumed.getConsumedTimestamp() );
 		assertEquals( jimi, expired.getMessage() );
 	}
-	
+
 	@Test
 	// Send and receive on two separate threads -- uses listenInThread()
 	public void send_ListenInThread() throws Exception {
@@ -156,17 +210,15 @@ public class TestMessageQueue {
 		};
 
 		// Launch a listener with that consumer on a background thread
-		Thread receiverT = queue.listenInThread( mc, 3000, true );
-	
-		
-		// Wait a bit, then launch the sender
-		MessageBroker.sleep( 1500 );
+		// Launch the sender
+		Thread receiverT = queue.listenInThread( mc, 3000 );
 		senderT.start();
-		
-		// Wait for the threads to be done, then check that they 
-		// exchanged the message
+
+		// Wait for the threads to be done
+		MessageBroker.sleep( 500 );	
 		senderT.join();
 		receiverT.join();
+		
 		assertNotNull( receivedMessage );
 		assertEquals( jimi, receivedMessage );
 		assertEquals( State.Consumed, receivedMessage.getEnvelope().getState() );
@@ -190,6 +242,8 @@ public class TestMessageQueue {
 		
 		queue.delete();
 	}
+	
+
 
 	@Test
 	public void send_Receive_Log() throws Exception {
@@ -225,8 +279,6 @@ public class TestMessageQueue {
 		assertEquals( sent.getMessage(), foundEnvelope.getMessage() );
 		assertEquals( State.Received,    foundEnvelope.getState() );
 	}
-	
-
 
 	@Test
 	public void send_Receive_Multiple() throws Exception {
@@ -242,11 +294,10 @@ public class TestMessageQueue {
 			System.out.println( ">>> sent: " + sent );
 		}
 		
-		
 		for( int i = repeats-1; i>=0 ; i-- ) {
 			String queueName = QUEUE_NAME + i;
 			MessageQueue queue = broker.messageQueue( queueName );
-			Envelope received = queue.receive( 2000L );
+			Envelope received = queue.receive( 2000 );
 			System.out.println( ">>> received: " + received );
 			TestMessage message = (TestMessage) received.getMessage();
 			assertEquals( i, message.age );
@@ -254,6 +305,7 @@ public class TestMessageQueue {
 		}
 	}
 
+	
 	@Test
 	// Send and find on two separate threads
 	public void send_ReceiveConcurrent() throws Exception {
@@ -290,7 +342,6 @@ public class TestMessageQueue {
 		assertNotNull( receivedMessage.getEnvelope().getReceivedTimestamp() );
 	}
 
-	
 	@Test
 	public void sendToGroup() throws Exception {
 

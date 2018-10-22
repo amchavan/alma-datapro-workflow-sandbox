@@ -215,8 +215,7 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 	//		 envelope state changes are persisted
 	public void listen( MessageQueue queue, 
 						MessageConsumer consumer, 
-						int timeout, 
-						boolean justOne ) throws IOException {
+						int timeout ) throws IOException {
 		
 		if( queue == null || consumer == null ) {
 			throw new IllegalArgumentException( "Null arg" );
@@ -231,10 +230,6 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 			envelope.setState( State.Consumed );
 			envelope.setConsumedTimestamp( nowISO() );
 			dbConn.save( busName, new CouchDbEnvelope( envelope ));
-			
-			if( justOne ) {
-				break;
-			}
 		}
 	}
 

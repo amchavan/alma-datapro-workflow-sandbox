@@ -126,9 +126,8 @@ public class TestMessageQueue {
 		};
 
 		// Launch a listener with that consumer on a background thread
-		Thread receiverT = queue.listenInThread( mc, 3000, true );
+		Thread receiverT = queue.listenInThread( mc, 3000 );
 	
-		
 		// Wait a bit, then launch the sender
 		MessageBroker.sleep( 1500 );
 		senderT.start();
@@ -163,7 +162,7 @@ public class TestMessageQueue {
 		// Define a sender thread
 		Runnable receiver = () -> {	
 			try {
-				queue.listen( mc, 3000, true );
+				queue.listen( mc, 3000 );
 			} 
 			catch (IOException e) {
 				throw new RuntimeException( e );
@@ -206,7 +205,7 @@ public class TestMessageQueue {
 		};
 		
 		try {
-			queue.listen( mc, 50, false );	// terminate after timeout
+			queue.listen( mc, 50 );	// terminate after timeout
 		} 
 		catch( TimeLimitExceededException te ) {
 			// no-op, expected
