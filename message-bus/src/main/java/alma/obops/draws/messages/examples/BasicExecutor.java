@@ -1,20 +1,21 @@
 package alma.obops.draws.messages.examples;
 
-import static alma.obops.draws.messages.examples.ExampleUtils.*;
+import static alma.obops.draws.messages.examples.ExampleUtils.MESSAGE_BUS_NAME;
 
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.TimeZone;
 
+import alma.obops.draws.messages.AbstractMessage;
 import alma.obops.draws.messages.Executor;
-import alma.obops.draws.messages.Message;
-import alma.obops.draws.messages.MessageBus;
+import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
-import alma.obops.draws.messages.TimeoutException;
+import alma.obops.draws.messages.ResponseMessage;
+import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.couchdb.CouchDbConfig;
-import alma.obops.draws.messages.couchdb.CouchDbMessageBus;
+import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
 
 /**
  * A basic executor, returns the current datetime in a given timezone.<br>
@@ -28,7 +29,7 @@ public class BasicExecutor {
 	 * A datetime request, e.g. <code>{"service":"datetime", "timezone":""}</code>
 	 * Our calculator expects messages of that form as requests.
 	 */
-	public static class DatetimeRequest implements RequestMessage {
+	public static class DatetimeRequest extends AbstractMessage implements RequestMessage  {
 		public String timezone;
 
 		public DatetimeRequest() {
@@ -44,7 +45,7 @@ public class BasicExecutor {
 	 * Describes a result, e.g. <code>{"datetime":"2"}</code><br>
 	 * Our calculator responds with this kind of message
 	 */
-	public static class DatetimeResponse implements Message {
+	public static class DatetimeResponse extends AbstractMessage implements ResponseMessage {
 		public String datetime;
 
 		public DatetimeResponse() {
@@ -60,7 +61,7 @@ public class BasicExecutor {
 	public static class DatetimeProcessor implements RequestProcessor {
 
 		@Override
-		public Message process(RequestMessage message) {
+		public ResponseMessage process(RequestMessage message) {
 
 			DatetimeRequest request = (DatetimeRequest) message;
 			System.out.println(">>> Received request with TZ=" + request.timezone);
@@ -72,14 +73,15 @@ public class BasicExecutor {
 
 	public static void main(String[] args) throws IOException {
 		CouchDbConfig config = new CouchDbConfig();
-		MessageBus bus = new CouchDbMessageBus(config, MESSAGE_BUS_NAME);
+		MessageBroker bus = new CouchDbMessageBroker(config, MESSAGE_BUS_NAME);
 		MessageQueue queue = bus.messageQueue(DATETIME_QUEUE);
 		RequestProcessor processor = new DatetimeProcessor();
 		Executor executor = new Executor(queue, processor, 5000);
 
 		try {
 			executor.run();
-		} catch (TimeoutException e) {
+		} 
+		catch (TimeLimitExceededException e) {
 			System.out.println(">>> Timed out: " + e.getMessage());
 		}
 	}

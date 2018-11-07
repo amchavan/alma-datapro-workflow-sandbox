@@ -6,11 +6,11 @@ import static alma.obops.draws.messages.examples.Calculator.*;
 import java.io.IOException;
 
 import alma.obops.draws.messages.ExecutorClient;
-import alma.obops.draws.messages.MessageBus;
+import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.couchdb.CouchDbConfig;
-import alma.obops.draws.messages.couchdb.CouchDbMessageBus;
+import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
 import alma.obops.draws.messages.examples.Calculator.ComputationMessage;
 import alma.obops.draws.messages.examples.Calculator.ResultMessage;
 
@@ -24,23 +24,23 @@ public class CalculatorClient {
 
 	public static void main(String[] args) throws IOException {
 		CouchDbConfig config = new CouchDbConfig();
-		MessageBus bus = new CouchDbMessageBus(config, MESSAGE_BUS_NAME);
+		MessageBroker bus = new CouchDbMessageBroker(config, MESSAGE_BUS_NAME);
 		MessageQueue queue = bus.messageQueue(CALC_SELECTOR);
-		ExecutorClient client = new ExecutorClient(queue);
 
 		MessageConsumer consumer = (message) -> {
 			String txt = request.a + " " + request.operation + " " + request.b + " = "
 					+ ((ResultMessage) message).value;
 			System.out.println(txt);
 		};
+		ExecutorClient client = new ExecutorClient(queue, consumer);
 
 		request = new ComputationMessage("+", "1", "2");
-		client.call(request, consumer);
+		client.call(request);
 
 		request = new ComputationMessage("-", "7", "4");
-		client.call(request, consumer);
+		client.call(request);
 
 		request = new ComputationMessage("*", "1", "3");
-		client.call(request, consumer);
+		client.call(request);
 	}
 }

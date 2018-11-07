@@ -22,7 +22,6 @@ import alma.obops.draws.messages.Record;
 public class CouchDbConnection implements DbConnection {
 
 	private String baseURL;
-
 	private Header authHeader;
 
 	/** Constructor: create an interface to a non-secured CouchDB instance */
@@ -262,20 +261,20 @@ public class CouchDbConnection implements DbConnection {
 			throw new IllegalArgumentException( "Null or empty arg" );
 		}
 
-		CouchDbRecord cdbrec = (CouchDbRecord) record;
-		CouchDbRecord found = (CouchDbRecord) findOne( dbName, cdbrec.getClass(), cdbrec.getId() );
+		Record found = findOne( dbName, record.getClass(), record.getId() );
 		if( found != null ) {
 			// Record exists already, need to retrieve its current version or
 			// we won't be able to update it
 			String version = found.getVersion();
-			cdbrec.setVersion( version );
+			record.setVersion( version );
 		}
 		
-		String id = urlEncode( cdbrec.getId().toString() );
+		String id = urlEncode( record.getId().toString() );
 		String url = baseURL + "/" + dbName + "/" + id;
 		
+		// Write our record to the database
 		ObjectMapper mapper = new ObjectMapper();
-		String json = mapper.writeValueAsString( cdbrec );
+		String json = mapper.writeValueAsString( record );
 
 		HttpResponse response = httpPut( url, json, this.authHeader );
 		int status = response.getStatusLine().getStatusCode();
@@ -286,7 +285,7 @@ public class CouchDbConnection implements DbConnection {
 		}
 		
 		String fmt = "save('%s',%s) failed: status=%d, '%s'";
-		String msg = String.format(fmt, dbName, cdbrec, status, readBody( response ));
+		String msg = String.format(fmt, dbName, record, status, readBody( response ));
 		throw new RuntimeException( msg );
 	}
 }

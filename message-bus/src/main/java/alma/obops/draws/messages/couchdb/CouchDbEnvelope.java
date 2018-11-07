@@ -1,51 +1,59 @@
 package alma.obops.draws.messages.couchdb;
 
-import java.util.UUID;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import alma.obops.draws.messages.Envelope;
 import alma.obops.draws.messages.Message;
-import alma.obops.draws.messages.MessageBus;
+import alma.obops.draws.messages.Record;
+import alma.obops.draws.messages.SimpleEnvelope;
 
 /**
  * Wrapper for user messages, adding message metadata like timestamp and ID.
  * 
  * @author mchavan, 12-Sep-2018
  */
+
 @JsonDeserialize(using = CouchDbEnvelopeDeserializer.class)
-public class CouchDbEnvelope extends CouchDbRecord implements Envelope, Comparable<CouchDbEnvelope> {
+public class CouchDbEnvelope extends SimpleEnvelope implements Record {
+	/**
+	 * Envelope version, mapped to the <code>_rev</code> property.
+	 * 
+	 * It's important that this property is initialized as <code>null</code> and
+	 * doesn't get serialized if <code>null</code>, otherwise CouchDB will complain
+	 * when creating a record for the first time.
+	 */
+	@JsonInclude(Include.NON_NULL)
+	@JsonProperty("_rev")
+	protected String version;
 
-	static String makeID() {
-		StringBuilder sb = new StringBuilder();
-		sb.append( MessageBus.nowISO() )
-		  .append( "-" )
-		  .append( UUID.randomUUID().toString().replace( "-", "" ) );
-		
-		return sb.toString();
-	}
-
-	private Message message;
-	private String messageClass;
-	private String creationTimestamp;
-	private String originIP;
-	private String queueName;
-	private boolean consumed;
-	
 	public CouchDbEnvelope() {
 		super();
+		this.version = null;
 	}
-	
-	public CouchDbEnvelope( Message message, String creationTimestamp, String originIP,
-						    String queueName ) {
-		super( makeID(), null );
-		
-		this.message = message;
-		this.messageClass = message != null ? message.getClass().getName() : null;
-		this.creationTimestamp = creationTimestamp;
-		this.originIP = originIP;
-		this.queueName = queueName;
-		this.consumed = false;
+
+	public CouchDbEnvelope( Message message, String ourIP, String queueName, long timeToLive) {
+		super( message, ourIP, queueName, timeToLive );
+		this.version = null;
+	}
+
+	public CouchDbEnvelope( SimpleEnvelope envelope ) {
+		super();
+		this.id                = envelope.getId();
+		this.message           = envelope.getMessage();
+		this.messageClass      = envelope.getMessageClass();
+		this.sentTimestamp     = envelope.getSentTimestamp();
+		this.receivedTimestamp = envelope.getReceivedTimestamp();
+		this.consumedTimestamp = envelope.getConsumedTimestamp();
+		this.expiredTimestamp  = envelope.getExpiredTimestamp();
+		this.rejectedTimestamp = envelope.getRejectedTimestamp();
+		this.originIP          = envelope.getOriginIP();
+		this.queueName         = envelope.getQueueName();
+		this.state             = envelope.getState();
+		this.expireTime        = envelope.getExpireTime();
+		this.version 	       = null;
+		this.token 	           = envelope.getToken();
 	}
 	
 	@Override
@@ -57,111 +65,27 @@ public class CouchDbEnvelope extends CouchDbRecord implements Envelope, Comparab
 		if (getClass() != obj.getClass())
 			return false;
 		CouchDbEnvelope other = (CouchDbEnvelope) obj;
-		if (consumed != other.consumed)
-			return false;
-		if (creationTimestamp == null) {
-			if (other.creationTimestamp != null)
+		if (version == null) {
+			if (other.version != null)
 				return false;
-		} else if (!creationTimestamp.equals(other.creationTimestamp))
-			return false;
-		if (message == null) {
-			if (other.message != null)
-				return false;
-		} else if (!message.equals(other.message))
-			return false;
-		if (messageClass == null) {
-			if (other.messageClass != null)
-				return false;
-		} else if (!messageClass.equals(other.messageClass))
-			return false;
-		if (originIP == null) {
-			if (other.originIP != null)
-				return false;
-		} else if (!originIP.equals(other.originIP))
-			return false;
-		if (queueName == null) {
-			if (other.queueName != null)
-				return false;
-		} else if (!queueName.equals(other.queueName))
+		} else if (!version.equals(other.version))
 			return false;
 		return true;
-	}
+	}	
 	
-	public String getCreationTimestamp() {
-		return creationTimestamp;
-	}
-
-	public Message getMessage() {
-		return message;
-	}
-	
-	public String getMessageClass() {
-		return messageClass;
-	}
-	
-	public String getOriginIP() {
-		return originIP;
-	}
-
-	public String getQueueName() {
-		return queueName;
+	public String getVersion() {
+		return version;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + (consumed ? 1231 : 1237);
-		result = prime * result + ((creationTimestamp == null) ? 0 : creationTimestamp.hashCode());
-		result = prime * result + ((message == null) ? 0 : message.hashCode());
-		result = prime * result + ((messageClass == null) ? 0 : messageClass.hashCode());
-		result = prime * result + ((originIP == null) ? 0 : originIP.hashCode());
-		result = prime * result + ((queueName == null) ? 0 : queueName.hashCode());
+		result = prime * result + ((version == null) ? 0 : version.hashCode());
 		return result;
 	}
 
-	public boolean isConsumed() {
-		return consumed;
-	}
-
-	public void setConsumed(boolean consumed) {
-		this.consumed = consumed;
-	}
-
-	public void setCreationTimestamp(String creationTimestamp) {
-		this.creationTimestamp = creationTimestamp;
-	}
-
-	public void setMessage( Message message) {
-		this.message = message;
-	}
-
-	public void setMessageClass(String messageClass) {
-		this.messageClass = messageClass;
-	}
-
-	public void setOriginIP(String originIP) {
-		this.originIP = originIP;
-	}
-
-	public void setQueueName(String queueName) {
-		this.queueName = queueName;
-	}
-
-	@Override
-	public String toString() {
-		return this.getClass().getSimpleName()
-				+ "[message=" + message + ", creationTimestamp=" + creationTimestamp + ", originIP="
-				+ originIP + ", queueName=" + queueName + ", consumed=" + consumed 
-				+ "]";
-	}
-	
-	/**
-	 * Compare by creation timestamp
-	 */
-	@Override
-	public int compareTo( CouchDbEnvelope other ) {
-		CouchDbEnvelope otherMessage = (CouchDbEnvelope) other;
-		return this.getCreationTimestamp().compareTo( otherMessage.getCreationTimestamp() );
+	public void setVersion(String version) {
+		this.version = version;
 	}
 }

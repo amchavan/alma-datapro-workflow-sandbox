@@ -2,8 +2,10 @@ package alma.obops.draws.messages;
 
 import java.io.IOException;
 
+import alma.obops.draws.messages.Envelope.State;
+
 /**
- * Allows messages to be sent and subscribed to. Depends on a {@link MessageBus}
+ * Allows messages to be sent and subscribed to. Depends on a {@link MessageBroker}
  * providing the transport mechanism.
  * 
  * @author mchavan, 18-Sep-2018
@@ -11,23 +13,23 @@ import java.io.IOException;
 public class MessageQueue {
 	
 	private String queueName;
-	private MessageBus messageBus;
+	private MessageBroker messageBroker;
 	
 	/**
 	 * @param name
 	 *            If it ends with <code>.*</code> it is interpreted as a group ID;
 	 *            messages set to the queue will be sent to all group members
 	 */
-	public MessageQueue( String queueName, MessageBus messageBus ) {
+	public MessageQueue( String queueName, MessageBroker messageBus ) {
 		if( queueName == null || messageBus == null ) {
 			throw new IllegalArgumentException( "Null arg" );
 		}
 		this.queueName = queueName;
-		this.messageBus = messageBus;
+		this.messageBroker = messageBus;
 	}
 	
-	public MessageBus getMessageBus() {
-		return messageBus;
+	public MessageBroker getMessageBroker() {
+		return messageBroker;
 	}
 	
 	public String getName() {
@@ -36,28 +38,35 @@ public class MessageQueue {
 
 	/**
 	 * Creates an {@link Envelope} (including meta-data) from the given
-	 * {@link Message} and sends it.
+	 * {@link Message} and sends to this queue. <br>
+	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
+	 * The {@link Message} instance is set to {@link State#Sent}.
 	 */
 	public Envelope send( Message message ) {
-		return messageBus.send( queueName, message);
+		return this.send( message, 0 );
 	}
 	
 	/**
-	 * Search for messages; selector includes the query parameters. Returned
-	 * messages are not consumed.
+	 * Creates an {@link Envelope} (including meta-data) from the given
+	 * {@link Message} and sends to this queue. <br>
+	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
+	 * The {@link Message} instance is set to {@link State#Sent}.
 	 * 
-	 * @param query
-	 *            A JSON selector like
-	 *            <pre>{ "selector": { "message": { "$exists": true }}}</pre>
-	 *            It's important that the selector restricts the result set to
-	 *            include only messages, as in this example.
-	 * 
-	 *            See also http://docs.couchdb.org/en/2.1.1/api/database/find.html
-	 * 
-	 * @return A possibly empty array of documents
+	 * @param timeToLive
+	 *            The time before this instance expires, in msec; if
+	 *            <code>null</code>, this instance never expires
 	 */
-	public Envelope[] find( String query ) throws IOException {
-		return messageBus.find( query );
+	public Envelope send( Message message, long timeToLive ) {
+		return messageBroker.send( this, message, timeToLive );
+	}
+	
+	/**
+	 * Delete this queue and all its messages
+	 * 
+	 * @throws IOException 
+	 */
+	public void delete() throws IOException {
+		messageBroker.deleteQueue( this );
 	}
 	
 	/**
@@ -67,8 +76,8 @@ public class MessageQueue {
 	 * 
 	 * @throws IOException 
 	 */
-	public Envelope findNext() throws IOException {
-		return messageBus.findNext( queueName );
+	public Envelope receive() throws IOException {
+		return messageBroker.receive( this );
 	}
 	
 	/**
@@ -77,15 +86,15 @@ public class MessageQueue {
 	 * @param timeout
 	 *            If timeout > 0 it represents the number of msec to wait for a
 	 *            message to arrive before timing out: upon timeout a
-	 *            {@link TimeoutException} is thrown.
+	 *            {@link TimeLimitExceededException} is thrown.
 	 * 
 	 * @return An {@link Envelope} wrapping a user {@link Message}.
 	 * 
-	 * @throws TimeoutException		If waiting time exceeded the given timeout value
+	 * @throws TimeLimitExceededException If waiting time exceeded the given timeout value
 	 * @throws IOException
 	 */
-	public Envelope findNext( int timeout ) throws IOException, TimeoutException {
-		return messageBus.findNext( queueName, timeout );
+	public Envelope receive( int timeout ) throws IOException, TimeLimitExceededException {
+		return messageBroker.receive( this, timeout );
 	}
 
 	
@@ -98,7 +107,7 @@ public class MessageQueue {
 	 *            with '<code>.*</code>', e.g. <code>state.changes.*</code>
 	 */
 	public void joinGroup( String groupName ) {
-		messageBus.joinGroup( queueName, groupName );
+		messageBroker.joinGroup( queueName, groupName );
 	}
 
 	/**
@@ -107,40 +116,34 @@ public class MessageQueue {
 	 * 
 	 * @param consumer
 	 *            Callback function to process the message with
-//	 * @param condition
-//	 *            Boolean function to be invoked before starting to listen: if not
-//	 *            <code>null</code>will cause the thread to sleep if the condition
-//	 *            is false
+	 *            
 	 * @param timeout
-	 *            If timeout > 0 it represents the number of msec to wait for a
-	 *            message to arrive before timing out -- upon timeout a
-	 *            RuntimeException is thrown
-	 * @param metadata
-	 *            If <code>true</code>, pass the consumer an {@link Envelope}
-	 *            including all meta-data; otherwise a plain {@link Message}
+	 *            If timeout is not-<code>null</code> and positive it represents the
+	 *            number of msec to wait for a message to arrive before timing out;
+	 *            upon timeout a
+	 *            {@link TimeLimitExceededException} is thrown
 	 * @param justOne
 	 *            If <code>true</code>, return after the first message
-	 * @throws IOException 
+	 *            
+	 * @throws IOException
+	 * @throws TimeLimitExceededException If waiting time exceeded the given timeout value
 	 */
-	public void listen( MessageConsumer consumer, int timeout, boolean metadata, boolean justOne ) throws IOException {
-		messageBus.listen( queueName, consumer, timeout, metadata, justOne );
+	public void listen( MessageConsumer consumer, int timeout ) throws IOException, TimeLimitExceededException {
+		this.messageBroker.listen( this, consumer, timeout );
 	} 	
 	
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName() + "[" + queueName + "]";
+	}
+
 	/**
 	 * Start a background thread listening for messages matching the
 	 * queue name and processing them as they come in.<br>
 	 * This method times out.<br>
 	 * This method is a wrapper around {@link #listen()}.
 	 */
-	public Thread listenInThread( MessageConsumer consumer, 
-								  int timeout, 
-								  boolean metadata, 
-								  boolean justOne ) {
-		
-		return messageBus.listenInThread( queueName, 
-										  consumer, 
-										  timeout, 
-										  metadata, 
-										  justOne );
+	public Thread listenInThread( MessageConsumer consumer, int timeout ) {
+		return messageBroker.listenInThread( this, consumer, timeout );
 	}
 }

@@ -1,8 +1,8 @@
 package alma.obops.draws.messages.examples;
 
-import alma.obops.draws.messages.Message;
+import alma.obops.draws.messages.AbstractMessage;
 
-public class BasicMessage implements Message {
+public class BasicMessage extends AbstractMessage {
 	
 	public String name;
 	public int age;

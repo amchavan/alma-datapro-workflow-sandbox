@@ -8,25 +8,27 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import alma.obops.draws.messages.Envelope.State;
 import alma.obops.draws.messages.Message;
+import alma.obops.draws.messages.SimpleEnvelope;
 
 /**
- * We need a special Jackson deserializer for the {@link CouchDbEnvelope}, as the actual
- * message is an embedded object of arbitrary type, for instance:
+ * We need a special Jackson deserializer for the {@link SimpleEnvelope}, as the
+ * contained message is an embedded object of arbitrary type, for instance:
  * 
  * <pre>
 {
 	"_id": "abcd",
-	"_rev": "1-3d9cae152c462e99e46fc988a135563b",
 	"message": {
 		...
 	},
 	"messageClass": "alma.obops.draws.messages....",
-	"creationTimestamp": "2018-09-12T14:21:19",
+	"sentTimestamp": "2018-09-12T14:21:19",
 	"originIP": "134.171.73.110",
 	"queueName": "xtss",
-	"consumed": false
+	...
 }
  * </pre>
  * 
@@ -36,7 +38,7 @@ import alma.obops.draws.messages.Message;
  */
 
 @SuppressWarnings("serial")
-class CouchDbEnvelopeDeserializer extends StdDeserializer<CouchDbEnvelope> {
+public class CouchDbEnvelopeDeserializer extends StdDeserializer<CouchDbEnvelope> {
 
 	public CouchDbEnvelopeDeserializer() {
         this( null );
@@ -49,33 +51,53 @@ class CouchDbEnvelopeDeserializer extends StdDeserializer<CouchDbEnvelope> {
     @Override
     public CouchDbEnvelope deserialize( JsonParser jp, DeserializationContext ctxt ) 
       throws IOException, JsonProcessingException {
-  
-        JsonNode node = jp.getCodec().readTree(jp);
-        
-        CouchDbEnvelope record = new CouchDbEnvelope();
-        record.setId(                node.get( "_id" ).textValue() );
-        record.setVersion(           node.get( "_rev" ).textValue() );
-        record.setCreationTimestamp( node.get( "creationTimestamp" ).textValue() );
-        record.setOriginIP(          node.get( "originIP" ).textValue() );
-        record.setQueueName(         node.get( "queueName" ).textValue() );
-        record.setConsumed(          node.get( "consumed" ).booleanValue() );
-//        record.setMessage(           node.get( "message" ).toString() );
 
-		String messageClass = node.get( "messageClass" ).textValue();
+        ObjectMapper mapper = (ObjectMapper) jp.getCodec();
+        ObjectNode root = (ObjectNode) mapper.readTree(jp);
+        
+        CouchDbEnvelope envelope = new CouchDbEnvelope();
+        
+        JsonNode etNode = root.get( "expireTime" );
+		Long expireTime = (etNode == null || etNode.isNull()) ? null : etNode.longValue();
+
+		String messageClass = root.get( "messageClass" ).textValue();
+        State state = State.valueOf( root.get( "state" ).textValue() );
+    	
+        JsonNode revNode = root.get( "_rev" );
+		String revision = (revNode == null || revNode.isNull()) ? null : revNode.textValue();
+		
+		envelope.setExpireTime(        expireTime );
+        envelope.setId(                root.get( "_id" ).textValue() );
+        envelope.setVersion(           revision );
+		envelope.setSentTimestamp(     root.get( "sentTimestamp" ).textValue() );
+        envelope.setReceivedTimestamp( root.get( "receivedTimestamp" ).textValue() );
+        envelope.setConsumedTimestamp( root.get( "consumedTimestamp" ).textValue() );
+        envelope.setExpiredTimestamp(  root.get( "expiredTimestamp" ).textValue() );
+        envelope.setRejectedTimestamp( root.get( "rejectedTimestamp" ).textValue() );
+        envelope.setOriginIP(          root.get( "originIP" ).textValue() );
+        envelope.setQueueName(         root.get( "queueName" ).textValue() );
+        envelope.setToken(      	   root.get( "token" ).textValue() );
+		envelope.setState( 			   state );
+        envelope.setMessageClass(      messageClass );
+        
         try {
 			if( messageClass != null ) {
 
 				ObjectMapper objectMapper = new ObjectMapper();
 				Class<?> clasz = Class.forName( messageClass );
-				Message o = (Message) objectMapper.readValue( node.get( "message" ).toString(), clasz );
-				record.setMessage( o );
+				Message o = (Message) objectMapper.readValue( root.get( "message" ).toString(), clasz );
+				envelope.setMessage( o );
+				
+				// Need to set envelope manually -- Jackson cannot
+				// cope with circular references like Envelope -> Message -> Envelope
+				o.setEnvelope( envelope );	 
 			}
 		} 
         catch( ClassNotFoundException e ) {
 			String msg = "Deserialization of class '" + messageClass + "' failed: ";
 			throw new IOException( msg, e );
 		}
-        
-        return record;
+		
+        return envelope;
     }
 }
