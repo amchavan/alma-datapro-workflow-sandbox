@@ -24,35 +24,13 @@ import alma.obops.draws.messages.TimeLimitExceededException;
 
 public class CouchDbMessageBroker extends AbstractMessageBroker implements MessageBroker {
 	    
-	private String busName;
+	private String brokerName;
 	private DbConnection dbConn;
 	private String ourIP;
 
 	/**
 	 * Public constructor: establishes a link to the underlying CouchDB server and
-	 * creates all necessary tables.
-	 * 
-	 * @param dbConn   The CouchDB connection instance
-	 * @param busName  Name of our message bus
-	 */
-	public CouchDbMessageBroker( DbConnection dbConn, String busName ) {
-		this.busName = busName;
-		this.ourIP   = ourIP();
-		this.dbConn  = dbConn;
-
-		try {
-			if( ! this.dbConn.dbExists( busName )) {
-				this.dbConn.dbCreate( busName );
-			}
-		} 
-		catch( Exception e ) {
-			throw new RuntimeException( e );
-		}
-	}
-
-	/**
-	 * Public constructor: establishes a link to the underlying CouchDB server and
-	 * creates all necessary tables. If the server is secured, this constructor
+	 * creates all necessary databases. If the server is secured, this constructor
 	 * requires a configuration including username and password of an admin user (or
 	 * a user with enough privileges to create tables).
 	 * 
@@ -61,6 +39,28 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 	 */
 	public CouchDbMessageBroker( CouchDbConfig config, String busName ) {
 		this( new CouchDbConnection( config ), busName );
+	}
+
+	/**
+	 * Public constructor: establishes a link to the underlying CouchDB server and
+	 * creates all necessary tables.
+	 * 
+	 * @param dbConn   The CouchDB connection instance
+	 * @param busName  Name of our message broker, will map to a CouchDB database name
+	 */
+	public CouchDbMessageBroker( DbConnection dbConn, String brokerName ) {
+		this.brokerName = brokerName;
+		this.ourIP   = ourIP();
+		this.dbConn  = dbConn;
+
+		try {
+			if( ! this.dbConn.dbExists( brokerName )) {
+				this.dbConn.dbCreate( brokerName );
+			}
+		} 
+		catch( Exception e ) {
+			throw new RuntimeException( e );
+		}
 	}
 
 	/**
@@ -80,6 +80,30 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 
 
 	/**
+	 * Mark as {@link State#Expired} all {@link Envelope} instances in the given
+	 * queue for which {@link Envelope#getTimeToLive()} returns 0.
+	 * 
+	 * @return The number of expired messages
+	 * @throws IOException 
+	 */
+	public int expireMessages( String queueName ) throws IOException {
+		
+		String queryFmt = "{'selector': {'$and': [{'queueName':'%s'}, {'state':'Sent'}]}}";		
+		String query = String.format(queryFmt, queueName ).replace( '\'', '\"' );
+		
+		CouchDbEnvelope[] envelopes = dbConn.find( brokerName, CouchDbEnvelope[].class, query );
+		int ret = 0;
+		for( CouchDbEnvelope envelope: envelopes ) {
+			if( envelope.getTimeToLive() == 0 ) {
+				this.setState( envelope, State.Expired );
+				ret++;
+			}
+		}
+		
+		return ret;
+	}
+	
+	/**
 	 * Search for messages; selector includes the query parameters. Returned
 	 * messages are not consumed.
 	 * 
@@ -96,55 +120,9 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 	public SimpleEnvelope[] find( String query ) throws IOException {
 
 		SimpleEnvelope[] envelopes = 
-				(SimpleEnvelope[]) dbConn.find( busName, SimpleEnvelope[].class, query );
+				(SimpleEnvelope[]) dbConn.find( brokerName, SimpleEnvelope[].class, query );
 
 		return envelopes;
-	}
-	
-	@Override
-	// TODO -- add progressive waiting time
-	public SimpleEnvelope receive( MessageQueue queue, long timeLimit ) throws IOException, TimeLimitExceededException {
-				
-		Date callTime = now();
-		String queryFmt = "{'selector': {'$and': [{'queueName':'%s'}, {'state':'Sent'}]}}";		
-		String query = String.format(queryFmt, queue.getName() ).replace( '\'', '\"' );
-		
-		while( true ) {
-			
-			// Did we time out?
-			Date now = now();
-			if( timeLimit > 0 && (now.getTime() - callTime.getTime()) > timeLimit ) {
-				// YES, throw an exception and exit
-				throw new TimeLimitExceededException( "After " + timeLimit + "msec" );
-			}
-			
-			// No timeout, let's try again
-			CouchDbEnvelope[] envelopes = dbConn.find( busName, CouchDbEnvelope[].class, query );
-			if( envelopes.length > 0 ) {
-				
-				Arrays.sort( envelopes );
-				CouchDbEnvelope ret = null;
-				
-				// Purge all expired messages
-				for( CouchDbEnvelope envelope : envelopes ) {
-					if( envelope.getTimeToLive() != 0 ) {	// is it expired?
-						ret = envelope;						// NO, return that
-						break;
-					}
-					purgeExpiredMessage( envelope );		// YES, purge it
-				}
-
-				// Do we have a non-expired message?
-				if( ret != null ) {
-					// YES, return that as "Received"
-					ret.setState( State.Received );
-					ret.setReceivedTimestamp( nowISO() );
-					dbConn.save( busName, new CouchDbEnvelope( ret ));
-					return ret;
-				}
-			}
-			sleep( 1000 );	// TODO: make this dynamic
-		}
 	}
 	
 	/** @return Our internal {@link DbConnection} instance */
@@ -158,7 +136,7 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 			throw new IllegalArgumentException( "Invalid group name: " + groupName );
 		}
 
-		ReceiverGroup g = dbConn.findOne( busName, ReceiverGroup.class, groupName );
+		ReceiverGroup g = dbConn.findOne( brokerName, ReceiverGroup.class, groupName );
 		if( g != null ) {
 			return g.getMembers();
 		}
@@ -178,7 +156,7 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 		
 		// First let's see if that group exists, otherwise we'll create it
 		try {
-			ReceiverGroup group = dbConn.findOne( busName, ReceiverGroup.class, groupName );
+			ReceiverGroup group = dbConn.findOne( brokerName, ReceiverGroup.class, groupName );
 			if( group == null ) {
 				// No group yet, let's create it first
 				group = new ReceiverGroup( groupName );
@@ -186,7 +164,7 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 
 			// Now we add ourselves to the group  
 			group.add( queueName );
-			dbConn.save( busName, group );
+			dbConn.save( brokerName, group );
 		} 
 		catch (IOException e) {
 			throw new RuntimeException( e );
@@ -194,25 +172,6 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 	}
 
 	@Override
-	public Envelope sendOne( MessageQueue queue, Message message, long timeToLive ) {
-		CouchDbEnvelope envelope = new CouchDbEnvelope( message, ourIP, queue.getName(), timeToLive );
-		envelope.setSentTimestamp( nowISO() );
-		envelope.setState( State.Sent );
-		envelope.setMessageClass( message.getClass().getName() );
-		message.setEnvelope( envelope );
-		try {
-			dbConn.save( busName, envelope );
-			return envelope;
-		} 
-		catch ( Exception e ) {
-			throw new RuntimeException( e );
-		}
-	}
-
-	@Override
-	// TODO: pull this up to AbstractMessageBroker, need to harmonize
-	//       with RabbitMqMessageBroker -- only difference is how 
-	//		 envelope state changes are persisted
 	public void listen( MessageQueue queue, 
 						MessageConsumer consumer, 
 						int timeout ) throws IOException {
@@ -224,43 +183,70 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 		while( true ) {
 			
 			// Receive the next message, consume it, and mark it as such
-			SimpleEnvelope envelope = receive( queue, timeout );
+			SimpleEnvelope envelope = (SimpleEnvelope) receive( queue, timeout );
 			consumer.consume( envelope.getMessage() );
 			
 			envelope.setState( State.Consumed );
 			envelope.setConsumedTimestamp( nowISO() );
-			dbConn.save( busName, new CouchDbEnvelope( envelope ));
+			dbConn.save( brokerName, new CouchDbEnvelope( envelope ));
+		}
+	}
+
+	@Override
+	protected SimpleEnvelope receiveOne( MessageQueue queue, long timeLimit ) throws TimeLimitExceededException {
+				
+		Date callTime = now();
+		String queryFmt = "{'selector': {'$and': [{'queueName':'%s'}, {'state':'Sent'}]}}";		
+		String query = String.format(queryFmt, queue.getName() ).replace( '\'', '\"' );
+		
+		while( true ) {
+			
+			// Did we time out?
+			Date now = now();
+			if( timeLimit > 0 && (now.getTime() - callTime.getTime()) > timeLimit ) {
+				// YES, throw an exception and exit
+				throw new TimeLimitExceededException( "After " + timeLimit + "msec" );
+			}
+			
+			// No timeout, let's try again
+			CouchDbEnvelope[] envelopes;
+			try {
+				envelopes = dbConn.find( brokerName, CouchDbEnvelope[].class, query );
+			} 
+			catch (IOException e) {
+				throw new RuntimeException( e );
+			}
+			
+			if( envelopes.length > 0 ) {	
+				Arrays.sort( envelopes );
+				CouchDbEnvelope ret = envelopes[0];
+				return ret;
+			}
+			
+			sleep( 1000L );		// TODO -- make this a progressive waiting time
+		}
+	}
+
+	@Override
+	protected SimpleEnvelope sendOne( MessageQueue queue, Message message, long timeToLive ) {
+		SimpleEnvelope se = super.sendOne( queue, message, timeToLive );
+		CouchDbEnvelope envelope = new CouchDbEnvelope( se );
+		try {
+			dbConn.save( brokerName, envelope );
+			return envelope;
+		} 
+		catch ( Exception e ) {
+			throw new RuntimeException( e );
 		}
 	}
 
 	/**
-	 * Mark as {@link State#Expired} all {@link Envelope} instances in the given
-	 * queue for which {@link Envelope#getTimeToLive()} returns 0.<br>
-	 * 
-	 * @return The number of expired messages
-	 * @throws IOException 
+	 * Subclassed to support persisting the new state
 	 */
-	public int purgeExpiredMessages( String queueName ) throws IOException {
-		
-		String queryFmt = "{'selector': {'$and': [{'queueName':'%s'}, {'state':'Sent'}]}}";		
-		String query = String.format(queryFmt, queueName ).replace( '\'', '\"' );
-		
-		CouchDbEnvelope[] envelopes = dbConn.find( busName, CouchDbEnvelope[].class, query );
-		int ret = 0;
-		for( CouchDbEnvelope envelope: envelopes ) {
-			if( envelope.getTimeToLive() == 0 ) {
-				purgeExpiredMessage( envelope );
-				ret++;
-			}
-		}
-		
-		return ret;
-	}
-
-	private void purgeExpiredMessage( SimpleEnvelope envelope ) throws IOException {
-		envelope .setState( State.Expired );
-		envelope .setExpiredTimestamp( nowISO() );
-		dbConn.save( busName, (Record) envelope  );
-		System.out.println( ">>> Expired: " + envelope  );
+	@Override
+	protected String setState( Envelope envelope, State state ) throws IOException {
+		String timestamp = super.setState(envelope, state);
+		dbConn.save( brokerName, (Record) envelope  );
+		return timestamp;
 	}
 }

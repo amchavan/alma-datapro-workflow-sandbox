@@ -73,8 +73,10 @@ public class CouchDbEnvelopeDeserializer extends StdDeserializer<CouchDbEnvelope
         envelope.setReceivedTimestamp( root.get( "receivedTimestamp" ).textValue() );
         envelope.setConsumedTimestamp( root.get( "consumedTimestamp" ).textValue() );
         envelope.setExpiredTimestamp(  root.get( "expiredTimestamp" ).textValue() );
+        envelope.setRejectedTimestamp( root.get( "rejectedTimestamp" ).textValue() );
         envelope.setOriginIP(          root.get( "originIP" ).textValue() );
         envelope.setQueueName(         root.get( "queueName" ).textValue() );
+        envelope.setToken(      	   root.get( "token" ).textValue() );
 		envelope.setState( 			   state );
         envelope.setMessageClass(      messageClass );
         

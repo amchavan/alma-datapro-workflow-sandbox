@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import alma.obops.draws.messages.Envelope.State;
+import alma.obops.draws.messages.security.TokenFactory;
 
 /**
  * Describes the functions implementing the message passing machinery.
@@ -236,19 +237,8 @@ public interface MessageBroker {
 	public Envelope send( MessageQueue queue, Message message, long expireTime );
 	
 	/**
-	 * Creates an {@link Envelope} (including meta-data) from the given
-	 * {@link Message} and sends it to a queue.<br>
-	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
-	 * The {@link Message} instance is set to {@link State#Sent}.
-	 * 
-	 * @param queue
-	 *            Name of the queue should not end with
-	 *            <code>.*</code> (that is, it should not be a receiver group
-	 *            designator)
-	 * 
-	 * @param expireTime
-	 *            Time interval before this instance expires, in msec; if
-	 *            timeToLive=0 this instance never expires
+	 * Give the broker a token factory: message passing is only secured if a token
+	 * factory is associated with the broker.
 	 */
-	public Envelope sendOne( MessageQueue queue, Message message, long expireTime );
+	public void setTokenFactory( TokenFactory factory );
 }

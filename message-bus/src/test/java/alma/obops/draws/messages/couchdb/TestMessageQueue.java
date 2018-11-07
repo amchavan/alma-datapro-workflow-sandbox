@@ -231,7 +231,7 @@ public class TestMessageQueue {
 	
 		MessageBroker.sleep( 1100 );	// Let both messages expire
 	
-		int purged = broker.purgeExpiredMessages( QUEUE_NAME );
+		int purged = broker.expireMessages( QUEUE_NAME );
 		assertEquals( 2, purged );
 	}
 	

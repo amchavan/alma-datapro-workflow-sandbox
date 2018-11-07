@@ -75,6 +75,10 @@ public class PersistenceListener implements Runnable {
 				case "Expired":
 					persistedEnvelope.expiredTimestamp = timestamp;
 					break;
+					
+				case "Rejected":
+					persistedEnvelope.rejectedTimestamp = timestamp;
+					break;
 				
 				default:
 					throw new RuntimeException( "Unknown state: '" + state + "'" );

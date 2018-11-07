@@ -23,15 +23,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonDeserialize(using = SimpleEnvelopeDeserializer.class)
 public class SimpleEnvelope implements Envelope, Comparable<SimpleEnvelope> {
 
-	protected static String makeID() {
-		StringBuilder sb = new StringBuilder();
-		sb.append( MessageBroker.nowISO() )
-		  .append( "-" )
-		  .append( UUID.randomUUID().toString().replace( "-", "" ) );
-		
-		return sb.toString();
-	}
-
 	/**
 	 * Convert a JSON string to a {@link SimpleEnvelope}, allowing for subclasses to
 	 * redefine this
@@ -81,6 +72,15 @@ public class SimpleEnvelope implements Envelope, Comparable<SimpleEnvelope> {
 		}
 	}
 
+	protected static String makeID() {
+		StringBuilder sb = new StringBuilder();
+		sb.append( MessageBroker.nowISO() )
+		  .append( "-" )
+		  .append( UUID.randomUUID().toString().replace( "-", "" ) );
+		
+		return sb.toString();
+	}
+
 	
 	/**
 	 * Envelope ID, mapped to the <code>_id</code> property.
@@ -90,20 +90,23 @@ public class SimpleEnvelope implements Envelope, Comparable<SimpleEnvelope> {
 	
 	protected Message message;
 	protected String messageClass;
+	protected String originIP;
+	protected String queueName;
+	
 	protected String sentTimestamp;
 	protected String receivedTimestamp;
 	protected String consumedTimestamp;
 	protected String expiredTimestamp;
-	protected String originIP;
-	protected String queueName;
+	protected String rejectedTimestamp;
+
+
 	protected State state;
 	protected long expireTime;
-	
+	protected String token;
 	public SimpleEnvelope() {
 		super();
 		this.state = State.Sent;
 	}
-
 	/**
 	 * @param message
 	 *            The {@linkplain Message} we enclose
@@ -126,7 +129,7 @@ public class SimpleEnvelope implements Envelope, Comparable<SimpleEnvelope> {
 		this.queueName = queueName;
 		this.expireTime = expireTime;
 	}
-
+	
 	/** All-fields constructor */
 	public SimpleEnvelope( String id, Message message, String messageClass, String sentTimestamp,
 			String receivedTimestamp, String consumedTimestamp, String expiredTimestamp, String originIP,
@@ -152,7 +155,6 @@ public class SimpleEnvelope implements Envelope, Comparable<SimpleEnvelope> {
 		SimpleEnvelope otherMessage = (SimpleEnvelope) other;
 		return this.getSentTimestamp().compareTo( otherMessage.getSentTimestamp() );
 	}
-
 
 	@Override
 	public boolean equals(Object obj) {
@@ -214,12 +216,13 @@ public class SimpleEnvelope implements Envelope, Comparable<SimpleEnvelope> {
 			return false;
 		return true;
 	}
-	
+
 	@Override
 	public String getConsumedTimestamp() {
 		return this.consumedTimestamp;
 	}
-	
+
+
 	@Override
 	public String getExpiredTimestamp() {
 		return expiredTimestamp;
@@ -228,7 +231,7 @@ public class SimpleEnvelope implements Envelope, Comparable<SimpleEnvelope> {
 	public Long getExpireTime() {
 		return expireTime;
 	}
-
+	
 	public String getId() {
 		return id;
 	}
@@ -247,15 +250,19 @@ public class SimpleEnvelope implements Envelope, Comparable<SimpleEnvelope> {
 	public String getOriginIP() {
 		return originIP;
 	}
-	
+
 	@Override
 	public String getQueueName() {
 		return queueName;
 	}
-
+	
 	@Override
 	public String getReceivedTimestamp() {
 		return this.receivedTimestamp;
+	}
+	
+	public String getRejectedTimestamp() {
+		return rejectedTimestamp;
 	}
 
 	@Override
@@ -302,6 +309,11 @@ public class SimpleEnvelope implements Envelope, Comparable<SimpleEnvelope> {
 			e.printStackTrace();
 			throw new RuntimeException( e );
 		}
+	}
+
+	@Override
+	public String getToken() {
+		return token;
 	}
 
 	@Override
@@ -358,12 +370,20 @@ public class SimpleEnvelope implements Envelope, Comparable<SimpleEnvelope> {
 		this.receivedTimestamp = receivedTimestamp;
 	}
 
+	public void setRejectedTimestamp(String rejectedTimestamp) {
+		this.rejectedTimestamp = rejectedTimestamp;
+	}
+
 	public void setSentTimestamp( String sentTimestamp  ) {
 		this.sentTimestamp = sentTimestamp;
 	}
 
 	public void setState( State state ) {
 		this.state = state;
+	}
+
+	public void setToken( String token ) {
+		this.token = token;
 	}
 
 	@Override

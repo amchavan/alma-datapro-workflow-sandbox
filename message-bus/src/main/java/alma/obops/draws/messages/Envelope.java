@@ -10,7 +10,7 @@ public interface Envelope {
 	 * The state of this {@linkplain Envelope} -- or rather, of the enclosed
 	 * {@linkplain Message}
 	 */
-	public enum State { Sent, Received, Consumed, Expired }
+	public enum State { Sent, Received, Consumed, Expired, Rejected }
 	
 	/**
 	 * @return When the message was processed in some form by the receiver:
@@ -57,6 +57,12 @@ public interface Envelope {
 	public String getSentTimestamp();
 	
 	/**
+	 * @return When the message was rejected: date/time string in ISO format, e.g.
+	 *         <code>2018-09-18T13:48:31</code>
+	 */
+	public String getRejectedTimestamp();
+	
+	/**
 	 * @return The current state of this instance
 	 */
 	public State getState();
@@ -68,6 +74,12 @@ public interface Envelope {
 	 *         Only messages that haven't been received can expire.
 	 */
 	public long getTimeToLive();
+	
+	/**
+	 * @return The authorization token sent with this instance, if any;
+	 *         <code>null</code> otherwise
+	 */
+	public String getToken();
 	
 	/**
 	 * @param message The message to carry

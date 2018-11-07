@@ -11,6 +11,7 @@ create table envelope (
     queue_name varchar(64),
     received_timestamp varchar(64),
     sent_timestamp varchar(64),
+    rejected_timestamp varchar(64),
     state varchar(64),
     time_to_live BIGINT
 );

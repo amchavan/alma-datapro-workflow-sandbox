@@ -1,8 +1,6 @@
 package alma.obops.draws.messages.rabbitmq;
 
 import static alma.obops.draws.messages.MessageBroker.now;
-import static alma.obops.draws.messages.MessageBroker.nowISO;
-import static alma.obops.draws.messages.MessageBroker.ourIP;
 
 import java.io.IOException;
 import java.util.Date;
@@ -49,27 +47,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		return channel;
 	}
 	
-	/** 
-	 * Set the envelope's state to {@link State#Received} or {@link State#Expired} 
-	 * depending on the envelope's time to live.
-	 */
-	public static String setReceivedEnvelopeState( SimpleEnvelope envelope )  {
-		// See if the message has expired
-		String now = nowISO();
-		long timeToLive = envelope.getTimeToLive();
-		if( timeToLive != 0 ) {
-			envelope.setState( State.Received );
-			envelope.setReceivedTimestamp( now );
-		}
-		else {
-			envelope.setState( State.Expired );
-			envelope.setExpiredTimestamp( now );
-		}
-		return now;
-	}
-	
 	private String baseURL;
-	private String ourIP;
 	private PersistenceListener messageLogListener;
 	private String exchangeName;
 
@@ -85,7 +63,6 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 								  RecipientGroupRepository groupRepository ) throws IOException, TimeoutException {
 		this.baseURL = baseURL;
 		this.exchangeName = exchangeName;
-		this.ourIP = ourIP();
 		this.groupRepository = groupRepository;
 		
 		// Declare the main channel and queues
@@ -108,7 +85,8 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	}
 
 
-	void drainLoggingQueue() {
+	// FOR TESTING ONLY
+	public void drainLoggingQueue() {
 		drainQueue( MESSAGE_PERSISTENCE_QUEUE );
 	}
 	
@@ -223,6 +201,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		
 		boolean autoAck = false;
 		lastDeliveryTime = new Date();
+		RabbitMqMessageBroker broker = this;
 		
 		DefaultConsumer rmqConsumer = new DefaultConsumer( channel ) {
 
@@ -242,17 +221,11 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
                     channel.basicAck(envelope.getDeliveryTag(), false);
 				}
 				
-				setReceivedEnvelopeState( receivedEnvelope );
-				if( receivedEnvelope.getState() != State.Expired ) {	
-					
+				computeState( receivedEnvelope );
+				if( receivedEnvelope.getState() == State.Received ) {	
 					consumer.consume( receivedEnvelope.getMessage() );
-	                
-					receivedEnvelope.setState( State.Consumed );
-					receivedEnvelope.setConsumedTimestamp( nowISO() );
+					broker.setState( receivedEnvelope, State.Consumed );
 				}
-				
-				// Signal the state change to the message log as well
-				sendNewStateEvent( receivedEnvelope.getId(), receivedEnvelope.getState(), nowISO() );
 			}
 		};
 		
@@ -268,7 +241,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 //				System.out.println( "Timeout!" );
 				throw new TimeLimitExceededException( "After " + timeout + "msec" );
 			}
-			MessageBroker.sleep( 100 );
+			MessageBroker.sleep( 100L );
 		}
 	}
 	
@@ -278,11 +251,11 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 
 		try {
 			this.channel.queueDeclare( queueName, 
-					                       true, 			// durable
-					                       false, 			// non-exclusive
-					                       false, 	// auto-deleting?
-					                       null 			// no extra properties
-					                       );
+					                   true, 			// durable
+					                   false, 			// non-exclusive
+					                   false, 			// auto-deleting?
+					                   null 			// no extra properties
+					                   );
 			String routingKey = queueName;
 			this.channel.queueBind( queueName, exchangeName, routingKey );
 		} 
@@ -290,19 +263,6 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			throw new RuntimeException( e );
 		}
 		return ret;
-	}
-	
-	@Override
-	public Envelope receive( MessageQueue queue, long timeLimit )
-			throws IOException, TimeLimitExceededException {
-		
-		// Wait for the first non-expired message we get, and return it
-		while( true ) {
-			Envelope receivedEnvelope = receiveOne( queue, timeLimit );
-			if( receivedEnvelope.getState() != State.Expired ) {
-				return (Envelope) receivedEnvelope;
-			}
-		}
 	}
 	
 	/**
@@ -316,7 +276,8 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	 * 
 	 * @return The message we received.
 	 */
-	private Envelope receiveOne( MessageQueue queue, long timeLimit ) {
+	@Override
+	protected SimpleEnvelope receiveOne( MessageQueue queue, long timeLimit ) {
 		SimpleEnvelope receivedEnvelope;
 		Date callTime = now();
 		try {
@@ -344,11 +305,6 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		
 			ObjectMapper objectMapper = new ObjectMapper();
 			receivedEnvelope = objectMapper.readValue( json, SimpleEnvelope.class );
-
-			String now = setReceivedEnvelopeState( receivedEnvelope );
-					
-			// Signal the state change to the message log as well
-			sendNewStateEvent( receivedEnvelope.getId(), receivedEnvelope.getState(), now );
 		}
 		catch( IOException e ) {
 			throw new RuntimeException( e );
@@ -356,24 +312,10 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		return receivedEnvelope;
 	}
 	
-	private void sendNewStateEvent( String id, State state, String timestamp ) throws IOException {
-		String stateChange = id + "@" + state.toString() + "@" + timestamp;
-		this.channel.basicPublish( this.exchangeName, 
-				                  	   MESSAGE_STATE_ROUTING_KEY, 
-				                 	   null, 
-				                 	   stateChange.getBytes() );
-	}
-
 	@Override
-	public Envelope sendOne( MessageQueue queue, Message message, long expireTime ) {
-
+	protected SimpleEnvelope sendOne( MessageQueue queue, Message message, long expireTime ) {
+		SimpleEnvelope envelope = super.sendOne( queue, message, expireTime );
 		try {
-			SimpleEnvelope envelope = new SimpleEnvelope( message, this.ourIP, queue.getName(), expireTime );
-			envelope.setSentTimestamp( nowISO() );
-			envelope.setState( State.Sent );
-			envelope.setMessageClass( message.getClass().getName() );
-			envelope.setExpireTime( expireTime );
-			message.setEnvelope( envelope );
 			ObjectMapper mapper = new ObjectMapper();
 			String json = mapper.writeValueAsString( envelope );
 			
@@ -392,5 +334,20 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		catch( IOException|TimeLimitExceededException e ) {
 			throw new RuntimeException( e );
 		}
+	}
+
+	/**
+	 * Subclassed to support sending a "state change" event, to persist the envelope
+	 * state
+	 */
+	@Override
+	protected String setState(Envelope envelope, State state) throws IOException {
+		String timestamp = super.setState(envelope, state);
+		String stateChange = envelope.getId() + "@" + state.toString() + "@" + timestamp;
+		this.channel.basicPublish( this.exchangeName, 
+				                  	   MESSAGE_STATE_ROUTING_KEY, 
+				                 	   null, 
+				                 	   stateChange.getBytes() );
+		return timestamp;
 	}
 }

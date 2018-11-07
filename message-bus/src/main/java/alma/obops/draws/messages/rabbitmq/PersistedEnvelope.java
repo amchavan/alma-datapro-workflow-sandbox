@@ -31,6 +31,7 @@ public class PersistedEnvelope {
 	String queueName;
 	String receivedTimestamp;
 	String sentTimestamp;
+	String rejectedTimestamp;
 	String state;
 	Long timeToLive;
 	

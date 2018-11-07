@@ -47,11 +47,13 @@ public class CouchDbEnvelope extends SimpleEnvelope implements Record {
 		this.receivedTimestamp = envelope.getReceivedTimestamp();
 		this.consumedTimestamp = envelope.getConsumedTimestamp();
 		this.expiredTimestamp  = envelope.getExpiredTimestamp();
+		this.rejectedTimestamp = envelope.getRejectedTimestamp();
 		this.originIP          = envelope.getOriginIP();
 		this.queueName         = envelope.getQueueName();
 		this.state             = envelope.getState();
 		this.expireTime        = envelope.getExpireTime();
 		this.version 	       = null;
+		this.token 	           = envelope.getToken();
 	}
 	
 	@Override
