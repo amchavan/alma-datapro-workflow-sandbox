@@ -2,7 +2,6 @@ package alma.obops.draws.messages.couchdb;
 
 import static alma.obops.draws.messages.MessageBroker.now;
 import static alma.obops.draws.messages.MessageBroker.nowISO;
-import static alma.obops.draws.messages.MessageBroker.ourIP;
 import static alma.obops.draws.messages.MessageBroker.sleep;
 
 import java.io.IOException;
@@ -26,7 +25,6 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 	    
 	private String brokerName;
 	private DbConnection dbConn;
-	private String ourIP;
 
 	/**
 	 * Public constructor: establishes a link to the underlying CouchDB server and
@@ -50,7 +48,6 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 	 */
 	public CouchDbMessageBroker( DbConnection dbConn, String brokerName ) {
 		this.brokerName = brokerName;
-		this.ourIP   = ourIP();
 		this.dbConn  = dbConn;
 
 		try {
