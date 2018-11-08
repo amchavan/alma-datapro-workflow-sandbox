@@ -4,11 +4,13 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MockedTokenFactory extends AbstractTokenFactory {
+public class MockedTokenFactory implements TokenFactory {
 
 	private static final String HEADER = "header";
 	private static final String VALID_SIGNATURE = "valid-signature";
 	private static final String INVALID_SIGNATURE = "invalid-signature";
+
+	protected static MockedTokenFactory instance = null;
 	
 	public static TokenFactory getFactory() {
 		if( instance == null ) {
@@ -22,28 +24,28 @@ public class MockedTokenFactory extends AbstractTokenFactory {
 
 	@Override
 	public String create() {
-		Map<String, String> claims = new HashMap<>();
-		claims.put( "iss", "user" );
+		Map<String, Object> claims = new HashMap<>();
+		claims.put( "sub", "user" );
 		claims.put( "role", "admin" );
 		claims.put( "ttl", "10000" );
 		return create( claims );
 	}
 
 	@Override
-	public String create( Map<String, String> properties ) {
+	public String create( Map<String, Object> properties ) {
 		if( properties == null ) {
 			throw new IllegalArgumentException( "No properties given" );
 		}
 		String header = HEADER;
 		
 		String signature = VALID_SIGNATURE;
-		final String valid = properties.get( "valid" );
+		Object valid = properties.get( "valid" );
 		if( valid != null && valid.equals( "false" )) {
 			signature = INVALID_SIGNATURE;
 		}
 		StringBuilder bodyBuilder = new StringBuilder();
 		for( String propName : properties.keySet() ) {
-			String propValue = properties.get( propName );
+			Object propValue = properties.get( propName );
 			if( bodyBuilder.length() > 0 ) {
 				bodyBuilder.append( "," );
 			}
@@ -56,7 +58,7 @@ public class MockedTokenFactory extends AbstractTokenFactory {
 	}
 
 	@Override
-	public Map<String,String> decode( String token ) throws InvalidSignatureException {
+	public Map<String,Object> decode( String token ) throws InvalidSignatureException {
 
 		final String encodedBody = isValidInternal( token );
 		if( encodedBody == null ) {
@@ -64,7 +66,7 @@ public class MockedTokenFactory extends AbstractTokenFactory {
 		}
 		
 		String body = new String( Base64.getDecoder().decode( encodedBody ));
-		Map<String, String> properties = new HashMap<>();
+		Map<String, Object> properties = new HashMap<>();
 		String[] claims = body.split( "," );
 		for( int i = 0; i < claims.length; i++ ) {
 			String  claim = claims[i];
@@ -73,7 +75,6 @@ public class MockedTokenFactory extends AbstractTokenFactory {
 			String value = t2[1];
 			
 			properties.put(key, value);
-			
 		}
 		
 		return properties;

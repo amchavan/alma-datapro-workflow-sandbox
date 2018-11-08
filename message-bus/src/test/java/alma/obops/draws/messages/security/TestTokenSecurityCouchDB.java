@@ -62,7 +62,7 @@ public class TestTokenSecurityCouchDB {
 		envelopeRepository.deleteAll();
 		groupRepository.deleteAll();
 		
-		tokenFactory = MockedTokenFactory.getFactory();
+		tokenFactory = JWTFactory.getFactory();
 		broker.setTokenFactory( tokenFactory );
 	}
 
@@ -92,7 +92,7 @@ public class TestTokenSecurityCouchDB {
 	public void send_Secure_Reject() throws IOException, InterruptedException {
 
 		// Give the broker a token that's been tampered with
-		Map<String, String> inProps = new HashMap<>();
+		Map<String, Object> inProps = new HashMap<>();
 		inProps.put( "valid", "false" );
 		String token = tokenFactory.create( inProps );
 		broker.setSendToken( token );

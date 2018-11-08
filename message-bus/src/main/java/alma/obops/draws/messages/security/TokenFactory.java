@@ -12,7 +12,7 @@ public interface TokenFactory {
 	 * @param claims A set of name/value pairs to be encoded in the token
 	 * @return A token
 	 */
-	public String create( Map<String,String> claims );
+	public String create( Map<String,Object> claims );
 
 	/**
 	 * Create a token from a standard, factory-specific set of claims (properties)
@@ -25,6 +25,6 @@ public interface TokenFactory {
 	 * @return The set of claims (name/value pairs) encoded in the token
 	 * @throws InvalidSignatureException 
 	 */
-	public Map<String,String> decode( String token ) throws InvalidSignatureException;
+	public Map<String,Object> decode( String token ) throws InvalidSignatureException;
 
 }
