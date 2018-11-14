@@ -1,12 +1,11 @@
 package alma.obops.draws.messages.rabbitmq;
 
-import static alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker.*;
+import static alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker.MESSAGE_PERSISTENCE_QUEUE;
+import static alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker.MESSAGE_STATE_ROUTING_KEY;
 
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
-
-import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP.BasicProperties;
@@ -16,7 +15,6 @@ import com.rabbitmq.client.DefaultConsumer;
 
 import alma.obops.draws.messages.SimpleEnvelope;
 
-@Component
 public class PersistenceListener implements Runnable {
 
 	private Consumer consumer;

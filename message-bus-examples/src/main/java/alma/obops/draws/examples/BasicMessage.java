@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.examples;
+package alma.obops.draws.examples;
 
 import alma.obops.draws.messages.AbstractMessage;
 

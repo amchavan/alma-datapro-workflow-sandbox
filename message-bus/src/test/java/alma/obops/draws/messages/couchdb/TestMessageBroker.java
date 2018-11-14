@@ -1,6 +1,5 @@
 package alma.obops.draws.messages.couchdb;
 
-import static alma.obops.draws.messages.TestUtils.COUCHDB_URL;
 import static alma.obops.draws.messages.TestUtils.MESSAGE_BUS_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -12,6 +11,11 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import alma.obops.draws.messages.DbConnection;
 import alma.obops.draws.messages.Envelope;
@@ -19,9 +23,13 @@ import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.TestUtils.TestMessage;
-import alma.obops.draws.messages.couchdb.CouchDbEnvelope;
-import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
+import alma.obops.draws.messages.configuration.CouchDbConfiguration;
+import alma.obops.draws.messages.configuration.CouchDbConfigurationProperties;
 
+
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = {CouchDbConfiguration.class, CouchDbConfigurationProperties.class})
+@AutoConfigureJdbc
 public class TestMessageBroker {
 
 	private static final String QUEUE_NAME = "Q";
@@ -31,9 +39,15 @@ public class TestMessageBroker {
 	private DbConnection db;
 	private MessageQueue queue;
 	
+	@Autowired
+	private CouchDbConnection couchDbConn;
+	
 	@Before
 	public void aaa_setUp() throws IOException {
-		messageBus = new CouchDbMessageBroker( COUCHDB_URL, null, null, MESSAGE_BUS_NAME  );
+
+		assertNotNull( couchDbConn );
+		
+		messageBus = new CouchDbMessageBroker( couchDbConn, MESSAGE_BUS_NAME  );
 		queue = new MessageQueue( QUEUE_NAME, messageBus );
 		db = ((CouchDbMessageBroker) messageBus).getDbConnection(); 
 		db.dbDelete( MESSAGE_BUS_NAME );
@@ -41,10 +55,11 @@ public class TestMessageBroker {
 	}
 
 	@Test
-	public void messageRecordConstructorGeneratesID() {
-		Envelope mr = new CouchDbEnvelope( jimi, null, null, 0 );
-		assertNotNull( mr.getId() );
-		System.out.println( mr.getId() );
+	public void construction() {
+		MessageQueue queue = messageBus.messageQueue( QUEUE_NAME );
+		assertNotNull( queue );
+		assertEquals( QUEUE_NAME, queue.getName() );
+		assertTrue( messageBus == queue.getMessageBroker() );
 	}
 	
 	@Test
@@ -73,11 +88,10 @@ public class TestMessageBroker {
 	}
 	
 	@Test
-	public void construction() {
-		MessageQueue queue = messageBus.messageQueue( QUEUE_NAME );
-		assertNotNull( queue );
-		assertEquals( QUEUE_NAME, queue.getName() );
-		assertTrue( messageBus == queue.getMessageBroker() );
+	public void messageRecordConstructorGeneratesID() {
+		Envelope mr = new CouchDbEnvelope( jimi, null, null, 0 );
+		assertNotNull( mr.getId() );
+		System.out.println( mr.getId() );
 	}
 	
 	@Test

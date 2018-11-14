@@ -1,8 +1,9 @@
-package alma.obops.draws.messages.examples;
-
-import static alma.obops.draws.messages.examples.ExampleUtils.MESSAGE_BUS_NAME;
+package alma.obops.draws.examples;
 
 import java.io.IOException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import alma.obops.draws.messages.AbstractMessage;
 import alma.obops.draws.messages.Executor;
@@ -12,16 +13,18 @@ import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
 import alma.obops.draws.messages.ResponseMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
-import alma.obops.draws.messages.couchdb.CouchDbConfig;
-import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
 
 /**
  * A trivial calculator, supports sum, subtraction and multiplication of
  * integers
  */
-public class Calculator {
+public class Calculator implements Runnable {
 
 	public static final String CALC_SELECTOR = "compute";
+
+	@Autowired
+	@Qualifier( "rabbitmq-message-broker" )
+	private MessageBroker broker;
 
 	/**
 	 * A computation request message, e.g.
@@ -101,17 +104,22 @@ public class Calculator {
 
 	}
 
-	public static void main(String[] args) throws IOException {
-		CouchDbConfig config = new CouchDbConfig();
-		MessageBroker bus = new CouchDbMessageBroker(config, MESSAGE_BUS_NAME);
-		MessageQueue queue = bus.messageQueue(CALC_SELECTOR);
+	@Override
+	public void run() {
+		MessageQueue queue = broker.messageQueue(CALC_SELECTOR);
 		RequestProcessor processor = new CalculatorProcessor();
 		Executor executor = new Executor(queue, processor, 5000);
 
 		try {
 			executor.run();
-		} catch (TimeLimitExceededException e) {
+		} 
+		catch( TimeLimitExceededException e ) {
 			System.out.println(">>> Timed out: " + e.getMessage());
+			System.exit( 0 );
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			System.exit( 1 );
 		}
 	}
 }

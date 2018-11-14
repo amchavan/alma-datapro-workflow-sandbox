@@ -29,10 +29,10 @@ public class CouchDbConnection implements DbConnection {
 		this( baseURL, null, null );
 	}
 	
-	/** Constructor: create an interface to a CouchDB instance */
-	public CouchDbConnection( CouchDbConfig config ) {
-		this( config.getUrl(), config.getUsername(), config.getPassword() );
-	}
+//	/** Constructor: create an interface to a CouchDB instance */
+//	public CouchDbConnection( CouchDbConfig config ) {
+//		this( config.getUrl(), config.getUsername(), config.getPassword() );
+//	}
 	
 	/** Constructor: create an interface to a CouchDB instance */
 	public CouchDbConnection( String baseURL, String username, String password ) {

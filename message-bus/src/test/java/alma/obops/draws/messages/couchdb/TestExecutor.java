@@ -1,6 +1,5 @@
 package alma.obops.draws.messages.couchdb;
 
-import static alma.obops.draws.messages.TestUtils.COUCHDB_URL;
 import static alma.obops.draws.messages.TestUtils.MESSAGE_BUS_NAME;
 import static org.junit.Assert.assertEquals;
 
@@ -8,6 +7,11 @@ import java.io.IOException;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import alma.obops.draws.messages.AbstractMessage;
 import alma.obops.draws.messages.DbConnection;
@@ -20,13 +24,21 @@ import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
 import alma.obops.draws.messages.ResponseMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
+import alma.obops.draws.messages.configuration.CouchDbConfiguration;
+import alma.obops.draws.messages.configuration.CouchDbConfigurationProperties;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = {CouchDbConfiguration.class, CouchDbConfigurationProperties.class})
+@AutoConfigureJdbc
 public class TestExecutor {
 
 	private static final String QUEUE_NAME = "DOUBLER_Q";
 	static Integer globalDoubled = null; 			// needs to be static!
 	private MessageBroker broker = null;
 	private MessageQueue queue;
+	
+	@Autowired
+	private CouchDbConnection couchDbConn;
 
 	// Request: double a number
 	public static class DoubleRequest extends AbstractMessage implements RequestMessage  {
@@ -85,7 +97,7 @@ public class TestExecutor {
 	
 	@Before
 	public void aaa_setUp() throws IOException {
-		broker = new CouchDbMessageBroker( COUCHDB_URL, null, null, MESSAGE_BUS_NAME  );
+		broker = new CouchDbMessageBroker( couchDbConn, MESSAGE_BUS_NAME  );
 		queue = broker.messageQueue( QUEUE_NAME );
 		
 		DbConnection db = ((CouchDbMessageBroker) broker).getDbConnection(); 

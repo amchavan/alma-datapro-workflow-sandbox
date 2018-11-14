@@ -1,10 +1,11 @@
-package alma.obops.draws.messages.examples;
-
-import static alma.obops.draws.messages.examples.ExampleUtils.MESSAGE_BUS_NAME;
+package alma.obops.draws.examples;
 
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.TimeZone;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import alma.obops.draws.messages.AbstractMessage;
 import alma.obops.draws.messages.Executor;
@@ -14,16 +15,18 @@ import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
 import alma.obops.draws.messages.ResponseMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
-import alma.obops.draws.messages.couchdb.CouchDbConfig;
-import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
 
 /**
  * A basic executor, returns the current datetime in a given timezone.<br>
  * This class defines the request and response message formats.
  */
-public class BasicExecutor {
+public class BasicExecutor implements Runnable {
 
 	public static final String DATETIME_QUEUE = "datetime";
+
+	@Autowired
+	@Qualifier( "rabbitmq-message-broker" )
+	private MessageBroker broker;
 
 	/**
 	 * A datetime request, e.g. <code>{"service":"datetime", "timezone":""}</code>
@@ -71,18 +74,22 @@ public class BasicExecutor {
 		}
 	}
 
-	public static void main(String[] args) throws IOException {
-		CouchDbConfig config = new CouchDbConfig();
-		MessageBroker bus = new CouchDbMessageBroker(config, MESSAGE_BUS_NAME);
-		MessageQueue queue = bus.messageQueue(DATETIME_QUEUE);
+	@Override
+	public void run() {
+		MessageQueue queue = broker.messageQueue( DATETIME_QUEUE );
 		RequestProcessor processor = new DatetimeProcessor();
-		Executor executor = new Executor(queue, processor, 5000);
+		Executor executor = new Executor( queue, processor, 5000 );
 
 		try {
 			executor.run();
 		} 
-		catch (TimeLimitExceededException e) {
+		catch( TimeLimitExceededException e ) {
 			System.out.println(">>> Timed out: " + e.getMessage());
+			System.exit( 0 );
+		} 
+		catch (IOException e) {
+			e.printStackTrace();
+			System.exit( 1 );
 		}
 	}
 }
