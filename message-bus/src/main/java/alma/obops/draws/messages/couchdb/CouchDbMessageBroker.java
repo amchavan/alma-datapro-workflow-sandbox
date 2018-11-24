@@ -2,7 +2,6 @@ package alma.obops.draws.messages.couchdb;
 
 import static alma.obops.draws.messages.MessageBroker.now;
 import static alma.obops.draws.messages.MessageBroker.nowISO;
-import static alma.obops.draws.messages.MessageBroker.ourIP;
 import static alma.obops.draws.messages.MessageBroker.sleep;
 
 import java.io.IOException;
@@ -23,22 +22,19 @@ import alma.obops.draws.messages.SimpleEnvelope;
 import alma.obops.draws.messages.TimeLimitExceededException;
 
 public class CouchDbMessageBroker extends AbstractMessageBroker implements MessageBroker {
-	    
+	
 	private String brokerName;
 	private DbConnection dbConn;
-	private String ourIP;
 
 	/**
 	 * Public constructor: establishes a link to the underlying CouchDB server and
-	 * creates all necessary databases. If the server is secured, this constructor
-	 * requires a configuration including username and password of an admin user (or
-	 * a user with enough privileges to create tables).
+	 * creates all necessary tables. The broker's name will be {@value
 	 * 
-	 * @param config  The CouchDB server configuration
-	 * @param busName Name of our message bus
+	 * @param dbConn   The CouchDB connection instance
+	 * @param busName  Name of our message broker, will map to a CouchDB database name
 	 */
-	public CouchDbMessageBroker( CouchDbConfig config, String busName ) {
-		this( new CouchDbConnection( config ), busName );
+	public CouchDbMessageBroker( DbConnection dbConn ) {
+		this( dbConn, MessageBroker.DEFAULT_MESSAGE_BROKER_NAME );
 	}
 
 	/**
@@ -50,7 +46,6 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 	 */
 	public CouchDbMessageBroker( DbConnection dbConn, String brokerName ) {
 		this.brokerName = brokerName;
-		this.ourIP   = ourIP();
 		this.dbConn  = dbConn;
 
 		try {
@@ -63,20 +58,20 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 		}
 	}
 
-	/**
-	 * Public constructor: establishes a link to the underlying CouchDB server and
-	 * creates all necessary tables. If the server is secured, this constructor
-	 * requires username and password of an admin user (or a user with enough
-	 * privileges to create tables).
-	 * 
-	 * @param dbURL     URL of the CouchDB server
-	 * @param username  Username of admin account on the CouchDB server
-	 * @param password  Password of admin account on the CouchDB server
-	 * @param busName   Name of our message bus
-	 */
-	public CouchDbMessageBroker( String dbURL, String username, String password, String busName ) {
-		this( new CouchDbConfig( dbURL, username, password ), busName );
-	}
+//	/**
+//	 * Public constructor: establishes a link to the underlying CouchDB server and
+//	 * creates all necessary tables. If the server is secured, this constructor
+//	 * requires username and password of an admin user (or a user with enough
+//	 * privileges to create tables).
+//	 * 
+//	 * @param dbURL     URL of the CouchDB server
+//	 * @param username  Username of admin account on the CouchDB server
+//	 * @param password  Password of admin account on the CouchDB server
+//	 * @param busName   Name of our message bus
+//	 */
+//	public CouchDbMessageBroker( String dbURL, String username, String password, String busName ) {
+//		this( new CouchDbConfig( dbURL, username, password ), busName );
+//	}
 
 
 	/**

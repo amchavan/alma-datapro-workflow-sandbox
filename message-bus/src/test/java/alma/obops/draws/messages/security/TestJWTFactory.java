@@ -6,19 +6,20 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestMockedTokenFactory {
+public class TestJWTFactory {
 	
 	private TokenFactory tokenFactory;
 
 	@Before
 	public void setUp() {
-		this.tokenFactory = MockedTokenFactory.getFactory();
+		this.tokenFactory = JWTFactory.getFactory();
 	}
 
 	@Test
@@ -31,17 +32,18 @@ public class TestMockedTokenFactory {
 		assertTrue( valid );
 
 		Map<String, Object> claims = tokenFactory.decode( token );
-		assertEquals( 3,       claims.size() );
-		assertEquals( "user",  claims.get( "sub" ));
+		assertEquals( 4, claims.size() );
+		assertEquals( "user", claims.get( "sub" ));
 		assertEquals( "admin", claims.get( "role" ));
-		assertEquals( "10000", claims.get( "ttl" ));
+		final Integer exp = (Integer) claims.get( "exp" );
+		assertTrue( exp > 10000 );
 	}
 
 	@Test
 	public void createValidToken() {
 		Map<String, Object> inProps = new HashMap<>();
-		inProps.put( "iss", "amchavan" );
-		inProps.put( "role", "admin" );
+		inProps.put( "sub",  "amchavan" );
+		inProps.put( "role", "admin"    );
 		String token = tokenFactory.create( inProps );
 		assertNotNull( token );
 		assertTrue( token.length() > 0 );
@@ -50,24 +52,36 @@ public class TestMockedTokenFactory {
 		assertTrue( valid );
 
 		Map<String, Object> outProps = tokenFactory.decode( token );
-		assertTrue( inProps.equals( outProps ));
+		assertEquals( "amchavan", outProps.get( "sub" ));
+		assertEquals( "admin",    outProps.get( "role" ));
 	}
 
 	@Test
 	public void createInvalidToken() {
 		Map<String, Object> inProps = new HashMap<>();
-		inProps.put( "valid", "false" );
+		inProps.put( "sub", "amchavan" );
 		String token = tokenFactory.create( inProps );
 		assertNotNull( token );
 		assertTrue( token.length() > 0 );
 		
-		boolean valid = tokenFactory.isValid( token );
+		// now try to fudge the token
+		String[] t = token.split( "\\." );
+		String encodedHeader    = t[0];
+		String encodedBody      = t[1];
+		String encodedSignature = t[2];
+		
+		String body = new String( Base64.getDecoder().decode( encodedBody ));
+		String fudgedBody = body.replace( "amchavan", "pjwoodhouse" );
+		String encodedFudgedBody = Base64.getEncoder().encodeToString( fudgedBody.getBytes() );
+		String fudgedToken =  encodedHeader + "." + encodedFudgedBody + "." + encodedSignature;
+
+		boolean valid = tokenFactory.isValid( fudgedToken );
 		assertFalse( valid );
 
 		try {
-			tokenFactory.decode( token );
+			tokenFactory.decode( fudgedToken );
 		} 
-		catch (InvalidSignatureException e) {
+		catch( InvalidSignatureException e ) {
 			// no-op, expected
 		}
 		catch( Exception e ) {

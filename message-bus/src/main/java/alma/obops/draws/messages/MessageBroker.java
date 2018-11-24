@@ -18,6 +18,8 @@ import alma.obops.draws.messages.security.TokenFactory;
  */
 public interface MessageBroker {
 
+	public static final String DEFAULT_MESSAGE_BROKER_NAME = "alma";
+	
 	/** All timestamps are in Universal Time (UT) */
     public static final TimeZone UT = TimeZone.getTimeZone( "Etc/GMT" );
 

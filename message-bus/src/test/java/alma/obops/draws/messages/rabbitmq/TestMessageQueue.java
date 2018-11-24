@@ -1,6 +1,5 @@
 package alma.obops.draws.messages.rabbitmq;
 
-import static alma.obops.draws.messages.TestUtils.RABBITMQ_URL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -55,8 +54,9 @@ public class TestMessageQueue {
 
 		System.out.println( ">>> SETUP ========================================" );
 		
-		this.broker = new RabbitMqMessageBroker( RABBITMQ_URL, EXCHANGE_NAME,
-												 envelopeRepository, groupRepository );
+		this.broker = new RabbitMqMessageBroker( EXCHANGE_NAME,
+												 envelopeRepository, 
+												 groupRepository );
 		this.queue = broker.messageQueue( QUEUE_NAME );
 
 		// Drain any existing messages in the logging queue

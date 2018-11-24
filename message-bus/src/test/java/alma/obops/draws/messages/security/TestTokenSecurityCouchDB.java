@@ -1,6 +1,5 @@
 package alma.obops.draws.messages.security;
 
-import static alma.obops.draws.messages.TestUtils.COUCHDB_URL;
 import static alma.obops.draws.messages.TestUtils.MESSAGE_BUS_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -23,7 +22,10 @@ import alma.obops.draws.messages.Envelope;
 import alma.obops.draws.messages.Envelope.State;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.TestUtils.TestMessage;
+import alma.obops.draws.messages.configuration.CouchDbConfiguration;
+import alma.obops.draws.messages.configuration.CouchDbConfigurationProperties;
 import alma.obops.draws.messages.TimeLimitExceededException;
+import alma.obops.draws.messages.couchdb.CouchDbConnection;
 import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
 import alma.obops.draws.messages.rabbitmq.PersistedEnvelope;
 import alma.obops.draws.messages.rabbitmq.PersistedEnvelopeRepository;
@@ -32,7 +34,9 @@ import alma.obops.draws.messages.rabbitmq.RecipientGroupRepository;
 
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = PersistenceConfiguration.class)
+@SpringBootTest(classes = { PersistenceConfiguration.class,
+		 					CouchDbConfiguration.class, 
+		 					CouchDbConfigurationProperties.class })
 @AutoConfigureJdbc
 public class TestTokenSecurityCouchDB {
 
@@ -46,6 +50,9 @@ public class TestTokenSecurityCouchDB {
 	private TokenFactory tokenFactory;
 	
 	@Autowired
+	private CouchDbConnection couchDbConn;
+	
+	@Autowired
 	private PersistedEnvelopeRepository envelopeRepository;
 	
 	@Autowired
@@ -53,7 +60,7 @@ public class TestTokenSecurityCouchDB {
 	
 	@Before
 	public void aaa_setUp() throws IOException {
-		broker = new CouchDbMessageBroker( COUCHDB_URL, null, null, MESSAGE_BUS_NAME  );
+		broker = new CouchDbMessageBroker( couchDbConn, MESSAGE_BUS_NAME  );
 		queue = new MessageQueue( QUEUE_NAME, broker );
 		db = ((CouchDbMessageBroker) broker).getDbConnection(); 
 		db.dbDelete( MESSAGE_BUS_NAME );
@@ -62,7 +69,7 @@ public class TestTokenSecurityCouchDB {
 		envelopeRepository.deleteAll();
 		groupRepository.deleteAll();
 		
-		tokenFactory = MockedTokenFactory.getFactory();
+		tokenFactory = JWTFactory.getFactory();
 		broker.setTokenFactory( tokenFactory );
 	}
 
@@ -92,7 +99,7 @@ public class TestTokenSecurityCouchDB {
 	public void send_Secure_Reject() throws IOException, InterruptedException {
 
 		// Give the broker a token that's been tampered with
-		Map<String, String> inProps = new HashMap<>();
+		Map<String, Object> inProps = new HashMap<>();
 		inProps.put( "valid", "false" );
 		String token = tokenFactory.create( inProps );
 		broker.setSendToken( token );

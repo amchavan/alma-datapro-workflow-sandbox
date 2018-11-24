@@ -1,6 +1,5 @@
 package alma.obops.draws.messages.rabbitmq;
 
-import static alma.obops.draws.messages.TestUtils.RABBITMQ_URL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -71,8 +70,12 @@ public class TestExecutor {
 	@Before
 	public void aaa_setUp() throws IOException, TimeoutException {
 		System.out.println( ">>> SETUP ========================================" );
-		this.broker = new RabbitMqMessageBroker( RABBITMQ_URL, EXCHANGE_NAME,
-												 envelopeRepository, groupRepository );
+		this.broker = new RabbitMqMessageBroker( "amqp://localhost:5672",
+												 "guest",
+												 "guest",
+												 EXCHANGE_NAME,
+												 envelopeRepository, 
+												 groupRepository );
 		this.queue = broker.messageQueue( QUEUE_NAME );
 
 		broker.drainLoggingQueue();

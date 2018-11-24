@@ -1,6 +1,5 @@
 package alma.obops.draws.messages.security;
 
-import static alma.obops.draws.messages.TestUtils.RABBITMQ_URL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -18,8 +17,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import alma.obops.draws.messages.Envelope;
-import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.Envelope.State;
+import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.TestUtils.TestMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
@@ -52,10 +51,11 @@ public class TestTokenSecurityRabbitMQ {
 	@Before
 	public void aaa_setUp() throws Exception {
 
-		System.out.println( ">>> SETUP ========================================" );
+//		System.out.println( ">>> SETUP ========================================" );
 		
-		this.broker = new RabbitMqMessageBroker( RABBITMQ_URL, EXCHANGE_NAME,
-												 envelopeRepository, groupRepository );
+		this.broker = new RabbitMqMessageBroker( EXCHANGE_NAME,
+												 envelopeRepository, 
+												 groupRepository );
 		this.queue = broker.messageQueue( QUEUE_NAME );
 
 		// Drain any existing messages in the logging queue
@@ -93,7 +93,7 @@ public class TestTokenSecurityRabbitMQ {
 	public void send_Secure_Reject() throws IOException, InterruptedException {
 
 		// Give the broker a token that's been tampered with
-		Map<String, String> inProps = new HashMap<>();
+		Map<String, Object> inProps = new HashMap<>();
 		inProps.put( "valid", "false" );
 		String token = tokenFactory.create( inProps );
 		broker.setSendToken( token );

@@ -1,6 +1,5 @@
 package alma.obops.draws.messages.couchdb;
 
-import static alma.obops.draws.messages.TestUtils.COUCHDB_URL;
 import static alma.obops.draws.messages.TestUtils.MESSAGE_BUS_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -11,6 +10,11 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import alma.obops.draws.messages.DbConnection;
 import alma.obops.draws.messages.Envelope;
@@ -19,8 +23,14 @@ import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.TestUtils.TestMessage;
+import alma.obops.draws.messages.configuration.CouchDbConfiguration;
+import alma.obops.draws.messages.configuration.CouchDbConfigurationProperties;
 import alma.obops.draws.messages.TimeLimitExceededException;
 
+
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = {CouchDbConfiguration.class, CouchDbConfigurationProperties.class})
+@AutoConfigureJdbc
 public class TestMessageQueue {
 
 	private static final String QUEUE_NAME = "Q";
@@ -31,9 +41,12 @@ public class TestMessageQueue {
 	private final TestMessage freddie = new TestMessage( "Freddie Mercury", 45, false );
 	private CouchDbMessageBroker broker;
 	
+	@Autowired
+	private CouchDbConnection couchDbConn;
+	
 	@Before
 	public void aaa_setUp() throws IOException {
-		broker = new CouchDbMessageBroker( COUCHDB_URL, null, null, MESSAGE_BUS_NAME  );
+		broker = new CouchDbMessageBroker( couchDbConn, MESSAGE_BUS_NAME  );
 		DbConnection db = ((CouchDbMessageBroker) broker).getDbConnection(); 
 		db.dbDelete( MESSAGE_BUS_NAME );
 		db.dbCreate( MESSAGE_BUS_NAME );
