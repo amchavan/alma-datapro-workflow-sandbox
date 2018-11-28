@@ -1,0 +1,9 @@
+class TokenFactory:
+    def isValid(token):
+        raise NotImplementedError
+    def create(claims):
+        raise NotImplementedError
+    def create():
+        raise NotImplementedError
+    def decode(token):
+        raise NotImplementedError
