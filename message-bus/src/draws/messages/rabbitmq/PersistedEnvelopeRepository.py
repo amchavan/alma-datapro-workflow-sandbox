@@ -2,18 +2,16 @@ class PersistedEnvelopeRepository:
     #@Query( "select * "
     #		+ "from envelope "
     #		+ "where state = :state" )
-    def findByState(state):
-        raise NotImplementedError
-    
+    def findByState(self, state):
+        return None
     #@Query( "select * " + 
     #		"from envelope " + 
     #		"where envelope_id = :envelope_id" )
-    def findByEnvelopeId(envelope_id):
-        raise NotImplementedError
-
+    def findByEnvelopeId(self, envelope_id):
+        return None
     def deleteAll(self):
         pass
-        #raise NotImplementedError
     def findAll(self):
+        return []
+    def save(self, envelope):
         pass
-        #raise NotImplementedError

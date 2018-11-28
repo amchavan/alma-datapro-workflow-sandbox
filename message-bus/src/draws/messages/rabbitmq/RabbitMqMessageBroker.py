@@ -55,7 +55,8 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             credentials = pika.PlainCredentials(username, password)
             parameters.credentials = credentials
         self.__exchangeName = exchangeName
-        self.__groupRepository = groupRepository
+        self.__envelopeRepository = PersistedEnvelopeRepository() if envelopeRepository is None else envelopeRepository
+        self.__groupRepository = RecipientGroupRepository() if groupRepository is None else groupRepository
         try:
             connection = pika.BlockingConnection(parameters)
             self.__channel = connection.channel()

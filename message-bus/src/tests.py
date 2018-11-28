@@ -32,7 +32,7 @@ class TestSerialization(unittest.TestCase):
     def testSimpleEnvelope(self):
         jimi = TestMessage("Jimi Hendrix", 28, False)
         _in = SimpleEnvelope(message=jimi, originIP="134.171.1.1", queueName="Q", expireTime=1000)
-        jsons = json.dumps(_in.__dict__, default=SimpleEnvelope.serialize)
+        jsons = json.dumps(_in, default=SimpleEnvelope.serialize)
         #print(">>> " + str(json))
         out = SimpleEnvelope()
         out.deserialize(json.loads(jsons))

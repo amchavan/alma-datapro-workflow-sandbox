@@ -2,11 +2,13 @@ class RecipientGroupRepository:
     #@Query( "select * " + 
     #        "from Recipient_Group " + 
     #        "where group_name = :groupName" )
-    def findByName(name):
-        raise NotImplementedError
+    def findByName(self, name):
+        return None
     def deleteAll(self):
         pass
         #raise NotImplementedError
     def findAll(self):
-        pass
+        return []
         #raise NotImplementedError
+    def save(self, group):
+        pass
