@@ -25,6 +25,6 @@ public interface TokenFactory {
 	 * @return The set of claims (name/value pairs) encoded in the token
 	 * @throws InvalidSignatureException 
 	 */
-	public Map<String,Object> decode( String token ) throws InvalidSignatureException;
+	public Map<String,Object> decode( String token );
 
 }

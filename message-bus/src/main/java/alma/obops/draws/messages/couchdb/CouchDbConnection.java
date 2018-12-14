@@ -1,6 +1,6 @@
 package alma.obops.draws.messages.couchdb;
 
-import static alma.obops.draws.messages.couchdb.HttpUtils.*;
+import static alma.obops.draws.messages.HttpUtils.*;
 
 import java.io.IOException;
 import java.util.Base64;

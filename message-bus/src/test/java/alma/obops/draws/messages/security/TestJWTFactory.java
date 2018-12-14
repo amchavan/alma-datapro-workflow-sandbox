@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
+import java.text.ParseException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,13 +13,15 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.nimbusds.jose.JOSEException;
+
 public class TestJWTFactory {
 	
 	private TokenFactory tokenFactory;
 
 	@Before
-	public void setUp() {
-		this.tokenFactory = JWTFactory.getFactory();
+	public void setUp() throws ParseException, JOSEException {
+		this.tokenFactory = new JWTFactory();
 	}
 
 	@Test
@@ -32,11 +34,11 @@ public class TestJWTFactory {
 		assertTrue( valid );
 
 		Map<String, Object> claims = tokenFactory.decode( token );
-		assertEquals( 4, claims.size() );
+		assertEquals( 3, claims.size() );
 		assertEquals( "user", claims.get( "sub" ));
 		assertEquals( "admin", claims.get( "role" ));
-		final Integer exp = (Integer) claims.get( "exp" );
-		assertTrue( exp > 10000 );
+		Long ttl = (Long) claims.get( "ttl" );
+		assertTrue( ttl == 10000L );
 	}
 
 	@Test
@@ -81,11 +83,8 @@ public class TestJWTFactory {
 		try {
 			tokenFactory.decode( fudgedToken );
 		} 
-		catch( InvalidSignatureException e ) {
-			// no-op, expected
-		}
 		catch( Exception e ) {
-			fail( e.getMessage() );
+			// no-op, expected
 		}
 	}
 }

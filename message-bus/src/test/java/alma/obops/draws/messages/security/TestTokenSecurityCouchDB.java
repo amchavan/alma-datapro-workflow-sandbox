@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import com.nimbusds.jose.JOSEException;
 
 import alma.obops.draws.messages.DbConnection;
 import alma.obops.draws.messages.Envelope;
@@ -59,7 +62,7 @@ public class TestTokenSecurityCouchDB {
 	private RecipientGroupRepository groupRepository;
 	
 	@Before
-	public void aaa_setUp() throws IOException {
+	public void aaa_setUp() throws IOException, ParseException, JOSEException {
 		broker = new CouchDbMessageBroker( couchDbConn, MESSAGE_BUS_NAME  );
 		queue = new MessageQueue( QUEUE_NAME, broker );
 		db = ((CouchDbMessageBroker) broker).getDbConnection(); 
@@ -69,7 +72,7 @@ public class TestTokenSecurityCouchDB {
 		envelopeRepository.deleteAll();
 		groupRepository.deleteAll();
 		
-		tokenFactory = JWTFactory.getFactory();
+		tokenFactory = new JWTFactory();
 		broker.setTokenFactory( tokenFactory );
 	}
 

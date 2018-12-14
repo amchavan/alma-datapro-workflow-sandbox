@@ -58,12 +58,9 @@ public class MockedTokenFactory implements TokenFactory {
 	}
 
 	@Override
-	public Map<String,Object> decode( String token ) throws InvalidSignatureException {
+	public Map<String,Object> decode( String token ) {
 
 		final String encodedBody = isValidInternal( token );
-		if( encodedBody == null ) {
-			throw new InvalidSignatureException();
-		}
 		
 		String body = new String( Base64.getDecoder().decode( encodedBody ));
 		Map<String, Object> properties = new HashMap<>();

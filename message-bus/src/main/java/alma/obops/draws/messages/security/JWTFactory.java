@@ -1,38 +1,43 @@
 package alma.obops.draws.messages.security;
 
-import java.security.Key;
-import java.util.Date;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.Payload;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.jwk.RSAKey;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.SignatureException;
+import net.minidev.json.JSONObject;
 
+/**
+ * See https://connect2id.com/products/nimbus-jose-jwt/examples/jws-with-rsa-signature
+ * @author mchavan, 14-Dec-2018 -- rewritten with JOSE
+ */
 public class JWTFactory implements TokenFactory {
 
-	// The secret key. This should be in a property file, NOT under source
-    // control and not hard coded in real life. It's here for simplicity.
-    private static final String SECRET_KEY = 
-    		"oeRaYY7Wo24sDqKSX3IM9ASGmdGPmkTd9jo1QTy4b7P9Ze5_9hKolVX8xNrQDcNRfVEdTZNOuOyqEGhXEbdJI-ZQ19k_o9MI0y3eZN2lp9jow55FfXMiINEdt1XR85VipRLSOkT6kSpzs2x-jbLDiz9iFVzkd81YKxMgPA7VfZeQUm4n-mOmnWMaVX30zGFU4L3oPBctYKkl4dYfqYWqRNfrgPJVi5DGFjywgxx0ASEiJHtV72paI3fDR2XwlSkyhhmY-ICjCRmsJN4fX1pdoL8a18-aQrvyu4j0Os6dVPYIoPvvY0SAZtWYKHfM15g7A3HD4cVREf9cUsprCRK93w";
+	// Private and public keys. This should be in a property file, not here.
+	// Generated with https://mkjwk.org/
+    private static final String JWKS = "{\"kty\":\"RSA\",\"d\":\"g_JYrlcTrwMPWM0ONWdJsw9f6jQoyNZBAdt8CPcSQmZA4iuBnX2LwIih3NgunBWA1TfERAoyD3mRiPU-yBidgQ\",\"e\":\"AQAB\",\"use\":\"sig\",\"kid\":\"testkey\",\"alg\":\"RS256\",\"n\":\"hDLlR76CTTQjnRyA0NqpBDcdq_Nc3fqPNXplLXUf9PSbolxm_SyYfUiTO2NhHy74Z13nZgWwpkJiM7K0QdlU5w\"}";
 	private static final String TIME_TO_LIVE_CLAIM = "ttl";
 
-	protected static JWTFactory instance = null;
+    private RSAKey rsaJWK;
+	private RSAKey rsaPublicJWK;
+	private JWSSigner signer;
+
 	
-	public static TokenFactory getFactory() {
-		if( instance == null ) {
-			instance = new JWTFactory(); 
-		}
-		return instance;
-	}
-	
-	private JWTFactory() {
+	public JWTFactory() throws ParseException, JOSEException {
+		this.rsaJWK = RSAKey.parse( JWKS );
+		this.rsaPublicJWK = rsaJWK.toPublicJWK();
+		this.signer = new RSASSASigner(rsaJWK);
 	}
 
 	@Override
@@ -47,73 +52,47 @@ public class JWTFactory implements TokenFactory {
 	@Override
 	public String create( Map<String, Object> claims ) {
 		
-	    //The JWT signature algorithm we will be using to sign the token
-	    SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
-
-	    long nowMillis = System.currentTimeMillis();
-	    Date now = new Date( nowMillis );
-
-	    //We will sign our JWT with our ApiKey secret
-	    byte[] apiKeySecretBytes = DatatypeConverter.parseBase64Binary( SECRET_KEY );
-	    Key signingKey = new SecretKeySpec(apiKeySecretBytes, signatureAlgorithm.getJcaName());
-
-	    // See if caller specified a TTL, convert that to an expiration time
-	    Date exp = null;
-	    Object ttl = claims.get( TIME_TO_LIVE_CLAIM );
-	    if( ttl != null && Number.class.isAssignableFrom( ttl.getClass() )) {
-	    	
-	    	Number ttln = (Number) ttl;
-	    	long ttlMillis = ttln.longValue();
-	    	if (ttlMillis > 0) {
-		        long expMillis = nowMillis + ttlMillis;
-		        exp = new Date( expMillis );
-		    }
-	    	claims.remove( TIME_TO_LIVE_CLAIM );
-	    }
-	    JwtBuilder builder = Jwts.builder()
-	    		.setClaims( claims )
-	            .setIssuedAt( now )
-	    		.signWith( signatureAlgorithm, signingKey );
-
-	    if( exp != null ) {
-	    	builder.setExpiration(exp);
-	    }	      
-	  
-	    //Builds the JWT and serializes it to a compact, URL-safe string
-	    return builder.compact();
-	}
-
-	@Override
-	public Map<String,Object> decode( String jwt ) throws InvalidSignatureException {
-		
-		//This line will throw an exception if it is not a signed JWS (as expected)
-	    Claims claims;
 		try {
-			claims = Jwts.parser()
-			        .setSigningKey(DatatypeConverter.parseBase64Binary( SECRET_KEY ))
-			        .parseClaimsJws(jwt).getBody();
+			JSONObject jose = new JSONObject( claims );
+			Payload payload = new Payload( jose );
+			JWSHeader builder = new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(rsaJWK.getKeyID()).build();
+			JWSObject jwsObject = new JWSObject( builder, payload );
+			jwsObject.sign( signer );
+			String ret = jwsObject.serialize();
+			return ret;
 		} 
-		catch( SignatureException e ) {
-			throw new InvalidSignatureException( e );
+		catch( JOSEException e ) {
+			throw new RuntimeException( e );
 		}
-	   
-	    Map<String,Object> ret = new HashMap<>();
-	    for (Entry<String, Object> claim : claims.entrySet() ) {
-			String key = claim.getKey();
-			Object value = claim.getValue();
-			ret.put( key, value );
-		}
-	    return ret;
 	}
 
 	@Override
-	public boolean isValid( String token ) {
+	public Map<String,Object> decode( String jwt ) {	
 		try {
-			decode( token );
+			Map<String,Object> ret = new HashMap<>();
+			JWSObject jwsObject = JWSObject.parse( jwt );
+			final JSONObject jsonObject = jwsObject.getPayload().toJSONObject();
+			Set<String> claimNames = jsonObject.keySet();
+			for( String claimName: claimNames ) {
+				Object claimValue = jsonObject.get( claimName );
+				ret.put( claimName, claimValue );
+			}
+			return ret;			
+		} 
+		catch ( Exception e ) {
+			throw new RuntimeException( e );
 		}
-		catch( InvalidSignatureException e ) {
-			return false;
+	}
+
+	@Override
+	public boolean isValid( String jwt ) {	
+		try {
+			JWSObject jwsObject = JWSObject.parse( jwt );
+			JWSVerifier verifier = new RSASSAVerifier( this.rsaPublicJWK );
+			return jwsObject.verify( verifier );
+		} 
+		catch ( Exception e ) {
+			throw new RuntimeException( e );
 		}
-		return true;
 	}
 }

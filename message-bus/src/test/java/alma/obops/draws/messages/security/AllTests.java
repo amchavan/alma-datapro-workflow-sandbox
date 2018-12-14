@@ -5,8 +5,8 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
-@SuiteClasses({ TestJWTFactory.class, TestMockedTokenFactory.class, TestTokenSecurityCouchDB.class,
-		TestTokenSecurityRabbitMQ.class })
+@SuiteClasses({ TestJWTFactory.class, TestMockedTokenFactory.class, TestOidcConfiguration.class,
+		TestOidcTokenFactory.class, TestTokenSecurityCouchDB.class, TestTokenSecurityRabbitMQ.class })
 
 public class AllTests {
 
