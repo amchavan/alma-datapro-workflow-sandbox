@@ -7,7 +7,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.Date;
 import java.util.Map;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +19,11 @@ import net.minidev.json.JSONArray;
 @SpringBootTest(classes = { OidcConfigurationProperties.class, OidcTokenFactory.class })
 public class TestOidcTokenFactory {
 	
+//	@Autowired
+//	private OidcConfigurationProperties oidcConfigProps;
+	
 	@Autowired
-	private OidcConfigurationProperties oidcConfigProps;
 	private OidcTokenFactory tokenFactory;
-
-	@Before
-	public void setUp() {
-		this.tokenFactory = new OidcTokenFactory( oidcConfigProps );
-	}
 
 	@Test
 	public void createStandardToken() {

@@ -49,7 +49,7 @@ public class MessageBrokerConfiguration {
 	
 
 	/**
-	 * RabbitMQ broker
+	 * CouchDB broker
 	 */
 	@Bean( name = "couchdb-message-broker" )
 	public MessageBroker couchDB() {

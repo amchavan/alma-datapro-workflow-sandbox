@@ -102,10 +102,8 @@ public class TestTokenSecurityCouchDB {
 	public void send_Secure_Reject() throws IOException, InterruptedException {
 
 		// Give the broker a token that's been tampered with
-		Map<String, Object> inProps = new HashMap<>();
-		inProps.put( "valid", "false" );
-		String token = tokenFactory.create( inProps );
-		broker.setSendToken( token );
+		String token = tokenFactory.create();
+		broker.setSendToken( token + "*****" );
 		
 		MessageQueue queue = broker.messageQueue( QUEUE_NAME );
 		queue.send( brian );

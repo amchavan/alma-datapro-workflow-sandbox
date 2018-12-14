@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import alma.obops.draws.messages.Envelope;
 import alma.obops.draws.messages.MessageBroker;
@@ -14,6 +15,7 @@ import alma.obops.draws.messages.TimeLimitExceededException;
 /**
  * Example receiver, logs the message it receives (a single message)
  */
+@Component
 public class BasicReceiver implements Runnable {
 
 	public static final String QUEUE_NAME = "BASIC";
