@@ -1,5 +1,8 @@
 package alma.obops.draws.messages.security;
 
+import static alma.obops.draws.messages.security.JWTFactory.EXPIRES_CLAIM;
+import static alma.obops.draws.messages.security.JWTFactory.TIME_TO_LIVE;
+import static alma.obops.draws.messages.security.JWTFactory.TIME_TO_LIVE_CLAIM;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -7,7 +10,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.text.ParseException;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Before;
@@ -34,11 +39,18 @@ public class TestJWTFactory {
 		assertTrue( valid );
 
 		Map<String, Object> claims = tokenFactory.decode( token );
-		assertEquals( 3, claims.size() );
+		assertEquals( 4, claims.size() );
 		assertEquals( "user", claims.get( "sub" ));
-		assertEquals( "admin", claims.get( "role" ));
-		Long ttl = (Long) claims.get( "ttl" );
-		assertTrue( ttl == 10000L );
+		
+		@SuppressWarnings("unchecked")
+		List<String> roles = ((List<String>) claims.get( "roles" ));
+		assertTrue( roles.contains( "OBOPS/AOD" ));
+		
+		Long ttl = (Long) claims.get( TIME_TO_LIVE_CLAIM );
+		assertTrue( ttl == TIME_TO_LIVE );
+		
+		Date expires = (Date) claims.get( EXPIRES_CLAIM );
+		assertNotNull( expires );
 	}
 
 	@Test

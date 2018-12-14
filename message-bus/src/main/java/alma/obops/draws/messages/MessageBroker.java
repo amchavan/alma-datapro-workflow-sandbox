@@ -243,4 +243,15 @@ public interface MessageBroker {
 	 * factory is associated with the broker.
 	 */
 	public void setTokenFactory( TokenFactory factory );
+	
+	/**
+	 * Defines the list of accepted sender roles for this queue. <br>
+	 * Forces messages sent to this queue to have a valid JWT and makes sure that
+	 * the list of roles included in the JWS (claim "roles") includes at least one
+	 * of the accepted roles
+	 * 
+	 * @throws RuntimeException if no {@link TokenFactory} was set prior to calling
+	 *                          this method
+	 */
+	public void setAcceptedRoles( List<String> acceptedRoles );
 }

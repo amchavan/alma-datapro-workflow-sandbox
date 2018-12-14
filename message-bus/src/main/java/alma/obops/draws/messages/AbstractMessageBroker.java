@@ -5,6 +5,7 @@ import static alma.obops.draws.messages.MessageBroker.ourIP;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import alma.obops.draws.messages.Envelope.State;
 import alma.obops.draws.messages.security.TokenFactory;
@@ -14,10 +15,10 @@ import alma.obops.draws.messages.security.TokenFactory;
  */
 public abstract class AbstractMessageBroker implements MessageBroker {
 
-	protected TokenFactory tokenFactory;
+	protected TokenFactory tokenFactory = null;
 	protected String sendToken;			// Token to send with our messages
-	
-	private String ourIP;
+	protected String ourIP;
+	protected List<String> acceptedRoles;
 
 	public AbstractMessageBroker() {
 		this.tokenFactory = null;
@@ -29,6 +30,7 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	 * Compute what the state of the input envelope should be
 	 */
 	protected void computeState( SimpleEnvelope envelope ) throws IOException {
+		
 		// -----------------------------------------------------
 		// NOTE: use "this" to call subclassed setState() method 
 		// -----------------------------------------------------
@@ -70,9 +72,13 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	/**
 	 * Decide whether a message should be rejected:
 	 * <ul>
-	 * <li> if this broker is secured, is the message signature valid? 
-	 * <li> <strong>TODO</strong> if this broker is secured, are the sender roles sufficient? 
-	 * <li> <strong>TODO</strong> do we accept this message type? 
+	 * <li> if this broker is not secured the message should not be rejected
+	 * <li> if this broker is secured:
+	 * <ul> 
+	 * 	<li> is the token valid? 
+	 * 	<li> do sender roles match any accepted roles? 
+	 * 	<li> <strong>TODO</strong> do we accept this message type? 
+	 * </ul> 
 	 * </ul> 
 	 * 
 	 * @return <code>true</code> if this message should be rejected,
@@ -85,13 +91,33 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 			return false;				// not secured, no rejection
 		}
 		
-		// Broker is secured: is the message signature valid?
-		if( ! tokenFactory.isValid( envelope.getToken() )) {
-			return true;				// invalid signature, reject
+		// Is the token valid?
+		String token = envelope.getToken();
+		Map<String, Object> claims;
+		try {
+			claims = tokenFactory.decode( token );
+		}
+		catch( Exception e ) {
+			return true;
 		}
 		
-		// All is fine, no rejection
-		return false;
+		// Do we have role restrictions?
+		if( this.acceptedRoles == null ) {
+			return false;		// NO, no rejection
+		}
+		
+		@SuppressWarnings("unchecked")
+		List<String> roles = (List<String>) claims.get( "roles" );
+		for( String role: roles ) {
+			for( String acceptedRole: this.acceptedRoles ) {
+				if( role.equals( acceptedRole )) {
+					return false;
+				}
+			}
+		}
+		
+		// No role found, reject
+		return true;
 	}
 	
 	@Override
@@ -254,5 +280,13 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	public void setTokenFactory( TokenFactory factory ) {
 		this.tokenFactory = factory;
 		this.sendToken = factory.create();
+	}
+
+	@Override
+	public void setAcceptedRoles( List<String> acceptedRoles ) {
+		if( this.tokenFactory == null ) {
+			throw new RuntimeException( "No token factory found" );
+		}
+		this.acceptedRoles = acceptedRoles;
 	}
 }

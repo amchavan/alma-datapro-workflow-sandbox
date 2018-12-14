@@ -1,8 +1,10 @@
 package alma.obops.draws.messages;
 
 import java.io.IOException;
+import java.util.List;
 
 import alma.obops.draws.messages.Envelope.State;
+import alma.obops.draws.messages.security.TokenFactory;
 
 /**
  * Allows messages to be sent and subscribed to. Depends on a {@link MessageBroker}
@@ -145,5 +147,18 @@ public class MessageQueue {
 	 */
 	public Thread listenInThread( MessageConsumer consumer, int timeout ) {
 		return messageBroker.listenInThread( this, consumer, timeout );
+	}
+
+	/**
+	 * Defines the list of accepted sender roles for this queue. <br>
+	 * Forces messages sent to this queue to have a valid JWT and makes sure that
+	 * the list of roles included in the JWS (claim "roles") includes at least one
+	 * of the accepted roles 
+	 * 
+	 * @throws RuntimeException if no {@link TokenFactory} was set prior to calling
+	 *                          this method
+	 */
+	public void setAcceptedRoles( List<String> acceptedRoles ) {
+		messageBroker.setAcceptedRoles( acceptedRoles );
 	}
 }

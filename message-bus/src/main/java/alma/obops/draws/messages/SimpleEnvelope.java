@@ -391,6 +391,7 @@ public class SimpleEnvelope implements Envelope, Comparable<SimpleEnvelope> {
 		return this.getClass().getSimpleName()
 				+ "[message=" + message + ", sent=" + sentTimestamp + ", originIP="
 				+ originIP + ", queueName=" + queueName + ", state=" + state 
+				+ ", token=" + token.substring( 0, 10 ) + "..."
 				+ "]";
 	}
 }
