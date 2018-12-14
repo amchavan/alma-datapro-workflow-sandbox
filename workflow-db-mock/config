@@ -1,0 +1,23 @@
+{
+	"config": [
+	],
+	"pre-tasks": [
+		{
+			"name": "EnvLoad",
+			"module": "EnvTask",
+			"class": "EnvLoader"
+		}
+	],
+	"post-tasks": [
+		{
+			"name": "EnvCheck",
+			"module": "EnvTask",
+			"class": "EnvChecker"
+		},
+		{
+			"name": "APA",
+			"module": "APATask",
+			"class": "APAFunc"
+		}
+	]
+}
