@@ -4,8 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -63,7 +61,7 @@ public class TestTokenSecurityRabbitMQ {
 		envelopeRepository.deleteAll();
 		groupRepository.deleteAll();
 		
-		tokenFactory = MockedTokenFactory.getFactory();
+		tokenFactory = new JWTFactory();
 		broker.setTokenFactory( tokenFactory );
 	}
 
@@ -93,13 +91,12 @@ public class TestTokenSecurityRabbitMQ {
 	public void send_Secure_Reject() throws IOException, InterruptedException {
 
 		// Give the broker a token that's been tampered with
-		Map<String, Object> inProps = new HashMap<>();
-		inProps.put( "valid", "false" );
-		String token = tokenFactory.create( inProps );
-		broker.setSendToken( token );
+		String token = tokenFactory.create();
+		int l = token.length();
+		broker.setSendToken( token.substring( 0, l-2 ));
 		
 		MessageQueue queue = broker.messageQueue( QUEUE_NAME );
-		queue.send( brian );
+		Envelope e = queue.send( brian );
 		
 
 		Runnable messageLogListener = broker.getMessageLogListener();
@@ -113,7 +110,7 @@ public class TestTokenSecurityRabbitMQ {
 			@SuppressWarnings("unused")
 			Envelope out = queue.receive( 1000 );
 		} 
-		catch (TimeLimitExceededException e) {
+		catch (TimeLimitExceededException ex) {
 			// no-op, expected
 		}		
 
