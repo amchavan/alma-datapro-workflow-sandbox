@@ -22,7 +22,13 @@ public class Application implements CommandLineRunner {
 	private BasicSender basicSender;
 	
 	@Autowired
+	private SecureSender secureSender;
+	
+	@Autowired
 	private BasicReceiver basicReceiver;
+	
+	@Autowired
+	private SecureReceiver secureReceiver;
 	
 	@Autowired
 	private BasicExecutor basicExecutor;
@@ -91,6 +97,14 @@ public class Application implements CommandLineRunner {
 
 		case "CalculatorClient":
 			calculatorClient.run();
+			break;
+
+		case "SecureSender":
+			secureSender.run();
+			break;
+
+		case "SecureReceiver":
+			secureReceiver.run();
 			break;
 			
 		default:
