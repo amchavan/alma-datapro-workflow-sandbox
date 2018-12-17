@@ -6,8 +6,6 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -25,9 +23,9 @@ import alma.obops.draws.messages.Envelope;
 import alma.obops.draws.messages.Envelope.State;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.TestUtils.TestMessage;
+import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.configuration.CouchDbConfiguration;
 import alma.obops.draws.messages.configuration.CouchDbConfigurationProperties;
-import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.couchdb.CouchDbConnection;
 import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
 import alma.obops.draws.messages.rabbitmq.PersistedEnvelope;

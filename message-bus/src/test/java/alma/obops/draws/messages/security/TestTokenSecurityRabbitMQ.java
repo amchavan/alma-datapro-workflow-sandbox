@@ -96,6 +96,7 @@ public class TestTokenSecurityRabbitMQ {
 		broker.setSendToken( token.substring( 0, l-2 ));
 		
 		MessageQueue queue = broker.messageQueue( QUEUE_NAME );
+		@SuppressWarnings("unused")
 		Envelope e = queue.send( brian );
 		
 
