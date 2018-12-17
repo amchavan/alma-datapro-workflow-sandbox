@@ -4,7 +4,7 @@
 
   <groupId>alma.obops.draws</groupId>
   <artifactId>message-bus</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>OBOPS-2019.02</version>
   <packaging>jar</packaging>
 
   <name>messages</name>
