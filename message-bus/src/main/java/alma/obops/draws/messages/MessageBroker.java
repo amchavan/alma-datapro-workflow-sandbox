@@ -241,6 +241,9 @@ public interface MessageBroker {
 	/**
 	 * Give the broker a token factory: message passing is only secured if a token
 	 * factory is associated with the broker.
+	 * 
+	 * @param factory A token factory: if <code>null</code>, message security is
+	 *                turned off; that's the default condition.
 	 */
 	public void setTokenFactory( TokenFactory factory );
 	
