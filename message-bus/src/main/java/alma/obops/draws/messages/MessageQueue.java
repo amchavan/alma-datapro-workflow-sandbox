@@ -16,6 +16,7 @@ public class MessageQueue {
 	
 	private String queueName;
 	private MessageBroker messageBroker;
+	private List<String> acceptedRoles;
 	
 	/**
 	 * @param name
@@ -29,39 +30,7 @@ public class MessageQueue {
 		this.queueName = queueName;
 		this.messageBroker = messageBus;
 	}
-	
-	public MessageBroker getMessageBroker() {
-		return messageBroker;
-	}
-	
-	public String getName() {
-		return queueName;
-	}
 
-	/**
-	 * Creates an {@link Envelope} (including meta-data) from the given
-	 * {@link Message} and sends to this queue. <br>
-	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
-	 * The {@link Message} instance is set to {@link State#Sent}.
-	 */
-	public Envelope send( Message message ) {
-		return this.send( message, 0 );
-	}
-	
-	/**
-	 * Creates an {@link Envelope} (including meta-data) from the given
-	 * {@link Message} and sends to this queue. <br>
-	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
-	 * The {@link Message} instance is set to {@link State#Sent}.
-	 * 
-	 * @param timeToLive
-	 *            The time before this instance expires, in msec; if
-	 *            <code>null</code>, this instance never expires
-	 */
-	public Envelope send( Message message, long timeToLive ) {
-		return messageBroker.send( this, message, timeToLive );
-	}
-	
 	/**
 	 * Delete this queue and all its messages
 	 * 
@@ -72,33 +41,22 @@ public class MessageQueue {
 	}
 	
 	/**
-	 * Search a queue for for new messages, return the oldest we can find
-	 * 
-	 * @return An {@link Envelope} wrapping a user {@link Message}.
-	 * 
-	 * @throws IOException 
+	 * @return The list of accepted sender roles for this queue. <br>
+	 * Forces messages sent to this queue to have a valid JWT and makes sure that
+	 * the list of roles included in the JWS (claim "roles") includes at least one
+	 * of the accepted roles 
 	 */
-	public Envelope receive() throws IOException {
-		return messageBroker.receive( this );
+	public List<String> getAcceptedRoles() {
+		return acceptedRoles;
 	}
 	
-	/**
-	 * Search a queue for for new messages, return the oldest we can find
-	 * 
-	 * @param timeout
-	 *            If timeout > 0 it represents the number of msec to wait for a
-	 *            message to arrive before timing out: upon timeout a
-	 *            {@link TimeLimitExceededException} is thrown.
-	 * 
-	 * @return An {@link Envelope} wrapping a user {@link Message}.
-	 * 
-	 * @throws TimeLimitExceededException If waiting time exceeded the given timeout value
-	 * @throws IOException
-	 */
-	public Envelope receive( int timeout ) throws IOException, TimeLimitExceededException {
-		return messageBroker.receive( this, timeout );
+	public MessageBroker getMessageBroker() {
+		return messageBroker;
 	}
 
+	public String getName() {
+		return queueName;
+	}
 	
 	/**
 	 * Add this queue to a group: messages sent to the group will be passed on to
@@ -111,7 +69,7 @@ public class MessageQueue {
 	public void joinGroup( String groupName ) {
 		messageBroker.joinGroup( queueName, groupName );
 	}
-
+	
 	/**
 	 * Listen for messages and process them as they come in.<br>
 	 * This method times out.
@@ -132,13 +90,8 @@ public class MessageQueue {
 	 */
 	public void listen( MessageConsumer consumer, int timeout ) throws IOException, TimeLimitExceededException {
 		this.messageBroker.listen( this, consumer, timeout );
-	} 	
-	
-	@Override
-	public String toString() {
-		return this.getClass().getSimpleName() + "[" + queueName + "]";
 	}
-
+	
 	/**
 	 * Start a background thread listening for messages matching the
 	 * queue name and processing them as they come in.<br>
@@ -147,6 +100,59 @@ public class MessageQueue {
 	 */
 	public Thread listenInThread( MessageConsumer consumer, int timeout ) {
 		return messageBroker.listenInThread( this, consumer, timeout );
+	}
+	
+	/**
+	 * Search a queue for for new messages, return the oldest we can find
+	 * 
+	 * @return An {@link Envelope} wrapping a user {@link Message}.
+	 * 
+	 * @throws IOException 
+	 */
+	public Envelope receive() throws IOException {
+		return messageBroker.receive( this );
+	}
+
+	
+	/**
+	 * Search a queue for for new messages, return the oldest we can find
+	 * 
+	 * @param timeout
+	 *            If timeout > 0 it represents the number of msec to wait for a
+	 *            message to arrive before timing out: upon timeout a
+	 *            {@link TimeLimitExceededException} is thrown.
+	 * 
+	 * @return An {@link Envelope} wrapping a user {@link Message}.
+	 * 
+	 * @throws TimeLimitExceededException If waiting time exceeded the given timeout value
+	 * @throws IOException
+	 */
+	public Envelope receive( int timeout ) throws IOException, TimeLimitExceededException {
+		return messageBroker.receive( this, timeout );
+	}
+
+	/**
+	 * Creates an {@link Envelope} (including meta-data) from the given
+	 * {@link Message} and sends to this queue. <br>
+	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
+	 * The {@link Message} instance is set to {@link State#Sent}.
+	 */
+	public Envelope send( Message message ) {
+		return this.send( message, 0 );
+	} 	
+	
+	/**
+	 * Creates an {@link Envelope} (including meta-data) from the given
+	 * {@link Message} and sends to this queue. <br>
+	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
+	 * The {@link Message} instance is set to {@link State#Sent}.
+	 * 
+	 * @param timeToLive
+	 *            The time before this instance expires, in msec; if
+	 *            <code>null</code>, this instance never expires
+	 */
+	public Envelope send( Message message, long timeToLive ) {
+		return messageBroker.send( this, message, timeToLive );
 	}
 
 	/**
@@ -159,6 +165,14 @@ public class MessageQueue {
 	 *                          this method
 	 */
 	public void setAcceptedRoles( List<String> acceptedRoles ) {
-		messageBroker.setAcceptedRoles( acceptedRoles );
+		if( this.messageBroker.getTokenFactory() == null ) {
+			throw new RuntimeException( "No token factory found" );
+		}
+		this.acceptedRoles = acceptedRoles;
+	}
+
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName() + "[" + queueName + "]";
 	}
 }

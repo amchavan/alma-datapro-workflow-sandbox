@@ -284,7 +284,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
                     channel.basicAck(envelope.getDeliveryTag(), false);
 				}
 				
-				computeState( receivedEnvelope );
+				computeState( queue, receivedEnvelope );
 				if( receivedEnvelope.getState() == State.Received ) {	
 					consumer.consume( receivedEnvelope.getMessage() );
 					broker.setState( receivedEnvelope, State.Consumed );

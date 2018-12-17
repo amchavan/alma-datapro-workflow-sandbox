@@ -93,6 +93,13 @@ public interface MessageBroker {
 	public void deleteQueue( MessageQueue queue );
 
 	/**
+	 * @return The broker's token factory: message passing is only secured if a
+	 *         token factory is associated with the broker. If <code>null</code>,
+	 *         message security is turned off; that's the default condition.
+	 */
+	public TokenFactory getTokenFactory();
+	
+	/**
 	 * Look for group members.
 	 * 
 	 * @param groupName
@@ -104,7 +111,7 @@ public interface MessageBroker {
 	 * @throws IOException 
 	 */
 	public List<String> groupMembers( String groupName  ) throws IOException;
-	
+
 	/**
 	 * Add a queue to a group: messages sent to the group will be passed on to
 	 * that queue as well.
@@ -114,6 +121,22 @@ public interface MessageBroker {
 	 *            with '<code>.*</code>', e.g. <code>state.changes.*</code>
 	 */
 	public void joinGroup( String queueName, String groupName  );
+
+	/**
+	 * Listen for messages matching the queue name and process them as
+	 * they come in.<br>
+	 * This method never returns.
+	 * 
+	 * @param consumer
+	 *            Callback function to process the message with
+	 * @param queueName
+	 *            Defines what messages to listen to.
+//	 * @param condition
+//	 *            Boolean function to be invoked before starting to listen: if not
+//	 *            <code>null</code>will cause the thread to sleep if the condition
+//	 *            is false
+	 */
+//	public void listen( String queueName, MessageConsumer consumer ) throws IOException;
 
 	/**
 	 * Listen for messages matching the queue name and process them as
@@ -144,22 +167,6 @@ public interface MessageBroker {
 						int timeout ) throws IOException, TimeLimitExceededException;
 
 	/**
-	 * Listen for messages matching the queue name and process them as
-	 * they come in.<br>
-	 * This method never returns.
-	 * 
-	 * @param consumer
-	 *            Callback function to process the message with
-	 * @param queueName
-	 *            Defines what messages to listen to.
-//	 * @param condition
-//	 *            Boolean function to be invoked before starting to listen: if not
-//	 *            <code>null</code>will cause the thread to sleep if the condition
-//	 *            is false
-	 */
-//	public void listen( String queueName, MessageConsumer consumer ) throws IOException;
-
-	/**
 	 * Start a background thread listening for messages matching the
 	 * queue name and processing them as they come in.<br>
 	 * This method times out.<br>
@@ -168,12 +175,12 @@ public interface MessageBroker {
 	public Thread listenInThread( MessageQueue queue, 
 								  MessageConsumer consumer, 
 								  int timeout );
-
+		
 	/**
 	 * @return A {@link MessageQueue} with the given name
 	 */
-	public MessageQueue messageQueue( String queueName );
-		
+	public MessageQueue messageQueue( String queueName );	
+
 	/**
 	 * Find the next message of this queue: that is, the oldest
 	 * non-{@link State#Received} message. That message will be set to
@@ -185,7 +192,7 @@ public interface MessageBroker {
 	 * 
 	 * @throws IOException
 	 */
-	public Envelope receive( MessageQueue queue ) throws IOException;	
+	public Envelope receive( MessageQueue queue ) throws IOException;
 
 	/**
 	 * Find the next message of the queue, that is, the oldest
@@ -220,7 +227,7 @@ public interface MessageBroker {
 	 *            group members
 	 */
 	public Envelope send( MessageQueue queue, Message message );
-
+	
 	/**
 	 * Creates an {@link Envelope} (including meta-data) from the given
 	 * {@link Message} and sends it to a queue.<br>
@@ -246,15 +253,4 @@ public interface MessageBroker {
 	 *                turned off; that's the default condition.
 	 */
 	public void setTokenFactory( TokenFactory factory );
-	
-	/**
-	 * Defines the list of accepted sender roles for this queue. <br>
-	 * Forces messages sent to this queue to have a valid JWT and makes sure that
-	 * the list of roles included in the JWS (claim "roles") includes at least one
-	 * of the accepted roles
-	 * 
-	 * @throws RuntimeException if no {@link TokenFactory} was set prior to calling
-	 *                          this method
-	 */
-	public void setAcceptedRoles( List<String> acceptedRoles );
 }

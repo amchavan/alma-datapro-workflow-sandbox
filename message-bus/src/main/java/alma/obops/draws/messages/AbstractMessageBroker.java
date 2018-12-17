@@ -18,8 +18,6 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	protected TokenFactory tokenFactory = null;
 	protected String sendToken;			// Token to send with our messages
 	protected String ourIP;
-	protected List<String> acceptedRoles;
-
 	public AbstractMessageBroker() {
 		this.tokenFactory = null;
 		this.sendToken = null;
@@ -29,7 +27,7 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	/** 
 	 * Compute what the state of the input envelope should be
 	 */
-	protected void computeState( SimpleEnvelope envelope ) throws IOException {
+	protected void computeState( MessageQueue queue, SimpleEnvelope envelope ) throws IOException {
 		
 		// -----------------------------------------------------
 		// NOTE: use "this" to call subclassed setState() method 
@@ -43,7 +41,7 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 		}
 		
 		// Should we reject the message?
-		if( isRejected( envelope )) {
+		if( isRejected( queue, envelope )) {
 			this.setState( envelope, State.Rejected );
 			return;
 		}
@@ -55,6 +53,10 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	@Override
 	public void deleteQueue(MessageQueue queue) {
 		// no-op
+	}
+
+	public TokenFactory getTokenFactory() {
+		return tokenFactory;
 	}
 
 	/** 
@@ -80,11 +82,12 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	 * 	<li> <strong>TODO</strong> do we accept this message type? 
 	 * </ul> 
 	 * </ul> 
+	 * @param queue 
 	 * 
 	 * @return <code>true</code> if this message should be rejected,
 	 *         <code>false</code> otherwise.
 	 */
-	protected boolean isRejected( SimpleEnvelope envelope ) {
+	protected boolean isRejected( MessageQueue queue, SimpleEnvelope envelope ) {
 		
 		// Is this broker secured? 
 		if( tokenFactory == null ) {
@@ -102,14 +105,14 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 		}
 		
 		// Do we have role restrictions?
-		if( this.acceptedRoles == null ) {
+		if( queue.getAcceptedRoles() == null ) {
 			return false;		// NO, no rejection
 		}
 		
 		@SuppressWarnings("unchecked")
 		List<String> roles = (List<String>) claims.get( "roles" );
 		for( String role: roles ) {
-			for( String acceptedRole: this.acceptedRoles ) {
+			for( String acceptedRole: queue.getAcceptedRoles() ) {
 				if( role.equals( acceptedRole )) {
 					return false;
 				}
@@ -158,7 +161,7 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 		// Wait for the first valid message we get and return it
 		while( true ) {
 			SimpleEnvelope envelope = receiveOne( queue, timeLimit );
-			computeState( envelope );
+			computeState( queue, envelope );
 			if( envelope.getState() == State.Received ) {
 				return envelope;
 			}
@@ -236,11 +239,19 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 		return envelope;
 	}
 	
+//	@Override
+//	public void setAcceptedRoles( List<String> acceptedRoles ) {
+//		if( this.tokenFactory == null ) {
+//			throw new RuntimeException( "No token factory found" );
+//		}
+//		this.acceptedRoles = acceptedRoles;
+//	}
+
 	/* FOR TESTING ONLY */
 	public void setSendToken( String sendToken ) {
 		this.sendToken = sendToken;
 	}
-
+	
 	/** 
 	 * Set the state of an Envelope, return the state timestamp.
 	 * <p>
@@ -275,18 +286,10 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 		
 		return now;
 	}
-	
+
 	@Override
 	public void setTokenFactory( TokenFactory factory ) {
 		this.tokenFactory = factory;
 		this.sendToken = factory.create();
-	}
-
-	@Override
-	public void setAcceptedRoles( List<String> acceptedRoles ) {
-		if( this.tokenFactory == null ) {
-			throw new RuntimeException( "No token factory found" );
-		}
-		this.acceptedRoles = acceptedRoles;
 	}
 }
