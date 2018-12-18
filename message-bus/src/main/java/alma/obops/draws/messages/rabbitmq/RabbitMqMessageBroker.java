@@ -396,7 +396,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 //						.correlationId( addCorrelationId ? envelope.getId() : null )
 //						.replyTo( addCorrelationId ? CALLBACK_MESSAGE_BUS : null )
 						.build();
-			String routingKey = queue.getName();	// The API calls "queue" what RabbitMQ calls "routing key"
+			String routingKey = queue.getName();	// Our API calls "queue" what RabbitMQ calls "routing key"
 			this.channel.basicPublish( exchangeName, routingKey, properties, json.getBytes() );
 //			this.mainChannel.close();
 //			this.mainChannel.getConnection().close();

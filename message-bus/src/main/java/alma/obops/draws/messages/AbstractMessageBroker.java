@@ -224,8 +224,8 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
 	 * The {@link Message} instance is set to {@link State#Sent}.
 	 * <p>
-	 * Implementation is broker-specific and delegated to subclasses, overriding methods
-	 * should invoke this method.
+	 * Implementation is broker-specific and delegated to subclasses: overriding methods
+	 * should invoke this method at the start.
 	 * 
 	 * @param queue      Name of the queue should not end with <code>.*</code> (that
 	 *                   is, it should not be a receiver group designator)
