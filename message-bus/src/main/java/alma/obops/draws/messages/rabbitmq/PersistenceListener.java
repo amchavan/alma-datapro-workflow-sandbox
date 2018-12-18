@@ -14,6 +14,7 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
 
 import alma.obops.draws.messages.SimpleEnvelope;
+import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
 
 public class PersistenceListener implements Runnable {
 

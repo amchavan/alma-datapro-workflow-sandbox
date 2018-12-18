@@ -16,7 +16,6 @@ import alma.obops.draws.messages.security.TokenFactory;
 public class SecureSender implements Runnable {
 
 	@Autowired
-	@Qualifier( "rabbitmq-message-broker" )
 	private MessageBroker broker;
 	
 	@Autowired

@@ -3,7 +3,6 @@ package alma.obops.draws.examples;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 import alma.obops.draws.examples.Calculator.ComputationMessage;
 import alma.obops.draws.examples.Calculator.ResultMessage;
@@ -14,13 +13,10 @@ import alma.obops.draws.messages.MessageQueue;
 
 /**
  * Example client for the rudimentary server defined in {@link #Calculator}
- * 
- * TODO!
  */
 public class CalculatorClient implements Runnable {
 
 	@Autowired
-	@Qualifier( "rabbitmq-message-broker" )
 	private MessageBroker broker;
 
 	// This needs to be static to be visible inside the consumer lambda

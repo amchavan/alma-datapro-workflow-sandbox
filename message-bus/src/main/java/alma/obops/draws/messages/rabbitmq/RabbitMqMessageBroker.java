@@ -23,6 +23,8 @@ import com.rabbitmq.client.GetResponse;
 import alma.obops.draws.messages.AbstractMessageBroker;
 import alma.obops.draws.messages.Envelope;
 import alma.obops.draws.messages.Envelope.State;
+import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
+import alma.obops.draws.messages.configuration.RecipientGroupRepository;
 import alma.obops.draws.messages.Message;
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;

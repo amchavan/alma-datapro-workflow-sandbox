@@ -23,25 +23,18 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 @Configuration
 @PropertySource("file:${ACSDATA}/config/archiveConfig.properties")
 public class DataSourceConfiguration {
-
-	public static final String UNIT_TEST_PROFILE   = "unit-test-profile";
-	public static final String PRODUCTION_PROFILE  = "production-profile";
-	public static final String INTEGRATION_PROFILE = "integration-profile";
 	
 	@Autowired
 	Environment env;
 	
-	/**
-	 * This bean will be created only if the current active Spring profile
-	 * is <em>not</em> {@value #UNIT_TEST_PROFILE}.
-	 * 
+	/** 
 	 * @return A JDBC DataSource configured according to ALMA conventions, e.g.
 	 *         retrieving the connection parameters from
 	 *         <em>$ACSDATA/config/archiveConfig.properties</em>
 	 */
-	@Bean( name = "production-data-source" )
 	@Primary
-	@Profile( PRODUCTION_PROFILE )
+	@Profile( "persisted-messages" )
+	@Bean
 	public DataSource confDataSource() {
 
 		String url      = env.getProperty( "archive.relational.connection" );
@@ -56,7 +49,7 @@ public class DataSourceConfiguration {
 		if( driverClassName != null && !driverClassName.isEmpty()) {
 		    ds.setDriverClassName(driverClassName);
 		}
-//        ds.addConnectionProperty("v$session.program","DASHboard");
+        ds.addConnectionProperty("v$session.program","draws");
 		return ds;
 	}
     
@@ -66,8 +59,8 @@ public class DataSourceConfiguration {
 	 * 
 	 * @return A DataSource for an in-memory database
 	 */
-	@Bean( name="embedded-data-source" )
-	@Profile( UNIT_TEST_PROFILE )
+	@Profile( "non-persisted-messages" )
+	@Bean
     public DataSource dataSource() {
 		
 	    EmbeddedDatabase testDataSrc=new EmbeddedDatabaseBuilder()

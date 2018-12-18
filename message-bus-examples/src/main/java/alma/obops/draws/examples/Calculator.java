@@ -3,7 +3,6 @@ package alma.obops.draws.examples;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 import alma.obops.draws.messages.AbstractMessage;
 import alma.obops.draws.messages.Executor;
@@ -23,7 +22,6 @@ public class Calculator implements Runnable {
 	public static final String CALC_SELECTOR = "compute";
 
 	@Autowired
-	@Qualifier( "rabbitmq-message-broker" )
 	private MessageBroker broker;
 
 	/**

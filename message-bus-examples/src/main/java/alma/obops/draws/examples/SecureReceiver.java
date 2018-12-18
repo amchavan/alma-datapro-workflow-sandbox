@@ -22,10 +22,9 @@ import alma.obops.draws.messages.security.TokenFactory;
 public class SecureReceiver implements Runnable {
 
 	public static final String QUEUE_NAME = "BASIC";
-	public static final String[] ACCEPTED_ROLES = { "OBOPS/AOD"/*, "QQQ"*/ };
+	public static final String[] ACCEPTED_ROLES = { "OBOPS/AOD" };
 
 	@Autowired
-	@Qualifier( "rabbitmq-message-broker" )
 	private MessageBroker broker;
 	
 	@Autowired
@@ -40,7 +39,7 @@ public class SecureReceiver implements Runnable {
 		queue.setAcceptedRoles( Arrays.asList( ACCEPTED_ROLES ));
 		
 		MessageConsumer consumer = (message) -> {
-			System.out.println(">>> Received: " + message);
+			System.out.println(">>> Received: " + message.getEnvelope() );
 		};
 
 		// Listen for a single message and pass it on to the consumer; will timeout

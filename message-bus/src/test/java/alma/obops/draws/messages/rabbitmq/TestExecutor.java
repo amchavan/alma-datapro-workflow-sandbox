@@ -20,6 +20,8 @@ import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
 import alma.obops.draws.messages.ResponseMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
+import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
+import alma.obops.draws.messages.configuration.RecipientGroupRepository;
 
 public class TestExecutor {
 

@@ -3,13 +3,12 @@ package alma.obops.draws.messages.configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.couchdb.CouchDbConnection;
 import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
-import alma.obops.draws.messages.rabbitmq.PersistedEnvelopeRepository;
 import alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker;
-import alma.obops.draws.messages.rabbitmq.RecipientGroupRepository;
 
 /**
  * Bean factory for the message brokers.
@@ -35,7 +34,8 @@ public class MessageBrokerConfiguration {
 	/**
 	 * RabbitMQ broker
 	 */
-	@Bean( name = "rabbitmq-message-broker" )
+	@Bean//( name = "rabbitmq-message-broker" )
+	@Profile( "rabbitmq" )
 	public MessageBroker rabbitMQ() {
 		
 		RabbitMqMessageBroker ret =
@@ -52,6 +52,7 @@ public class MessageBrokerConfiguration {
 	 * CouchDB broker
 	 */
 	@Bean( name = "couchdb-message-broker" )
+	@Profile( "couchdb" )
 	public MessageBroker couchDB() {
 		
 		CouchDbMessageBroker ret = new CouchDbMessageBroker( couchDbConn );

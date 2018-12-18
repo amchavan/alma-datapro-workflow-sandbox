@@ -3,7 +3,6 @@ package alma.obops.draws.examples;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 import alma.obops.draws.examples.BasicExecutor.DatetimeRequest;
 import alma.obops.draws.examples.BasicExecutor.DatetimeResponse;
@@ -18,7 +17,6 @@ import alma.obops.draws.messages.MessageQueue;
 public class BasicExecutorClient implements Runnable {
 
 	@Autowired
-	@Qualifier( "rabbitmq-message-broker" )
 	private MessageBroker broker;
 
 	@Override

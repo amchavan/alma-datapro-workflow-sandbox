@@ -18,6 +18,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import alma.obops.draws.messages.Envelope.State;
 import alma.obops.draws.messages.SimpleEnvelope;
 import alma.obops.draws.messages.TestUtils.TestMessage;
+import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
+import alma.obops.draws.messages.configuration.PersistenceConfiguration;
+import alma.obops.draws.messages.configuration.RecipientGroupRepository;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = PersistenceConfiguration.class)

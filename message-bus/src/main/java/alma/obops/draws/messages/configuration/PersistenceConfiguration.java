@@ -1,38 +1,35 @@
-package alma.obops.draws.messages.rabbitmq;
+package alma.obops.draws.messages.configuration;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories;
 import org.springframework.data.jdbc.repository.config.JdbcConfiguration;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @EnableJdbcRepositories
+@Profile( "persisted-messages" )
 public class PersistenceConfiguration extends JdbcConfiguration {
 
+	@Autowired
+	DataSource dataSource;
+	
     @Bean
     NamedParameterJdbcOperations operations() { 
-        return new NamedParameterJdbcTemplate(dataSource());
+    	System.out.println( "1>>> " + dataSource );
+        return new NamedParameterJdbcTemplate( dataSource );
     }
 
     @Bean
     PlatformTransactionManager transactionManager() { 
-        return new DataSourceTransactionManager(dataSource());
+    	System.out.println( "2>>> " + dataSource );
+        return new DataSourceTransactionManager( dataSource );
 	}
-
-    @Bean
-    DataSource dataSource(){ 
-        return new EmbeddedDatabaseBuilder()
-                .setName( "obops" )
-                .setType( EmbeddedDatabaseType.HSQL )
-                .addScript( "rmq-message-broker-schema.sql" )
-                .build();
-    }
 }

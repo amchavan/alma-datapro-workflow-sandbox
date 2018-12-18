@@ -26,12 +26,12 @@ import alma.obops.draws.messages.TestUtils.TestMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.configuration.CouchDbConfiguration;
 import alma.obops.draws.messages.configuration.CouchDbConfigurationProperties;
+import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
+import alma.obops.draws.messages.configuration.PersistenceConfiguration;
+import alma.obops.draws.messages.configuration.RecipientGroupRepository;
 import alma.obops.draws.messages.couchdb.CouchDbConnection;
 import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
 import alma.obops.draws.messages.rabbitmq.PersistedEnvelope;
-import alma.obops.draws.messages.rabbitmq.PersistedEnvelopeRepository;
-import alma.obops.draws.messages.rabbitmq.PersistenceConfiguration;
-import alma.obops.draws.messages.rabbitmq.RecipientGroupRepository;
 
 
 @RunWith(SpringRunner.class)

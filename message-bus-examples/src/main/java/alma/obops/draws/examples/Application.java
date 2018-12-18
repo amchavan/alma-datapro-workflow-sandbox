@@ -1,22 +1,15 @@
 package alma.obops.draws.examples;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.Banner;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
-import alma.obops.draws.messages.MessageBroker;
-
 @SpringBootApplication
 @ComponentScan( { "alma.obops.draws.messages", "alma.obops.draws.examples" } )
 public class Application implements CommandLineRunner {
-
-	@Autowired
-	@Qualifier( "rabbitmq-message-broker" )
-	private MessageBroker broker;
 
 	@Autowired
 	private BasicSender basicSender;
