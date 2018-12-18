@@ -6,22 +6,19 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
 /**
- * Configure the application's data sources.
+ * Configure a JDBC DataSource configured according to ALMA conventions
  * 
- * @author amchavan, 13-Nov-2018
+ * @author amchavan, 18-Dec-2018
  */
 
 @Configuration
 @PropertySource("file:${ACSDATA}/config/archiveConfig.properties")
+@Profile( "persisted-rabbitmq" )
 public class DataSourceConfiguration {
 	
 	@Autowired
@@ -32,8 +29,6 @@ public class DataSourceConfiguration {
 	 *         retrieving the connection parameters from
 	 *         <em>$ACSDATA/config/archiveConfig.properties</em>
 	 */
-	@Primary
-	@Profile( "persisted-messages" )
 	@Bean
 	public DataSource confDataSource() {
 
@@ -52,24 +47,5 @@ public class DataSourceConfiguration {
         ds.addConnectionProperty("v$session.program","draws");
 		return ds;
 	}
-    
-	/**
-	 * This bean will be created only if the current active Spring profile is
-	 * {@value #UNIT_TEST_PROFILE}.
-	 * 
-	 * @return A DataSource for an in-memory database
-	 */
-	@Profile( "non-persisted-messages" )
-	@Bean
-    public DataSource dataSource() {
-		
-	    EmbeddedDatabase testDataSrc=new EmbeddedDatabaseBuilder()
-	        .setType( EmbeddedDatabaseType.H2 )
-            .setName( "Dashboard embedded test database" )
-            .addScript( "classpath:/rmq-message-broker-schema.sql" )
-            .ignoreFailedDrops(true)
-            .build();
-	    return testDataSrc;
-    }
 }
 

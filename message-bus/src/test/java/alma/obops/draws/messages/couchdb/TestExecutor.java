@@ -73,7 +73,7 @@ public class TestExecutor {
 		public ResponseMessage process(RequestMessage message) {
 
 			DoubleRequest request = (DoubleRequest) message;
-			System.out.println( ">>> Received request with number=" + request.number );
+			System.out.println( ">>> Received request with number: " + request.number );
 			int doubled = request.number + request.number;
 			return new DoubleResponse( doubled );
 		}

@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import alma.obops.draws.messages.Envelope;
@@ -19,8 +20,11 @@ import alma.obops.draws.messages.Envelope.State;
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.TestUtils.TestMessage;
+import alma.obops.draws.messages.configuration.EmbeddedDataSourceConfiguration;
 import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
+import alma.obops.draws.messages.configuration.PersistedRabbitMqBrokerConfiguration;
 import alma.obops.draws.messages.configuration.PersistenceConfiguration;
+import alma.obops.draws.messages.configuration.RabbitMqConfigurationProperties;
 import alma.obops.draws.messages.configuration.RecipientGroupRepository;
 import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.rabbitmq.PersistedEnvelope;
@@ -28,7 +32,11 @@ import alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker;
 
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = PersistenceConfiguration.class)
+@SpringBootTest(classes = { PersistenceConfiguration.class,
+        PersistedRabbitMqBrokerConfiguration.class,
+        RabbitMqConfigurationProperties.class,
+        EmbeddedDataSourceConfiguration.class } )
+@ActiveProfiles( "unit-test-rabbitmq" )
 @AutoConfigureJdbc
 public class TestTokenSecurityRabbitMQ {
 

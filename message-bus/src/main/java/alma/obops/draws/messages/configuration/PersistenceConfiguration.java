@@ -15,7 +15,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @EnableJdbcRepositories
-@Profile( "persisted-messages" )
+@Profile( {"persisted-rabbitmq", "unit-test-rabbitmq", "couchdb"} )
 public class PersistenceConfiguration extends JdbcConfiguration {
 
 	@Autowired
@@ -23,13 +23,11 @@ public class PersistenceConfiguration extends JdbcConfiguration {
 	
     @Bean
     NamedParameterJdbcOperations operations() { 
-    	System.out.println( "1>>> " + dataSource );
         return new NamedParameterJdbcTemplate( dataSource );
     }
 
     @Bean
     PlatformTransactionManager transactionManager() { 
-    	System.out.println( "2>>> " + dataSource );
         return new DataSourceTransactionManager( dataSource );
 	}
 }

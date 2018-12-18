@@ -9,33 +9,47 @@ import java.util.concurrent.TimeoutException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import alma.obops.draws.messages.AbstractMessage;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.ExecutorClient;
+import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
 import alma.obops.draws.messages.ResponseMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
-import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
-import alma.obops.draws.messages.configuration.RecipientGroupRepository;
+import alma.obops.draws.messages.configuration.EmbeddedDataSourceConfiguration;
+import alma.obops.draws.messages.configuration.PersistedRabbitMqBrokerConfiguration;
+import alma.obops.draws.messages.configuration.PersistenceConfiguration;
+import alma.obops.draws.messages.configuration.RabbitMqConfigurationProperties;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = { PersistenceConfiguration.class,
+        PersistedRabbitMqBrokerConfiguration.class,
+        RabbitMqConfigurationProperties.class,
+        EmbeddedDataSourceConfiguration.class } )
+@AutoConfigureJdbc
+@ActiveProfiles( "unit-test-rabbitmq" )
 public class TestExecutor {
 
 	private static final String QUEUE_NAME = "test.executor.queue";
-	private static final String EXCHANGE_NAME = "unit-test-exchange";
+//	private static final String EXCHANGE_NAME = "unit-test-exchange";
 	static Integer doubled = null; 			// needs to be static!
+	
+	@Autowired
+	private MessageBroker injectedMessageBroker;
+	
 	private RabbitMqMessageBroker broker = null;
 	private MessageQueue queue;
 
-	@Autowired
-	private PersistedEnvelopeRepository envelopeRepository;
-	
-	@Autowired
-	private RecipientGroupRepository groupRepository;
 
 	// Request: double a number
 	public static class DoubleRequest extends AbstractMessage implements RequestMessage  {
@@ -62,7 +76,7 @@ public class TestExecutor {
 		public ResponseMessage process( RequestMessage message ) {
 
 			DoubleRequest request = (DoubleRequest) message;
-			System.out.println( ">>> Received request with number=" + request.number );
+			System.out.println( ">>> Received request with number: " + request.number );
 			DoubleResponse response = new DoubleResponse();
 			response.doubled = request.number + request.number;
 			return response;
@@ -72,16 +86,10 @@ public class TestExecutor {
 	@Before
 	public void aaa_setUp() throws IOException, TimeoutException {
 		System.out.println( ">>> SETUP ========================================" );
-		this.broker = new RabbitMqMessageBroker( "amqp://localhost:5672",
-												 "guest",
-												 "guest",
-												 EXCHANGE_NAME,
-												 envelopeRepository, 
-												 groupRepository );
+		this.broker = (RabbitMqMessageBroker) this.injectedMessageBroker;
 		this.queue = broker.messageQueue( QUEUE_NAME );
-
-		broker.drainLoggingQueue();
-		broker.drainQueue( this.queue );
+		this.broker.drainLoggingQueue();
+		this.broker.drainQueue( this.queue );
 	}
 
 	@After

@@ -50,6 +50,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	private String exchangeName;
 	private Channel channel;
 	private RecipientGroupRepository groupRepository;
+	private PersistedEnvelopeRepository envelopeRepository;
 	private Date lastDeliveryTime;
 
 	/**
@@ -66,7 +67,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			  					  RecipientGroupRepository groupRepository ) throws IOException, TimeoutException {
 		this( MINIMAL_URI, null, null, exchangeName, envelopeRepository, groupRepository );
 	}
-	
+
 	/**
 	 * Constructor, will use exchange {@value #DEFAULT_EXCHANGE_NAME}, creating it
 	 * if necessary.
@@ -128,6 +129,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 				
 		this.exchangeName = exchangeName;
 		this.groupRepository = groupRepository;
+		this.envelopeRepository = envelopeRepository;
 		
 		try {
 			Connection connection = factory.newConnection();
@@ -140,7 +142,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			throw new RuntimeException( e );
 		}
 	}
-
+	
 	/**
 	 * TODO
 	 */
@@ -153,19 +155,19 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		}
 	}
 
-
 	// FOR TESTING ONLY
 	public void drainLoggingQueue() {
 		drainQueue( MESSAGE_PERSISTENCE_QUEUE );
 	}
-	
-	
+
+
 	/**
 	 * TODO
 	 */
 	public void drainQueue( MessageQueue queue ) {
 		drainQueue( queue.getName() );
 	}
+	
 	
 	/**
 	 * TODO
@@ -178,10 +180,14 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			throw new RuntimeException( e );
 		}
 	}
-
+	
 	// For testing only
 	Channel getChannel() {
 		return channel;
+	}
+
+	public PersistedEnvelopeRepository getEnvelopeRepository() {
+		return envelopeRepository;
 	}
 
 	public Runnable getMessageLogListener() {

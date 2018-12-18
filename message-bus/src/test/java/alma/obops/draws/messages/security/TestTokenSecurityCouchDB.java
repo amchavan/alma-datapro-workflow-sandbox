@@ -14,6 +14,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.nimbusds.jose.JOSEException;
@@ -26,6 +27,7 @@ import alma.obops.draws.messages.TestUtils.TestMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.configuration.CouchDbConfiguration;
 import alma.obops.draws.messages.configuration.CouchDbConfigurationProperties;
+import alma.obops.draws.messages.configuration.EmbeddedDataSourceConfiguration;
 import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
 import alma.obops.draws.messages.configuration.PersistenceConfiguration;
 import alma.obops.draws.messages.configuration.RecipientGroupRepository;
@@ -37,7 +39,9 @@ import alma.obops.draws.messages.rabbitmq.PersistedEnvelope;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { PersistenceConfiguration.class,
 		 					CouchDbConfiguration.class, 
-		 					CouchDbConfigurationProperties.class })
+		 					CouchDbConfigurationProperties.class,
+		 			        EmbeddedDataSourceConfiguration.class })
+@ActiveProfiles( "unit-test-rabbitmq" )
 @AutoConfigureJdbc
 public class TestTokenSecurityCouchDB {
 

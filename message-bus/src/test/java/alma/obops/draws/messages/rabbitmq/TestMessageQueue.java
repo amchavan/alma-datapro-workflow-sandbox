@@ -17,6 +17,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import alma.obops.draws.messages.Envelope;
@@ -26,47 +27,50 @@ import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.TestUtils.TestMessage;
-import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
-import alma.obops.draws.messages.configuration.PersistenceConfiguration;
-import alma.obops.draws.messages.configuration.RecipientGroupRepository;
 import alma.obops.draws.messages.TimeLimitExceededException;
+import alma.obops.draws.messages.configuration.EmbeddedDataSourceConfiguration;
+import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
+import alma.obops.draws.messages.configuration.PersistedRabbitMqBrokerConfiguration;
+import alma.obops.draws.messages.configuration.PersistenceConfiguration;
+import alma.obops.draws.messages.configuration.RabbitMqConfigurationProperties;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = PersistenceConfiguration.class)
+@SpringBootTest(classes = { PersistenceConfiguration.class,
+        PersistedRabbitMqBrokerConfiguration.class,
+        RabbitMqConfigurationProperties.class,
+        EmbeddedDataSourceConfiguration.class } )
 @AutoConfigureJdbc
+@ActiveProfiles( "unit-test-rabbitmq" )
 public class TestMessageQueue {
 
 	private static final String QUEUE_NAME = "test.queue";
-	private static final String EXCHANGE_NAME = "unit-test-exchange";
+//	private static final String EXCHANGE_NAME = "unit-test-exchange";
 
 	private final TestMessage jimi = new TestMessage( "Jimi Hendrix", 28, false );
 	private final TestMessage freddie = new TestMessage( "Freddie Mercury", 45, false );
 	private final TestMessage brian = new TestMessage( "Brian May", 71, true );
+	
+	@Autowired
+	private MessageBroker injectedMessageBroker;
+	
 	private RabbitMqMessageBroker broker;
 	private MessageQueue queue;
 	private Message receivedMessage;
-
-	@Autowired
 	private PersistedEnvelopeRepository envelopeRepository;
-	
-	@Autowired
-	private RecipientGroupRepository groupRepository;
+
 	
 	@Before
 	public void aaa_setUp() throws Exception {
 
 		System.out.println( ">>> SETUP ========================================" );
 		
-		this.broker = new RabbitMqMessageBroker( EXCHANGE_NAME,
-												 envelopeRepository, 
-												 groupRepository );
+		this.broker = (RabbitMqMessageBroker) this.injectedMessageBroker;
 		this.queue = broker.messageQueue( QUEUE_NAME );
-
+		this.envelopeRepository = broker.getEnvelopeRepository();
+		
 		// Drain any existing messages in the logging queue
 		broker.drainLoggingQueue();
-		
 		envelopeRepository.deleteAll();
-		groupRepository.deleteAll();
 	}
 
 	@After

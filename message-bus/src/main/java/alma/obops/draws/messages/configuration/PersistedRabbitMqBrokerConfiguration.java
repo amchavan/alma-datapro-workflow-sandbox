@@ -6,50 +6,39 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import alma.obops.draws.messages.MessageBroker;
-import alma.obops.draws.messages.couchdb.CouchDbConnection;
-import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
 import alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker;
 
 /**
- * Bean factory for our message broker.
+ * Bean factory for persisted message brokers.
  * 
  * @author amchavan, 14-Nov-2018
  */
 
 @Configuration
-public class MessageBrokerConfiguration {
+@Profile( {"persisted-rabbitmq", "unit-test-rabbitmq"} )
+public class PersistedRabbitMqBrokerConfiguration {
 
 	@Autowired
 	RabbitMqConfigurationProperties rabbitMqProps;
+
+	@Autowired
+	private PersistedEnvelopeRepository envelopeRepository;
 	
 	@Autowired
-	CouchDbConnection couchDbConn;
+	private RecipientGroupRepository groupRepository;
 	
 	/**
-	 * RabbitMQ broker, does <em>not</em> persist its messages; that's the default case.
+	 * RabbitMQ broker
 	 */
 	@Bean
-	@Profile( "rabbitmq" )
-	public MessageBroker rabbitMQ() {
+	public MessageBroker rabbitMQPersisted() {
 		
 		RabbitMqMessageBroker ret =
 				new RabbitMqMessageBroker( rabbitMqProps.getConnection(), 
 										   rabbitMqProps.getUsername(),
 										   rabbitMqProps.getPassword(), 
-										   null, 
-										   null );
-		return ret;
-	}
-	
-
-	/**
-	 * CouchDB broker
-	 */
-	@Bean
-	@Profile( "couchdb" )
-	public MessageBroker couchDB() {
-		
-		CouchDbMessageBroker ret = new CouchDbMessageBroker( couchDbConn );
+										   envelopeRepository, 
+										   groupRepository );
 		return ret;
 	}
 }

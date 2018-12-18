@@ -388,10 +388,14 @@ public class SimpleEnvelope implements Envelope, Comparable<SimpleEnvelope> {
 
 	@Override
 	public String toString() {
-		return this.getClass().getSimpleName()
+		
+		String msg = this.getClass().getSimpleName()
 				+ "[message=" + message + ", sent=" + sentTimestamp + ", originIP="
-				+ originIP + ", queueName=" + queueName + ", state=" + state 
-				+ ", token=" + token.substring( 0, 10 ) + "..."
-				+ "]";
+				+ originIP + ", queueName=" + queueName + ", state=" + state;
+		if( token != null ) {
+			msg += ", token=" + token.substring( 0, 10 ) + "...";
+		}
+		msg += "]";
+		return msg;
 	}
 }
