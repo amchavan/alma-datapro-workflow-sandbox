@@ -23,6 +23,7 @@ import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
 import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.TestUtils.TestMessage;
+import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.configuration.CouchDbConfiguration;
 import alma.obops.draws.messages.configuration.CouchDbConfigurationProperties;
 
@@ -194,7 +195,10 @@ public class TestMessageBroker {
 		Runnable receiver = () -> {	
 			try {
 				messageBus.listen( queue, mc, 3000 );
-			} 
+			}
+			catch( TimeLimitExceededException e ) {
+				System.out.println( ">>> timing out" );
+			}
 			catch (IOException e) {
 				throw new RuntimeException( e );
 			}

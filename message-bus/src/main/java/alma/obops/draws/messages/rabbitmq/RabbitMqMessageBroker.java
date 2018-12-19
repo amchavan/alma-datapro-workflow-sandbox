@@ -46,13 +46,26 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	public static final String MESSAGE_PERSISTENCE_QUEUE = "message.persistence.queue";
 	public static final String MESSAGE_STATE_ROUTING_KEY = "new.message.state";
 
+	private static String extractRoutingKeyFromQueueName( String queueName ) {
+		int start = queueName.indexOf( "." ) + 1;
+		int end = queueName.length();
+		return queueName.substring( start, end );
+	}
+	
+	private static String makeQueueNameFromRoutingKey( String serviceName, String queueName ) {
+		return serviceName + "." + queueName;
+	}
+	
 	private PersistenceListener messageLogListener;
 	private String exchangeName;
 	private Channel channel;
 	private RecipientGroupRepository groupRepository;
 	private PersistedEnvelopeRepository envelopeRepository;
+
 	private Date lastDeliveryTime;
 
+	private String serviceName;
+	
 	/**
 	 * Constructor for default connection on localhost
 	 * 
@@ -67,7 +80,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			  					  RecipientGroupRepository groupRepository ) throws IOException, TimeoutException {
 		this( MINIMAL_URI, null, null, exchangeName, envelopeRepository, groupRepository );
 	}
-
+	
 	/**
 	 * Constructor, will use exchange {@value #DEFAULT_EXCHANGE_NAME}, creating it
 	 * if necessary.
@@ -89,7 +102,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			  MessageBroker.DEFAULT_MESSAGE_BROKER_NAME, 
 			  envelopeRepository, groupRepository );
 	}
-	
+
 	/**
 	 * Constructor
 	 * 
@@ -142,6 +155,18 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			throw new RuntimeException( e );
 		}
 	}
+
+
+	@Override
+	public void closeConnection() {
+		try {
+			getChannel().getConnection().close();
+		} 
+		catch (IOException e) {
+			throw new RuntimeException( e );
+		}
+	}
+	
 	
 	/**
 	 * TODO
@@ -154,12 +179,11 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			throw new RuntimeException( e );
 		}
 	}
-
+	
 	// FOR TESTING ONLY
 	public void drainLoggingQueue() {
 		drainQueue( MESSAGE_PERSISTENCE_QUEUE );
 	}
-
 
 	/**
 	 * TODO
@@ -167,8 +191,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	public void drainQueue( MessageQueue queue ) {
 		drainQueue( queue.getName() );
 	}
-	
-	
+
 	/**
 	 * TODO
 	 */
@@ -180,7 +203,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			throw new RuntimeException( e );
 		}
 	}
-	
+
 	// For testing only
 	Channel getChannel() {
 		return channel;
@@ -188,39 +211,6 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 
 	public PersistedEnvelopeRepository getEnvelopeRepository() {
 		return envelopeRepository;
-	}
-
-	public Runnable getMessageLogListener() {
-		return this.messageLogListener;
-	}
-
-	@Override
-	public List<String> groupMembers(String groupName) throws IOException {
-		if( groupName == null || (!groupName.endsWith( ".*" ))) {
-			throw new IllegalArgumentException( "Invalid group name: " + groupName );
-		}
-
-		Optional<RecipientGroup> oGroup = groupRepository.findByName( groupName );
-		if( oGroup.isPresent() ) {
-			return oGroup.get().getGroupMembersAsList();
-		}
-		return null;
-	}
-
-	@Override
-	public void joinGroup( String queueName, String groupName ) {
-		
-		if( groupName == null || (!groupName.endsWith( ".*" ))) {
-			throw new IllegalArgumentException( "Invalid group name: " + groupName );
-		}
-		if( queueName == null ) {
-			throw new IllegalArgumentException( "Null queueName" );
-		}
-
-		Optional<RecipientGroup> oGroup = groupRepository.findByName( groupName );
-		RecipientGroup group = oGroup.isPresent() ? oGroup.get() : new RecipientGroup( groupName );
-		group.addMember( queueName );
-		groupRepository.save( group );
 	}
 
 //	/**
@@ -263,6 +253,28 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 //		return receivedEnvelope;
 //	}
 	
+	public Runnable getMessageLogListener() {
+		return this.messageLogListener;
+	}
+	
+	@Override
+	public List<String> groupMembers(String groupName) throws IOException {
+		if( groupName == null || (!groupName.endsWith( ".*" ))) {
+			throw new IllegalArgumentException( "Invalid group name: " + groupName );
+		}
+
+		Optional<RecipientGroup> oGroup = groupRepository.findByName( groupName );
+		if( oGroup.isPresent() ) {
+			return oGroup.get().getGroupMembersAsList();
+		}
+		return null;
+	}
+	
+	@Override
+	public void joinGroup( String queueName, String groupName ) {
+		// no-op
+	}
+
 	@Override
 	public void listen( MessageQueue queue, MessageConsumer consumer, int timeout ) throws IOException {
 
@@ -317,23 +329,34 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	}
 	
 	@Override
+	/**
+	 * @param queueName Will be used as the AMPQ routing key; we'll generate the
+	 *                  actual RabbitMQ queue name from this parameter and the
+	 *                  service name.
+	 */
 	public MessageQueue messageQueue( String queueName ) {
-		MessageQueue ret = new MessageQueue( queueName, this );
-
+		if( this.serviceName == null ) {
+			setServiceName( null );		// make sure we have some service name at all
+		}
 		try {
+			String routingKey = queueName;
+			queueName = makeQueueNameFromRoutingKey( this.serviceName, queueName );
+			
 			this.channel.queueDeclare( queueName, 
-					                   true, 			// durable
+					                   true, 			// persisted
 					                   false, 			// non-exclusive
 					                   false, 			// auto-deleting?
 					                   null 			// no extra properties
 					                   );
-			String routingKey = queueName;
+			
 			this.channel.queueBind( queueName, exchangeName, routingKey );
+			
+			MessageQueue ret = new MessageQueue( queueName, this );
+			return ret;
 		} 
 		catch( IOException e ) {
 			throw new RuntimeException( e );
 		}
-		return ret;
 	}
 	
 	/**
@@ -382,7 +405,18 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		}
 		return receivedEnvelope;
 	}
-	
+
+	@Override
+	public Envelope send( MessageQueue queue, Message message, long expireTime ) {
+
+		if( queue == null || message == null ) {
+			throw new IllegalArgumentException( "Null arg" );
+		}
+		
+		Envelope ret = this.sendOne( queue, message, expireTime );	// No, just send this message
+		return ret;
+	}
+
 	@Override
 	protected SimpleEnvelope sendOne( MessageQueue queue, Message message, long expireTime ) {
 		SimpleEnvelope envelope = super.sendOne( queue, message, expireTime );
@@ -393,10 +427,8 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			AMQP.BasicProperties properties = 
 					new AMQP.BasicProperties.Builder()
 						.deliveryMode( 2 )			// persisted delivery
-//						.correlationId( addCorrelationId ? envelope.getId() : null )
-//						.replyTo( addCorrelationId ? CALLBACK_MESSAGE_BUS : null )
 						.build();
-			String routingKey = queue.getName();	// Our API calls "queue" what RabbitMQ calls "routing key"
+			String routingKey = extractRoutingKeyFromQueueName( queue.getName() );
 			this.channel.basicPublish( exchangeName, routingKey, properties, json.getBytes() );
 //			this.mainChannel.close();
 //			this.mainChannel.getConnection().close();
@@ -405,6 +437,18 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		catch( IOException|TimeLimitExceededException e ) {
 			throw new RuntimeException( e );
 		}
+	}
+
+	@Override
+	public void setServiceName( String serviceName ) {
+		if( serviceName == null || serviceName.length() == 0 ) {
+			serviceName = "noservice";
+		}
+		
+		if( ! serviceName.matches( "^[a-zA-Z_][a-zA-Z_0-9]*$" ) ) {
+			throw new RuntimeException( "Invalid serviceName" );
+		}
+		this.serviceName = serviceName;
 	}
 
 	/**

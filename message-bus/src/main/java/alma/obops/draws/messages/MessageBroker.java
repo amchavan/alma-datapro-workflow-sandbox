@@ -88,17 +88,23 @@ public interface MessageBroker {
 	}
 	
 	/**
+	 * Close the connection to the broker — may be necessary to correctly terminate
+	 * a client
+	 */
+	public void closeConnection();
+
+	/**
 	 * Delete a queue and all its messages. Use with care.
 	 */
 	public void deleteQueue( MessageQueue queue );
-
+	
 	/**
 	 * @return The broker's token factory: message passing is only secured if a
 	 *         token factory is associated with the broker. If <code>null</code>,
 	 *         message security is turned off; that's the default condition.
 	 */
 	public TokenFactory getTokenFactory();
-	
+
 	/**
 	 * Look for group members.
 	 * 
@@ -111,16 +117,6 @@ public interface MessageBroker {
 	 * @throws IOException 
 	 */
 	public List<String> groupMembers( String groupName  ) throws IOException;
-
-	/**
-	 * Add a queue to a group: messages sent to the group will be passed on to
-	 * that queue as well.
-	 * 
-	 * @param groupName
-	 *            Name of the group to join, should be non-<code>null</code> and end
-	 *            with '<code>.*</code>', e.g. <code>state.changes.*</code>
-	 */
-	public void joinGroup( String queueName, String groupName  );
 
 	/**
 	 * Listen for messages matching the queue name and process them as
@@ -137,6 +133,16 @@ public interface MessageBroker {
 //	 *            is false
 	 */
 //	public void listen( String queueName, MessageConsumer consumer ) throws IOException;
+
+	/**
+	 * Add a queue to a group: messages sent to the group will be passed on to
+	 * that queue as well.
+	 * 
+	 * @param groupName
+	 *            Name of the group to join, should be non-<code>null</code> and end
+	 *            with '<code>.*</code>', e.g. <code>state.changes.*</code>
+	 */
+	public void joinGroup( String queueName, String groupName  );
 
 	/**
 	 * Listen for messages matching the queue name and process them as
@@ -165,7 +171,7 @@ public interface MessageBroker {
 	public void listen( MessageQueue queue, 
 						MessageConsumer consumer, 
 						int timeout ) throws IOException, TimeLimitExceededException;
-
+		
 	/**
 	 * Start a background thread listening for messages matching the
 	 * queue name and processing them as they come in.<br>
@@ -174,12 +180,12 @@ public interface MessageBroker {
 	 */
 	public Thread listenInThread( MessageQueue queue, 
 								  MessageConsumer consumer, 
-								  int timeout );
-		
+								  int timeout );	
+
 	/**
 	 * @return A {@link MessageQueue} with the given name
 	 */
-	public MessageQueue messageQueue( String queueName );	
+	public MessageQueue messageQueue( String queueName );
 
 	/**
 	 * Find the next message of this queue: that is, the oldest
@@ -214,7 +220,7 @@ public interface MessageBroker {
 	 * @throws IOException
 	 */
 	public Envelope receive( MessageQueue queue, long timeLimit ) throws IOException, TimeLimitExceededException;
-
+	
 	/**
 	 * Creates an {@link Envelope} (including meta-data) from the given
 	 * {@link Message} and sends it to a queue.<br>
@@ -245,6 +251,15 @@ public interface MessageBroker {
 	 */
 	public Envelope send( MessageQueue queue, Message message, long expireTime );
 	
+	/**
+	 * Tell the broker which service is using it.
+	 * 
+	 * @param serviceName Any string that would be a valid C/Java/Python variable
+	 *                    name; it should be unique among all systems connected to
+	 *                    this broker.
+	 */
+	public void setServiceName( String serviceName );
+
 	/**
 	 * Give the broker a token factory: message passing is only secured if a token
 	 * factory is associated with the broker.

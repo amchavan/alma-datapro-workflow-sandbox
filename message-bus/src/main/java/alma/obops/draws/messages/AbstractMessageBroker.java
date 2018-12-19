@@ -24,6 +24,11 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 		this.ourIP = ourIP();
 	}
 
+	@Override
+	public void closeConnection() {
+		// no-op
+	}
+
 	/** 
 	 * Compute what the state of the input envelope should be
 	 */
@@ -252,6 +257,11 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 		this.sendToken = sendToken;
 	}
 	
+	@Override
+	public void setServiceName( String serviceName ) {
+		// no-op
+	}
+
 	/** 
 	 * Set the state of an Envelope, return the state timestamp.
 	 * <p>
