@@ -22,8 +22,14 @@ public class Executor {
 	private MessageConsumer consumer = (message) -> {
 		Message response = processor.process( (RequestMessage) message );
 		Envelope envelope = message.getEnvelope();
-		MessageQueue responseQueue = queue.getMessageBroker().messageQueue( envelope.getId() );
+		
+		// NOTE  We are creating here a temporary sending queue.
+		MessageQueue responseQueue = queue.getMessageBroker().messageQueue( envelope.getId(),
+				                                                            MessageQueue.Type.SENDQUEUE );
+		System.out.println( ">>> server: sending to: " + responseQueue.getName() );
 		queue.getMessageBroker().send( responseQueue, response, 0 );
+		System.out.println( ">>> server: sent" );
+		responseQueue.delete();
 	};
 
 	/**

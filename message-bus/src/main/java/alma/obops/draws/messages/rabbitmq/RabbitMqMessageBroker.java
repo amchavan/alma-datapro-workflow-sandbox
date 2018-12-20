@@ -343,9 +343,12 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			String routingKey = queueName;
 			queueName = makeQueueNameFromRoutingKey( this.serviceName, queueName );
 			
-			if( type == MessageQueue.Type.RECEIVE ) {
-				// If this queue is for receiving messages we need to create an
-				// underlying RabbitMQ queue
+			// If this queue is for receiving messages or it's used by an
+			// Executor/ExecutorClient pair we need to create an actual RabbitMQ queue,
+			// otherwise we should not
+			
+			if( type == MessageQueue.Type.RECEIVE || type == MessageQueue.Type.SENDQUEUE ) {
+				
 				this.channel.queueDeclare( 
 						queueName, 
 						true, 			// persisted

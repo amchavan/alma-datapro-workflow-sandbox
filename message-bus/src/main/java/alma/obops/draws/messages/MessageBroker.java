@@ -75,15 +75,15 @@ public interface MessageBroker {
 	}
 
 	/**
-	 * A simple wrapper around {@link Thread#sleep(long)}, swallows the dreaded
-	 * {@link InterruptedException}
+	 * A simple wrapper around {@link Thread#sleep(long)} that doesn't throw checked
+	 * exceptions
 	 */
 	public static void sleep( long msec ) {
 		try {
 			Thread.sleep( msec );
 		}
 		catch (InterruptedException e) {
-			// ignore
+			throw new RuntimeException( e );
 		}
 	}
 	

@@ -16,7 +16,22 @@ public class MessageQueue {
 	
 	/** Type of the queue */
 	public enum Type {
-		SEND, RECEIVE
+		/** 
+		 * The queue is used for sending messages, implementations may or may not
+		 * create an underlying structure
+         */
+		SEND,
+		
+		/** 
+		 * The queue is used for receiving messages
+		 */
+		RECEIVE, 
+		
+		/**
+		 * The queue is used for sending messages, implementations should
+		 * create an underlying structure
+		 */
+		SENDQUEUE
 	}
 
 	private String queueName;
@@ -56,7 +71,7 @@ public class MessageQueue {
 	 * 
 	 * @throws IOException 
 	 */
-	public void delete() throws IOException {
+	public void delete() {
 		messageBroker.deleteQueue( this );
 	}
 
