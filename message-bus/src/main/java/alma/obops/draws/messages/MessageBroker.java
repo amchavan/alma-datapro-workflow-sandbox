@@ -183,9 +183,14 @@ public interface MessageBroker {
 								  int timeout );	
 
 	/**
-	 * @return A {@link MessageQueue} with the given name
+	 * @return A {@link MessageQueue.Type#RECEIVE} {@link MessageQueue} with the given name
 	 */
 	public MessageQueue messageQueue( String queueName );
+
+	/**
+	 * @return A {@link MessageQueue} with the given name and type
+	 */
+	public MessageQueue messageQueue( String queueName, MessageQueue.Type type );
 
 	/**
 	 * Find the next message of this queue: that is, the oldest

@@ -147,9 +147,18 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 		return t;
 	}
 
+	/**
+	 * @return A {@link MessageQueue.Type#RECEIVE} {@link MessageQueue} with the given name
+	 */
 	@Override
 	public MessageQueue messageQueue( String queueName ) {
-		MessageQueue ret = new MessageQueue( queueName, this );
+		MessageQueue ret = messageQueue( queueName, MessageQueue.Type.RECEIVE );
+		return ret;
+	}
+	
+	@Override
+	public MessageQueue messageQueue( String queueName, MessageQueue.Type type ) {
+		MessageQueue ret = new MessageQueue( queueName, this, type );
 		return ret;
 	}
 	
@@ -212,7 +221,7 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 			}
 			Envelope ret = null;
 			for( String member: members ) {
-				MessageQueue memberQueue = new MessageQueue( member, this );
+				MessageQueue memberQueue = new MessageQueue( member, this, MessageQueue.Type.SEND );
 				ret = this.sendOne( memberQueue, message, expireTime );
 			}
 			return ret;

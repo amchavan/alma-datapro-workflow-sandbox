@@ -328,13 +328,14 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		}
 	}
 	
-	@Override
 	/**
 	 * @param queueName Will be used as the AMPQ routing key; we'll generate the
 	 *                  actual RabbitMQ queue name from this parameter and the
 	 *                  service name.
+	 * @param type The queue type
 	 */
-	public MessageQueue messageQueue( String queueName ) {
+	@Override
+	public MessageQueue messageQueue( String queueName, MessageQueue.Type type ) {
 		if( this.serviceName == null ) {
 			setServiceName( null );		// make sure we have some service name at all
 		}
@@ -342,15 +343,19 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			String routingKey = queueName;
 			queueName = makeQueueNameFromRoutingKey( this.serviceName, queueName );
 			
-			this.channel.queueDeclare( queueName, 
-					                   true, 			// persisted
-					                   false, 			// non-exclusive
-					                   false, 			// auto-deleting?
-					                   null 			// no extra properties
-					                   );
+			if( type == MessageQueue.Type.RECEIVE ) {
+				// If this queue is for receiving messages we need to create an
+				// underlying RabbitMQ queue
+				this.channel.queueDeclare( 
+						queueName, 
+						true, 			// persisted
+						false, 			// non-exclusive
+						false, 			// auto-deleting?
+						null 			// no extra properties
+						);
 			
-			this.channel.queueBind( queueName, exchangeName, routingKey );
-			
+				this.channel.queueBind( queueName, exchangeName, routingKey );
+			}
 			MessageQueue ret = new MessageQueue( queueName, this );
 			return ret;
 		} 

@@ -14,21 +14,41 @@ import alma.obops.draws.messages.security.TokenFactory;
  */
 public class MessageQueue {
 	
+	/** Type of the queue */
+	public enum Type {
+		SEND, RECEIVE
+	}
+
 	private String queueName;
 	private MessageBroker messageBroker;
 	private List<String> acceptedRoles;
+	private Type type;	
 	
 	/**
+	 * Create a {@link Type#RECEIVE} queue in the given broker.
+	 * 
 	 * @param name
 	 *            If it ends with <code>.*</code> it is interpreted as a group ID;
 	 *            messages set to the queue will be sent to all group members
 	 */
 	public MessageQueue( String queueName, MessageBroker messageBus ) {
+		this( queueName, messageBus, Type.RECEIVE );
+	}
+	
+	/**
+	 * Create a queue in the given broker.
+	 * 
+	 * @param name
+	 *            If it ends with <code>.*</code> it is interpreted as a group ID;
+	 *            messages set to the queue will be sent to all group members
+	 */
+	public MessageQueue( String queueName, MessageBroker messageBus, Type type ) {
 		if( queueName == null || messageBus == null ) {
 			throw new IllegalArgumentException( "Null arg" );
 		}
 		this.queueName = queueName;
 		this.messageBroker = messageBus;
+		this.type = type;
 	}
 
 	/**
@@ -39,7 +59,7 @@ public class MessageQueue {
 	public void delete() throws IOException {
 		messageBroker.deleteQueue( this );
 	}
-	
+
 	/**
 	 * @return The list of accepted sender roles for this queue. <br>
 	 * Forces messages sent to this queue to have a valid JWT and makes sure that
@@ -53,9 +73,13 @@ public class MessageQueue {
 	public MessageBroker getMessageBroker() {
 		return messageBroker;
 	}
-
+	
 	public String getName() {
 		return queueName;
+	}
+
+	public Type getType() {
+		return type;
 	}
 	
 	/**
