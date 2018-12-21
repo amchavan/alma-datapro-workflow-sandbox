@@ -1,6 +1,7 @@
 package alma.obops.draws.messages;
 
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * Implements a message-based RPC client (request/reply)
@@ -12,6 +13,16 @@ public class ExecutorClient {
 
 	private MessageQueue queue;
 	private MessageConsumer consumer;
+	
+	public static String makeResponseQueueName() {
+		StringBuilder sb = new StringBuilder();
+		sb.append( "response-queue-" )
+		  .append( MessageBroker.nowISO() )
+		  .append( "-" )
+		  .append( UUID.randomUUID().toString().replace( "-", "" ) );
+		
+		return sb.toString();
+	}
 	
 	/**
 	 * Public constructor
@@ -28,13 +39,21 @@ public class ExecutorClient {
 	}
 	
 	public void call( RequestMessage request, int timeout ) throws IOException {
-		Envelope envelope = queue.send( request );
-		final String correlationId = envelope.getId();
-		MessageQueue responseQueue = queue.getMessageBroker().messageQueue( correlationId );
-		System.out.println( ">>> client: receiving on: " + responseQueue.getName() );
+		
+		// Create the queue for the Executor to publish its response
+		String responseQueueName = makeResponseQueueName();		
+		MessageQueue responseQueue = queue.getMessageBroker().messageQueue( responseQueueName );
+		
+		// Send the request
+		request.setResponseQueueName( responseQueueName );
+		queue.send( request );
+
+		// Wait for an answer, delete the response queue when done -- response queues
+		// are used only once
 		Envelope response = responseQueue.receive( timeout );
-		System.out.println( ">>> client: received" );
-		responseQueue.delete();		// response queues are used only once
+		responseQueue.delete();		
+		
+		// Pass the response on to the consumer, and we're done
 		this.consumer.consume( response.getMessage() );
 	}
 }

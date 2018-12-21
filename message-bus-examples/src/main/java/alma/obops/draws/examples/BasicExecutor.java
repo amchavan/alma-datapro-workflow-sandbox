@@ -7,6 +7,7 @@ import java.util.TimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import alma.obops.draws.messages.AbstractMessage;
+import alma.obops.draws.messages.AbstractRequestMessage;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageQueue;
@@ -30,7 +31,8 @@ public class BasicExecutor implements Runnable {
 	 * A datetime request, e.g. <code>{"service":"datetime", "timezone":""}</code>
 	 * Our calculator expects messages of that form as requests.
 	 */
-	public static class DatetimeRequest extends AbstractMessage implements RequestMessage  {
+	public static class DatetimeRequest extends AbstractRequestMessage  {
+		
 		public String timezone;
 
 		public DatetimeRequest() {

@@ -7,5 +7,14 @@ package alma.obops.draws.messages;
  * @author mchavan, 17-Sep-2018
  */
 public interface RequestMessage extends Message {
-	// empty
+	
+	/**
+	 * @return Name of the queue for the server to publish its response
+	 */
+	public String getResponseQueueName();
+	
+	/**
+	 * @param name Name of the queue for the server to publish its response
+	 */
+	public void setResponseQueueName( String name );
 }

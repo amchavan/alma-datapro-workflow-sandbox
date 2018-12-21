@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import alma.obops.draws.messages.AbstractMessage;
+import alma.obops.draws.messages.AbstractRequestMessage;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageQueue;
@@ -28,7 +29,7 @@ public class Calculator implements Runnable {
 	 * A computation request message, e.g.
 	 * <code>{"service":"sum", "a":"1", "b":"2"}</code>
 	 */
-	public static class ComputationMessage extends AbstractMessage implements RequestMessage {
+	public static class ComputationMessage extends AbstractRequestMessage {
 
 		public String a;
 		public String b;

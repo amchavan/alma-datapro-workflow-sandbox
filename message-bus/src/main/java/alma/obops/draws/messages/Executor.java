@@ -19,17 +19,16 @@ public class Executor {
 	 * {@link RequestMessage} and send the result of that to a queue named after the
 	 * original message's ID.
 	 */
-	private MessageConsumer consumer = (message) -> {
-		Message response = processor.process( (RequestMessage) message );
-		Envelope envelope = message.getEnvelope();
+	private MessageConsumer consumer = (m) -> {
 		
-		// NOTE  We are creating here a temporary sending queue.
-		MessageQueue responseQueue = queue.getMessageBroker().messageQueue( envelope.getId(),
-				                                                            MessageQueue.Type.SENDQUEUE );
-		System.out.println( ">>> server: sending to: " + responseQueue.getName() );
+		// Compute the response
+		RequestMessage message = (RequestMessage) m;
+		Message response = processor.process( message );
+		
+		// Retrieve the response queue and publish the response there
+		MessageQueue responseQueue = queue.getMessageBroker().messageQueue( message.getResponseQueueName(),
+				                                                            MessageQueue.Type.SEND );
 		queue.getMessageBroker().send( responseQueue, response, 0 );
-		System.out.println( ">>> server: sent" );
-		responseQueue.delete();
 	};
 
 	/**

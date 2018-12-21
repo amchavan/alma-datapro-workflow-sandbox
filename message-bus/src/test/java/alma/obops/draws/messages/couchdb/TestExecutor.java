@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import alma.obops.draws.messages.AbstractMessage;
+import alma.obops.draws.messages.AbstractRequestMessage;
 import alma.obops.draws.messages.DbConnection;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.ExecutorClient;
@@ -41,7 +42,8 @@ public class TestExecutor {
 	private CouchDbConnection couchDbConn;
 
 	// Request: double a number
-	public static class DoubleRequest extends AbstractMessage implements RequestMessage  {
+	public static class DoubleRequest extends AbstractRequestMessage  {
+		
 		public int number;
 
 		public DoubleRequest() {
