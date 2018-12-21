@@ -160,7 +160,7 @@ public class TestMessageQueue {
 		
 		// Process all pending log messages because we need to 
 		// interrogate the database
-		Runnable messageLogListener = broker.getMessageLogListener();
+		Runnable messageLogListener = broker.getMessageArchiver();
 		Thread messageLogThread = new Thread( messageLogListener );
 		messageLogThread.start();			
 		MessageBroker.sleep( 500L );	// Give some time to the background thread to catch up
@@ -253,7 +253,7 @@ public class TestMessageQueue {
 		@SuppressWarnings("unused")
 		Envelope received = queue.receive();
 
-		Runnable messageLogListener = broker.getMessageLogListener();
+		Runnable messageLogListener = broker.getMessageArchiver();
 		Thread messageLogThread = new Thread( messageLogListener );
 		messageLogThread.start();
 		messageLogThread.join();
@@ -375,7 +375,7 @@ public class TestMessageQueue {
 		
 		// Process all pending log messages because we need to 
 		// interrogate the database
-		Runnable messageLogListener = broker.getMessageLogListener();
+		Runnable messageLogListener = broker.getMessageArchiver();
 		Thread messageLogThread = new Thread( messageLogListener );
 		messageLogThread.start();
 		messageLogThread.join();

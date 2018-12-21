@@ -108,7 +108,7 @@ public class TestTokenSecurityRabbitMQ {
 		Envelope e = queue.send( brian );
 		
 
-		Runnable messageLogListener = broker.getMessageLogListener();
+		Runnable messageLogListener = broker.getMessageArchiver();
 		Thread messageLogThread = new Thread( messageLogListener );
 		messageLogThread.start();
 		

@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
@@ -16,8 +19,9 @@ import com.rabbitmq.client.DefaultConsumer;
 import alma.obops.draws.messages.SimpleEnvelope;
 import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
 
-public class PersistenceListener implements Runnable {
-
+public class MessageArchiver implements Runnable {
+	
+	private Logger logger = LoggerFactory.getLogger( MessageArchiver.class );
 	private Consumer consumer;
 	private Channel channel;
 	
@@ -36,8 +40,8 @@ public class PersistenceListener implements Runnable {
 									byte[] body ) throws IOException {
 
 			String message = new String( body );
-			String msg = ">>>> handling delivery: " + envelope.getRoutingKey() + ": " + message; 
-			System.out.println( msg );
+			String msg = ">>>> delivery: " + envelope.getRoutingKey() + ": " + message; 
+			logger.info( msg );
 			
 			PersistedEnvelope persistedEnvelope;
 			
@@ -101,7 +105,11 @@ public class PersistenceListener implements Runnable {
 		}
 	}
 	
-	public PersistenceListener( Channel channel, String exchangeName, PersistedEnvelopeRepository envelopeRepository ) throws IOException, TimeoutException {
+	public MessageArchiver( Channel channel, 
+						   String exchangeName,
+						   PersistedEnvelopeRepository envelopeRepository ) 
+			throws IOException, TimeoutException {
+		
 		this.channel = channel;
 		this.channel.queueBind( MESSAGE_PERSISTENCE_QUEUE, exchangeName, "#" );
 		this.consumer = new MessageLogConsumer( channel, envelopeRepository );

@@ -56,7 +56,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		return serviceName + "." + queueName;
 	}
 	
-	private PersistenceListener messageLogListener;
+	private MessageArchiver messageLogListener;
 	private String exchangeName;
 	private Channel channel;
 	private RecipientGroupRepository groupRepository;
@@ -149,7 +149,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			this.channel = connection.createChannel();
 			this.channel.exchangeDeclare( exchangeName, BuiltinExchangeType.TOPIC );
 			this.channel.queueDeclare( MESSAGE_PERSISTENCE_QUEUE,  true, false, false, null );
-			this.messageLogListener = new PersistenceListener( this.channel, exchangeName, envelopeRepository );
+			this.messageLogListener = new MessageArchiver( this.channel, exchangeName, envelopeRepository );
 		} 
 		catch (IOException | TimeoutException e) {
 			throw new RuntimeException( e );
@@ -210,50 +210,10 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	}
 
 	public PersistedEnvelopeRepository getEnvelopeRepository() {
-		return envelopeRepository;
+		return this.envelopeRepository;
 	}
-
-//	/**
-//	 * Wait until a message arrives, set its state to {@link State#Received} or
-//	 * {@link State#Expired}.
-//	 * 
-//	 * @param timeLimit
-//	 *            If greater than 0 it represents the number of msec to wait for a
-//	 *            message to arrive before timing out: upon timeout a
-//	 *            {@link TimeLimitExceededException} is thrown.
-//	 * 
-//	 * @return The message we received.
-//	 */
-//	// This does not work, no time to understand why -- amchavan, 18-Oct-2018
-//	@SuppressWarnings("unused")
-//	private Envelope receiveOneEXPERIMENTAL( MessageQueue queue, long timeLimit ) {
-//		
-//		OneReceiver receiver1 = new OneReceiver( channel, queue, timeLimit );
-//		SimpleEnvelope receivedEnvelope = (SimpleEnvelope) receiver1.receive();
-//		
-//		// See if the message has expired
-//		String now = nowISO();
-//		final long timeToLive = receivedEnvelope.getTimeToLive();
-//		if( timeToLive != 0 ) {
-//			receivedEnvelope.setState( State.Received );
-//			receivedEnvelope.setReceivedTimestamp( now );
-//		}
-//		else {
-//			receivedEnvelope.setState( State.Expired );
-//			receivedEnvelope.setExpiredTimestamp( now );
-//		}
-//				
-//		// Signal the state change to the message log as well
-//		try {
-//			sendNewStateEvent( receivedEnvelope.getId(), receivedEnvelope.getState(), now );
-//		} 
-//		catch (IOException e) {
-//			throw new RuntimeException( e );
-//		}
-//		return receivedEnvelope;
-//	}
 	
-	public Runnable getMessageLogListener() {
+	public Runnable getMessageArchiver() {
 		return this.messageLogListener;
 	}
 	
