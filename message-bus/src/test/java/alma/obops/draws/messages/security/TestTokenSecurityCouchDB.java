@@ -22,7 +22,6 @@ import com.nimbusds.jose.JOSEException;
 import alma.obops.draws.messages.DbConnection;
 import alma.obops.draws.messages.Envelope;
 import alma.obops.draws.messages.Envelope.State;
-import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.Publisher;
 import alma.obops.draws.messages.Subscriber;
 import alma.obops.draws.messages.TestUtils.TestMessage;
