@@ -18,8 +18,9 @@ public class Subscriber {
 
 	/**
 	 * @param messageBroker
-	 * @param queueName
-	 * @param serviceName
+	 * @param queueName     Address of the messages we subscribe to
+	 * @param serviceName   Identifies the service that's subscribing, as multiple
+	 *                      services could subscribe to the same messages
 	 */
 	public Subscriber( MessageBroker messageBroker, String queueName, String serviceName ) {
 		this.messageBroker = messageBroker;
