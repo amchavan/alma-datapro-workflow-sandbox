@@ -19,14 +19,15 @@ import alma.obops.draws.messages.Envelope;
 import alma.obops.draws.messages.Envelope.State;
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.Publisher;
+import alma.obops.draws.messages.Subscriber;
 import alma.obops.draws.messages.TestUtils.TestMessage;
+import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.configuration.EmbeddedDataSourceConfiguration;
 import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
 import alma.obops.draws.messages.configuration.PersistedRabbitMqBrokerConfiguration;
 import alma.obops.draws.messages.configuration.PersistenceConfiguration;
 import alma.obops.draws.messages.configuration.RabbitMqConfigurationProperties;
-import alma.obops.draws.messages.configuration.RecipientGroupRepository;
-import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.rabbitmq.PersistedEnvelope;
 import alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker;
 
@@ -40,34 +41,33 @@ import alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker;
 @AutoConfigureJdbc
 public class TestTokenSecurityRabbitMQ {
 
-	private static final String QUEUE_NAME = "test.queue";
-	private static final String EXCHANGE_NAME = "unit-test-exchange";
+	private static final String QUEUE_NAME = "rock.stars";
+	private static final String SERVICE_NAME = "local";
 	
 	private final TestMessage brian = new TestMessage( "Brian May", 71, true );
-	private RabbitMqMessageBroker broker;
-	private MessageQueue queue;
+	
+	@Autowired
+	private MessageBroker broker;
+	
+	private Publisher publisher;
+	private Subscriber subscriber;
 	private TokenFactory tokenFactory;
 	
 	@Autowired
 	private PersistedEnvelopeRepository envelopeRepository;
-	
-	@Autowired
-	private RecipientGroupRepository groupRepository;
+	private RabbitMqMessageBroker rmqBroker;
 	
 	@Before
 	public void aaa_setUp() throws Exception {
 
 //		System.out.println( ">>> SETUP ========================================" );
-		
-		this.broker = new RabbitMqMessageBroker( EXCHANGE_NAME,
-												 envelopeRepository, 
-												 groupRepository );
-		this.queue = broker.messageQueue( QUEUE_NAME );
 
-		// Drain any existing messages in the logging queue
-		broker.drainLoggingQueue();
-		envelopeRepository.deleteAll();
-		groupRepository.deleteAll();
+		this.publisher = new Publisher( broker, QUEUE_NAME );
+		this.subscriber = new Subscriber( broker, QUEUE_NAME, SERVICE_NAME );
+
+		this.rmqBroker = (RabbitMqMessageBroker) broker;
+		this.rmqBroker.drainLoggingQueue();
+		this.rmqBroker.getEnvelopeRepository().deleteAll();
 		
 		tokenFactory = new JWTFactory();
 		broker.setTokenFactory( tokenFactory );
@@ -75,24 +75,20 @@ public class TestTokenSecurityRabbitMQ {
 
 	@After
 	public void aaa_tearDown() throws Exception {
-		this.queue.delete();
+		this.subscriber.getQueue().delete();
 	}
 	
 	@Test
 	public void send_Secure_Receive() throws IOException, InterruptedException {
 
-		MessageQueue queue = broker.messageQueue( QUEUE_NAME );
-
-		queue.send( brian );
-		Envelope out = queue.receive();
+		publisher.publish( brian );
+		Envelope out = subscriber.receive();
 		
 		assertNotNull( out );
 		assertEquals( State.Received, out.getState() );
 		assertNotNull( out.getReceivedTimestamp() );
 		assertEquals( brian, out.getMessage() );
 		assertEquals( out, out.getMessage().getEnvelope() );
-		
-		queue.delete();
 	}
 	
 	@Test
@@ -101,14 +97,12 @@ public class TestTokenSecurityRabbitMQ {
 		// Give the broker a token that's been tampered with
 		String token = tokenFactory.create();
 		int l = token.length();
-		broker.setSendToken( token.substring( 0, l-2 ));
-		
-		MessageQueue queue = broker.messageQueue( QUEUE_NAME );
+		rmqBroker.setSendToken( token.substring( 0, l-2 ));
 		@SuppressWarnings("unused")
-		Envelope e = queue.send( brian );
+		Envelope e = publisher.publish( brian );
 		
 
-		Runnable messageLogListener = broker.getMessageArchiver();
+		Runnable messageLogListener = rmqBroker.getMessageArchiver();
 		Thread messageLogThread = new Thread( messageLogListener );
 		messageLogThread.start();
 		
@@ -117,7 +111,7 @@ public class TestTokenSecurityRabbitMQ {
 			// should see that the message was 
 			// rejected
 			@SuppressWarnings("unused")
-			Envelope out = queue.receive( 1000 );
+			Envelope out = subscriber.receive( 1000 );
 		} 
 		catch (TimeLimitExceededException ex) {
 			// no-op, expected
@@ -133,7 +127,5 @@ public class TestTokenSecurityRabbitMQ {
 			System.out.println( ">>> TestPersistence.envelope(): p: " + p + ", state: " + state );
 			assertEquals( State.Rejected, state );
 		}
-		
-		queue.delete();
 	}
 }

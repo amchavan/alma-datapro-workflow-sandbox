@@ -22,10 +22,11 @@ import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.ExecutorClient;
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
-import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.Publisher;
 import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
 import alma.obops.draws.messages.ResponseMessage;
+import alma.obops.draws.messages.Subscriber;
 import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.configuration.EmbeddedDataSourceConfiguration;
 import alma.obops.draws.messages.configuration.PersistedRabbitMqBrokerConfiguration;
@@ -46,10 +47,11 @@ public class TestExecutor {
 	static Integer doubled = null; 			// needs to be static!
 	
 	@Autowired
-	private MessageBroker injectedMessageBroker;
+	private MessageBroker broker;
 	
-	private RabbitMqMessageBroker broker = null;
-	private MessageQueue queue;
+	private RabbitMqMessageBroker rmqBroker = null;
+	private Subscriber subscriber;
+	private Publisher publisher;
 
 
 	// Request: double a number
@@ -87,15 +89,17 @@ public class TestExecutor {
 	@Before
 	public void aaa_setUp() throws IOException, TimeoutException {
 		System.out.println( ">>> SETUP ========================================" );
-		this.broker = (RabbitMqMessageBroker) this.injectedMessageBroker;
-		this.queue = broker.messageQueue( QUEUE_NAME );
-		this.broker.drainLoggingQueue();
-		this.broker.drainQueue( this.queue );
+		this.publisher = new Publisher( broker, QUEUE_NAME );
+		this.subscriber = new Subscriber( broker, QUEUE_NAME, "test" );
+
+		this.rmqBroker = (RabbitMqMessageBroker) this.broker;
+		this.rmqBroker.drainLoggingQueue();
+		this.rmqBroker.drainQueue( this.subscriber.getQueue() );
 	}
 
 	@After
 	public void aaa_tearDown() throws Exception {
-		broker.deleteQueue( this.queue );
+		broker.deleteQueue( this.subscriber.getQueue() );
 	}
 
 	@Test
@@ -103,7 +107,7 @@ public class TestExecutor {
 
 		// Start a background thread to run the Doubler Executor
 		RequestProcessor doubler = new Doubler();
-		Executor doublerExecutor = new Executor( queue, doubler, 5000 );
+		Executor doublerExecutor = new Executor( this.subscriber, doubler, 5000 );
 		Runnable doublerRunnable = () -> {	
 			try {
 				doublerExecutor.run();
@@ -131,7 +135,7 @@ public class TestExecutor {
 			doubled = ((DoubleResponse) message).doubled;
 		};
 		
-		ExecutorClient client = new ExecutorClient( queue, consumer );
+		ExecutorClient client = new ExecutorClient( publisher, consumer );
 
 		// Client sends a request to double 1
 		DoubleRequest request = new DoubleRequest();

@@ -167,7 +167,6 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 		return receive( queue, 0 );
 	}
 	
-	
 	@Override
 	public Envelope receive( MessageQueue queue, long timeLimit )
 			throws IOException, TimeLimitExceededException {
@@ -217,7 +216,39 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 		try {
 			List<String> members = groupMembers( groupName );
 			if( members == null ) {
-				throw new RuntimeException("Receiver group '" + groupName + "' not found");
+				throw new RuntimeException( "Receiver group '" + groupName + "' not found" );
+			}
+			Envelope ret = null;
+			for( String member: members ) {
+				MessageQueue memberQueue = new MessageQueue( member, this, MessageQueue.Type.SEND );
+				ret = this.sendOne( memberQueue, message, expireTime );
+			}
+			return ret;
+		} 
+		catch ( Exception e ) {
+			throw new RuntimeException( e );
+		}
+	}
+	
+	@Override
+	public Envelope send( String queueName, Message message, long expireTime ) {
+
+		if( queueName == null || queueName.length() == 0 || message == null ) {
+			throw new IllegalArgumentException( "Null arg" );
+		}
+		
+		// Are we sending to a group?
+		if( ! queueName.endsWith( ".*" )) {
+			Envelope ret = this.sendOne( queueName, message, expireTime );	// No, just send this message
+			return ret;
+		}
+		
+		// We are sending to a group: loop over all recipients
+		String groupName = queueName;
+		try {
+			List<String> members = groupMembers( groupName );
+			if( members == null ) {
+				throw new RuntimeException( "Receiver group '" + groupName + "' not found" );
 			}
 			Envelope ret = null;
 			for( String member: members ) {
@@ -248,7 +279,26 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	 *                   timeToLive=0 this instance never expires
 	 */
 	protected SimpleEnvelope sendOne( MessageQueue queue, Message message, long expireTime ) {
-		SimpleEnvelope envelope = new SimpleEnvelope( message, this.ourIP, queue.getName(), expireTime );
+		return sendOne( queue.getName(), message, expireTime );
+	}
+	
+	/**
+	 * Creates an {@link Envelope} (including meta-data) from the given
+	 * {@link Message} and sends it to a queue.<br>
+	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
+	 * The {@link Message} instance is set to {@link State#Sent}.
+	 * <p>
+	 * Implementation is broker-specific and delegated to subclasses: overriding methods
+	 * should invoke this method at the start.
+	 * 
+	 * @param queue      Name of the queue should not end with <code>.*</code> (that
+	 *                   is, it should not be a receiver group designator)
+	 * 
+	 * @param expireTime Time interval before this instance expires, in msec; if
+	 *                   timeToLive=0 this instance never expires
+	 */
+	protected SimpleEnvelope sendOne( String queueName, Message message, long expireTime ) {
+		SimpleEnvelope envelope = new SimpleEnvelope( message, this.ourIP, queueName, expireTime );
 		initEnvelope( envelope );
 		return envelope;
 	}

@@ -1,9 +1,6 @@
 package alma.obops.draws.messages.rabbitmq;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,7 +21,8 @@ import alma.obops.draws.messages.Envelope.State;
 import alma.obops.draws.messages.Message;
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
-import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.Publisher;
+import alma.obops.draws.messages.Subscriber;
 import alma.obops.draws.messages.TestUtils.TestMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.configuration.EmbeddedDataSourceConfiguration;
@@ -40,41 +38,42 @@ import alma.obops.draws.messages.configuration.RabbitMqConfigurationProperties;
         EmbeddedDataSourceConfiguration.class } )
 @AutoConfigureJdbc
 @ActiveProfiles( "unit-test-rabbitmq" )
-public class TestMessageQueue {
+public class TestPublisherSubscriber {
 
-	private static final String QUEUE_NAME = "test.queue";
-//	private static final String EXCHANGE_NAME = "unit-test-exchange";
+	private static final String QUEUE_NAME = "rock.stars";
+	private static final String SERVICE_NAME = "local";
 
 	private final TestMessage jimi = new TestMessage( "Jimi Hendrix", 28, false );
 	private final TestMessage freddie = new TestMessage( "Freddie Mercury", 45, false );
 	private final TestMessage brian = new TestMessage( "Brian May", 71, true );
 	
 	@Autowired
-	private MessageBroker injectedMessageBroker;
+	private MessageBroker broker;
 	
-	private RabbitMqMessageBroker broker;
-	private MessageQueue queue;
+	private RabbitMqMessageBroker rmqBroker;
+//	private MessageQueue queue;
 	private Message receivedMessage;
 	private PersistedEnvelopeRepository envelopeRepository;
+	private Publisher publisher;
+	private Subscriber subscriber;
 
 	
 	@Before
 	public void aaa_setUp() throws Exception {
 
 		System.out.println( ">>> SETUP ========================================" );
+		this.publisher = new Publisher( broker, QUEUE_NAME );
+		this.subscriber = new Subscriber( broker, QUEUE_NAME, SERVICE_NAME );
 		
-		this.broker = (RabbitMqMessageBroker) this.injectedMessageBroker;
-		this.queue = broker.messageQueue( QUEUE_NAME );
-		this.envelopeRepository = broker.getEnvelopeRepository();
-		
-		// Drain any existing messages in the logging queue
-		broker.drainLoggingQueue();
-		envelopeRepository.deleteAll();
+		this.rmqBroker = (RabbitMqMessageBroker) this.broker;
+		this.rmqBroker.drainLoggingQueue();
+		this.envelopeRepository = rmqBroker.getEnvelopeRepository();
+		this.envelopeRepository.deleteAll();
 	}
 
 	@After
 	public void aaa_tearDown() throws Exception {
-		this.queue.delete();
+		subscriber.getQueue().delete();
 	}
 	
 	@Test
@@ -90,7 +89,7 @@ public class TestMessageQueue {
 		// First time around -- just timeout
 		receivedMessage = null;
 		try {
-			queue.listen( mc, 1000 );
+			subscriber.listen( mc, 1000 );
 			MessageBroker.sleep( 2000 );
 		} 
 		catch( TimeLimitExceededException e ) {
@@ -102,11 +101,11 @@ public class TestMessageQueue {
 		assertNull( receivedMessage );
 
 		// Second time around: send a message, retrieve, timeout
-		queue.send( jimi );
+		publisher.publish( jimi );
 		System.out.println( ">>> Sent: " + jimi );
 		
 		try {
-			queue.listen( mc, 1000 );
+			subscriber.listen( mc, 1000 );
 			MessageBroker.sleep( 2000 );
 		} 
 		catch( TimeLimitExceededException e ) {
@@ -129,13 +128,13 @@ public class TestMessageQueue {
 	public void send_LetExpire_Listen() throws Exception {
 
 		// Drain any existing messages in the logging queue
-		broker.drainLoggingQueue();
+		rmqBroker.drainLoggingQueue();
 		
 		Envelope e;
 		
-		e = queue.send( jimi, 1000L );						// jimi will expire
+		e = publisher.publish( jimi, 1000L );						// jimi will expire
 		System.out.println( ">>> Sent: " + e );
-		e = queue.send( freddie );							// freddie will not expire
+		e = publisher.publish( freddie );							// freddie will not expire
 		System.out.println( ">>> Sent: " + e );
 	
 		MessageBroker.sleep( 1100 );	// Let the first message expire
@@ -146,7 +145,7 @@ public class TestMessageQueue {
 		};
 		
 		try {
-			queue.listen( mc, 50 );	// terminate after timeout
+			subscriber.listen( mc, 50 );	// terminate after timeout
 		} 
 		catch( TimeLimitExceededException te ) {
 			// no-op, expected
@@ -160,7 +159,7 @@ public class TestMessageQueue {
 		
 		// Process all pending log messages because we need to 
 		// interrogate the database
-		Runnable messageLogListener = broker.getMessageArchiver();
+		Runnable messageLogListener = rmqBroker.getMessageArchiver();
 		Thread messageLogThread = new Thread( messageLogListener );
 		messageLogThread.start();			
 		MessageBroker.sleep( 500L );	// Give some time to the background thread to catch up
@@ -192,8 +191,8 @@ public class TestMessageQueue {
 		
 		// Define a sender thread
 		Runnable sender = () -> {	
-			queue.send( jimi );
-			System.out.println( ">>> Sent: " + jimi );
+			publisher.publish( jimi );
+			System.out.println( ">>> published: " + jimi );
 		};
 		Thread senderT = new Thread( sender );
 		
@@ -205,7 +204,7 @@ public class TestMessageQueue {
 
 		// Launch a listener with that consumer on a background thread
 		// Launch the sender
-		Thread receiverT = queue.listenInThread( mc, 3000 );
+		Thread receiverT = subscriber.listenInThread( mc, 3000 );
 		senderT.start();
 
 		// Wait for the threads to be done
@@ -222,38 +221,29 @@ public class TestMessageQueue {
 	@Test
 	public void send_Receive() throws IOException, InterruptedException {
 
-		String queue2Name = QUEUE_NAME;// + "." + 99;
-		MessageQueue queue = broker.messageQueue( queue2Name );
-
-		queue.send( jimi );
-		Envelope out = queue.receive();
+		publisher.publish( jimi );
+		Envelope received = subscriber.receive();
 		
-		assertNotNull( out );
-		assertEquals( State.Received, out.getState() );
-		assertNotNull( out.getReceivedTimestamp() );
-		assertEquals( jimi, out.getMessage() );
-		assertEquals( out, out.getMessage().getEnvelope() );
-		
-		queue.delete();
+		assertNotNull( received );
+		assertEquals( State.Received, received.getState() );
+		assertNotNull( received.getReceivedTimestamp() );
+		assertEquals( jimi, received.getMessage() );
+		assertEquals( received, received.getMessage().getEnvelope() );
 	}
-	
-
 
 	@Test
 	public void send_Receive_Log() throws Exception {
 
-		System.out.println( ">>> Send/Receive/Log ========================================" );
-
 		// Drain any existing messages in the logging queue
-		broker.drainLoggingQueue();
+		rmqBroker.drainLoggingQueue();
 
-		Envelope sent = queue.send( brian );			
-		System.out.println( ">>> sent: " + sent  );
+		Envelope published = publisher.publish( brian );			
+		System.out.println( ">>> published: " + published  );
 		
 		@SuppressWarnings("unused")
-		Envelope received = queue.receive();
+		Envelope received = subscriber.receive();
 
-		Runnable messageLogListener = broker.getMessageArchiver();
+		Runnable messageLogListener = rmqBroker.getMessageArchiver();
 		Thread messageLogThread = new Thread( messageLogListener );
 		messageLogThread.start();
 		messageLogThread.join();
@@ -269,8 +259,8 @@ public class TestMessageQueue {
 		assertEquals( 1, persistedEnvelopes.size() );
 		PersistedEnvelope persistedEnvelope = persistedEnvelopes.get(0);
 		Envelope foundEnvelope = persistedEnvelope.asSimpleEnvelope();
-		assertEquals( sent.getId(),      foundEnvelope.getId() );
-		assertEquals( sent.getMessage(), foundEnvelope.getMessage() );
+		assertEquals( published.getId(),      foundEnvelope.getId() );
+		assertEquals( published.getMessage(), foundEnvelope.getMessage() );
 		assertEquals( State.Received,    foundEnvelope.getState() );
 	}
 
@@ -280,39 +270,33 @@ public class TestMessageQueue {
 		System.out.println( ">>> Send/Receive multiple ========================================" );
 		final int repeats = 10;
 		
-		for( int i = 0; i < repeats; i++ ) {
-			String queueName = QUEUE_NAME + i;
-			MessageQueue queue = broker.messageQueue( queueName );
+		for( int i = 0; i < repeats; i++ ) {	
 			TestMessage message = new TestMessage( null, i, true );
-			Envelope sent = queue.send( message );
-			System.out.println( ">>> sent: " + sent );
+			Envelope published = publisher.publish( message );
+			System.out.println( ">>> published: " + published );
 		}
 		
-		for( int i = repeats-1; i>=0 ; i-- ) {
-			String queueName = QUEUE_NAME + i;
-			MessageQueue queue = broker.messageQueue( queueName );
-			Envelope received = queue.receive( 2000 );
+		for( int i = 0; i < repeats; i++ ) {
+			Envelope received = subscriber.receive( 2000 );
 			System.out.println( ">>> received: " + received );
 			TestMessage message = (TestMessage) received.getMessage();
 			assertEquals( i, message.age );
-			broker.deleteQueue( queue );
 		}
 	}
-
 	
 	@Test
 	// Send and find on two separate threads
 	public void send_ReceiveConcurrent() throws Exception {
 		
 		Runnable sender = () -> {	
-			queue.send( freddie );
+			publisher.publish( freddie );
 			System.out.println( ">>> Sent: " + freddie );
 		};
 		Thread senderT = new Thread( sender );
 		
 		Runnable receiver = () -> {	
 			try {
-				Envelope e = (Envelope) queue.receive();
+				Envelope e = (Envelope) subscriber.receive();
 				setReceivedMessage( (TestMessage) e.getMessage() );
 			} 
 			catch ( Exception e ) {
@@ -334,68 +318,6 @@ public class TestMessageQueue {
 		assertEquals( freddie, receivedMessage );
 		assertEquals( State.Received, receivedMessage.getEnvelope().getState() );
 		assertNotNull( receivedMessage.getEnvelope().getReceivedTimestamp() );
-	}
-
-	//@Test
-	// Commented out because this doesn't work anymore -- you cannot have multiple
-	// receivers from the same RabbitMQ broker anymore.
-	// Need to write a better test with multiple brokers.
-	// amchavan, 19-Dec-2108 19:35
-	public void sendToGroup() throws Exception {
-
-		System.out.println( ">>> sendToGroup ========================================" );
-
-		// Drain any existing messages in the logging queue
-		broker.drainLoggingQueue();
-
-		// Create the recipient group
-		String groupName = "test.recipients.*";
-		MessageQueue sender     = broker.messageQueue( groupName );
-		MessageQueue recipient1 = broker.messageQueue( groupName );
-		MessageQueue recipient2 = broker.messageQueue( groupName );
-		
-		recipient1.joinGroup( groupName );
-		recipient2.joinGroup( groupName );
-		
-		// Send to the recipient group
-		Envelope e = sender.send( jimi );			
-		System.out.println( ">>> Sent to group " + groupName + ": " + e );
-
-		Envelope out1 = recipient1.receive();
-		assertNotNull( out1 );
-		assertEquals( jimi, out1.getMessage() );
-
-		Envelope out2 = recipient2.receive();
-		assertNotNull( out2 );
-		assertEquals( jimi, out2.getMessage() );
-
-		broker.deleteQueue( sender );
-		broker.deleteQueue( recipient2 );
-		broker.deleteQueue( recipient1 );
-		
-		// Process all pending log messages because we need to 
-		// interrogate the database
-		Runnable messageLogListener = broker.getMessageArchiver();
-		Thread messageLogThread = new Thread( messageLogListener );
-		messageLogThread.start();
-		messageLogThread.join();
-		// Give some time to the background thread to catch up
-		MessageBroker.sleep( 2000L );
-		
-		for( PersistedEnvelope pe: envelopeRepository.findAll() ) {
-			System.out.println( ">>> pe: " + pe );
-		}
-		
-		List<PersistedEnvelope> found = envelopeRepository.findByState( "Received" );
-		assertEquals( 2, found.size() );
-		
-		Envelope e0 = found.get(0).asSimpleEnvelope();
-		assertEquals( jimi, e0.getMessage() );
-		assertEquals( groupName, e0.getQueueName()  );
-		
-		Envelope e1 = found.get(1).asSimpleEnvelope();
-		assertEquals( jimi, e1.getMessage() );
-		assertEquals( groupName, e1.getQueueName()  );
 	}
 
 	private void setReceivedMessage( Message message ) {

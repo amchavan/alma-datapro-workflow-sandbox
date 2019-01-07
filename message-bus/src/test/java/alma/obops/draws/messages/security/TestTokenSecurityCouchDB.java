@@ -23,6 +23,8 @@ import alma.obops.draws.messages.DbConnection;
 import alma.obops.draws.messages.Envelope;
 import alma.obops.draws.messages.Envelope.State;
 import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.Publisher;
+import alma.obops.draws.messages.Subscriber;
 import alma.obops.draws.messages.TestUtils.TestMessage;
 import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.configuration.CouchDbConfiguration;
@@ -45,14 +47,17 @@ import alma.obops.draws.messages.rabbitmq.PersistedEnvelope;
 @AutoConfigureJdbc
 public class TestTokenSecurityCouchDB {
 
-	
-	private static final String QUEUE_NAME = "Q";
+
+	private static final String QUEUE_NAME = "rock.stars";
+	private static final String SERVICE_NAME = "local";
 	private CouchDbMessageBroker broker = null;
 	
 	private final TestMessage brian = new TestMessage( "Brian May", 71, true );
 	private DbConnection db;
-	private MessageQueue queue;
 	private TokenFactory tokenFactory;
+
+	private Publisher publisher;
+	private Subscriber subscriber;
 	
 	@Autowired
 	private CouchDbConnection couchDbConn;
@@ -65,39 +70,36 @@ public class TestTokenSecurityCouchDB {
 	
 	@Before
 	public void aaa_setUp() throws IOException, ParseException, JOSEException {
-		broker = new CouchDbMessageBroker( couchDbConn, MESSAGE_BUS_NAME  );
-		queue = new MessageQueue( QUEUE_NAME, broker );
-		db = ((CouchDbMessageBroker) broker).getDbConnection(); 
-		db.dbDelete( MESSAGE_BUS_NAME );
-		db.dbCreate( MESSAGE_BUS_NAME );
+		this.broker = new CouchDbMessageBroker( couchDbConn, MESSAGE_BUS_NAME  );
+		this.publisher = new Publisher( broker, QUEUE_NAME );
+		this.subscriber = new Subscriber( broker, QUEUE_NAME, SERVICE_NAME );
+		this.db = ((CouchDbMessageBroker) broker).getDbConnection(); 
+		this.db.dbDelete( MESSAGE_BUS_NAME );
+		this.db.dbCreate( MESSAGE_BUS_NAME );
 	
-		envelopeRepository.deleteAll();
-		groupRepository.deleteAll();
+		this.envelopeRepository.deleteAll();
+		this.groupRepository.deleteAll();
 		
-		tokenFactory = new JWTFactory();
-		broker.setTokenFactory( tokenFactory );
+		this.tokenFactory = new JWTFactory();
+		this.broker.setTokenFactory( tokenFactory );
 	}
 
 	@After
 	public void aaa_tearDown() throws Exception {
-		this.queue.delete();
+		this.subscriber.getQueue().delete();
 	}
 	
 	@Test
 	public void send_Secure_Receive() throws IOException, InterruptedException {
 
-		MessageQueue queue = broker.messageQueue( QUEUE_NAME );
-
-		queue.send( brian );
-		Envelope out = queue.receive();
+		publisher.publish( brian );
+		Envelope out = subscriber.receive();
 		
 		assertNotNull( out );
 		assertEquals( State.Received, out.getState() );
 		assertNotNull( out.getReceivedTimestamp() );
 		assertEquals( brian, out.getMessage() );
 		assertEquals( out, out.getMessage().getEnvelope() );
-		
-		queue.delete();
 	}
 	
 	@Test
@@ -106,16 +108,14 @@ public class TestTokenSecurityCouchDB {
 		// Give the broker a token that's been tampered with
 		String token = tokenFactory.create();
 		broker.setSendToken( token + "*****" );
-		
-		MessageQueue queue = broker.messageQueue( QUEUE_NAME );
-		queue.send( brian );
+		publisher.publish( brian );
 		
 		try {
 			// time out right away because we
 			// should see that the message was 
 			// rejected
 			@SuppressWarnings("unused")
-			Envelope out = queue.receive( 1000 );
+			Envelope out = subscriber.receive( 1000 );
 		} 
 		catch (TimeLimitExceededException e) {
 			// no-op, expected
@@ -127,7 +127,5 @@ public class TestTokenSecurityCouchDB {
 			System.out.println( ">>> TestPersistence.envelope(): p: " + p + ", state: " + state );
 			assertEquals( State.Rejected, state );
 		}
-		
-		queue.delete();
 	}
 }

@@ -10,7 +10,7 @@ import java.io.IOException;
  */
 public class Executor {
 
-	private MessageQueue queue;
+	private Subscriber subscriber;
 	private RequestProcessor processor;
 	private int timeout;
 
@@ -26,9 +26,9 @@ public class Executor {
 		Message response = processor.process( message );
 		
 		// Retrieve the response queue and publish the response there
-		MessageQueue responseQueue = queue.getMessageBroker().messageQueue( message.getResponseQueueName(),
-				                                                            MessageQueue.Type.SEND );
-		queue.getMessageBroker().send( responseQueue, response, 0 );
+		MessageBroker broker = subscriber.getQueue().getMessageBroker();
+		Publisher publisher = new Publisher( broker, message.getResponseQueueName() );
+		publisher.publish( response, 0 );
 	};
 
 	/**
@@ -40,8 +40,8 @@ public class Executor {
 	 *                  a message to arrive before timing out -- upon timeout a
 	 *                  RuntimeException is thrown
 	 */
-	public Executor( MessageQueue queue, RequestProcessor processor, int timeout ) {
-		this.queue = queue;
+	public Executor( Subscriber subscriber, RequestProcessor processor, int timeout ) {
+		this.subscriber = subscriber;
 		this.processor = processor;
 		this.timeout = timeout;
 	}
@@ -52,6 +52,6 @@ public class Executor {
 	 * @throws IOException
 	 */
 	public void run() throws IOException {
-		queue.listen( consumer, timeout );
+		subscriber.listen( consumer, timeout );
 	}
 }

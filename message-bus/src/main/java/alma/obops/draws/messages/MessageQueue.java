@@ -3,7 +3,6 @@ package alma.obops.draws.messages;
 import java.io.IOException;
 import java.util.List;
 
-import alma.obops.draws.messages.Envelope.State;
 import alma.obops.draws.messages.security.TokenFactory;
 
 /**
@@ -107,91 +106,6 @@ public class MessageQueue {
 	 */
 	public void joinGroup( String groupName ) {
 		messageBroker.joinGroup( queueName, groupName );
-	}
-	
-	/**
-	 * Listen for messages and process them as they come in.<br>
-	 * This method times out.
-	 * 
-	 * @param consumer
-	 *            Callback function to process the message with
-	 *            
-	 * @param timeout
-	 *            If timeout is not-<code>null</code> and positive it represents the
-	 *            number of msec to wait for a message to arrive before timing out;
-	 *            upon timeout a
-	 *            {@link TimeLimitExceededException} is thrown
-	 * @param justOne
-	 *            If <code>true</code>, return after the first message
-	 *            
-	 * @throws IOException
-	 * @throws TimeLimitExceededException If waiting time exceeded the given timeout value
-	 */
-	public void listen( MessageConsumer consumer, int timeout ) throws IOException, TimeLimitExceededException {
-		this.messageBroker.listen( this, consumer, timeout );
-	}
-	
-	/**
-	 * Start a background thread listening for messages matching the
-	 * queue name and processing them as they come in.<br>
-	 * This method times out.<br>
-	 * This method is a wrapper around {@link #listen()}.
-	 */
-	public Thread listenInThread( MessageConsumer consumer, int timeout ) {
-		return messageBroker.listenInThread( this, consumer, timeout );
-	}
-	
-	/**
-	 * Search a queue for for new messages, return the oldest we can find
-	 * 
-	 * @return An {@link Envelope} wrapping a user {@link Message}.
-	 * 
-	 * @throws IOException 
-	 */
-	public Envelope receive() throws IOException {
-		return messageBroker.receive( this );
-	}
-
-	
-	/**
-	 * Search a queue for for new messages, return the oldest we can find
-	 * 
-	 * @param timeout
-	 *            If timeout > 0 it represents the number of msec to wait for a
-	 *            message to arrive before timing out: upon timeout a
-	 *            {@link TimeLimitExceededException} is thrown.
-	 * 
-	 * @return An {@link Envelope} wrapping a user {@link Message}.
-	 * 
-	 * @throws TimeLimitExceededException If waiting time exceeded the given timeout value
-	 * @throws IOException
-	 */
-	public Envelope receive( int timeout ) throws IOException, TimeLimitExceededException {
-		return messageBroker.receive( this, timeout );
-	}
-
-	/**
-	 * Creates an {@link Envelope} (including meta-data) from the given
-	 * {@link Message} and sends to this queue. <br>
-	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
-	 * The {@link Message} instance is set to {@link State#Sent}.
-	 */
-	public Envelope send( Message message ) {
-		return this.send( message, 0 );
-	} 	
-	
-	/**
-	 * Creates an {@link Envelope} (including meta-data) from the given
-	 * {@link Message} and sends to this queue. <br>
-	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
-	 * The {@link Message} instance is set to {@link State#Sent}.
-	 * 
-	 * @param timeToLive
-	 *            The time before this instance expires, in msec; if
-	 *            <code>null</code>, this instance never expires
-	 */
-	public Envelope send( Message message, long timeToLive ) {
-		return messageBroker.send( this, message, timeToLive );
 	}
 
 	/**

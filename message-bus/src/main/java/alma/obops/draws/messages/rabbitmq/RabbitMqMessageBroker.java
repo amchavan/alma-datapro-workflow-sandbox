@@ -46,11 +46,11 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	public static final String MESSAGE_PERSISTENCE_QUEUE = "message.persistence.queue";
 	public static final String MESSAGE_STATE_ROUTING_KEY = "new.message.state";
 
-	private static String extractRoutingKeyFromQueueName( String queueName ) {
-		int start = queueName.indexOf( "." ) + 1;
-		int end = queueName.length();
-		return queueName.substring( start, end );
-	}
+//	private static String extractRoutingKeyFromQueueName( String queueName ) {
+//		int start = queueName.indexOf( "." ) + 1;
+//		int end = queueName.length();
+//		return queueName.substring( start, end );
+//	}
 	
 	private static String makeQueueNameFromRoutingKey( String serviceName, String queueName ) {
 		return serviceName + "." + queueName;
@@ -297,7 +297,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	@Override
 	public MessageQueue messageQueue( String queueName, MessageQueue.Type type ) {
 		if( this.serviceName == null ) {
-			setServiceName( null );		// make sure we have some service name at all
+			setServiceName( "" );		// make sure we have some service name at all
 		}
 		try {
 			String routingKey = queueName;
@@ -381,8 +381,41 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			throw new IllegalArgumentException( "Null arg" );
 		}
 		
-		Envelope ret = this.sendOne( queue, message, expireTime );	// No, just send this message
+		Envelope ret = this.sendOne( queue, message, expireTime );
 		return ret;
+	}
+
+	@Override
+	public Envelope send( String queueName, Message message, long expireTime ) {
+
+		if( queueName == null || queueName.length() == 0 || message == null ) {
+			throw new IllegalArgumentException( "Null arg" );
+		}
+		
+		Envelope ret = this.sendOne( queueName, message, expireTime );
+		return ret;
+	}
+
+	@Override
+	protected SimpleEnvelope sendOne( String queueName, Message message, long expireTime ) {
+		SimpleEnvelope envelope = super.sendOne( queueName, message, expireTime );
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			String json = mapper.writeValueAsString( envelope );
+			
+			AMQP.BasicProperties properties = 
+					new AMQP.BasicProperties.Builder()
+						.deliveryMode( 2 )			// persisted delivery
+						.build();
+			String routingKey = queueName;
+			this.channel.basicPublish( exchangeName, routingKey, properties, json.getBytes() );
+//			this.mainChannel.close();
+//			this.mainChannel.getConnection().close();
+			return envelope;
+		} 
+		catch( IOException|TimeLimitExceededException e ) {
+			throw new RuntimeException( e );
+		}
 	}
 
 	@Override
@@ -396,7 +429,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 					new AMQP.BasicProperties.Builder()
 						.deliveryMode( 2 )			// persisted delivery
 						.build();
-			String routingKey = extractRoutingKeyFromQueueName( queue.getName() );
+			String routingKey = queue.getName();
 			this.channel.basicPublish( exchangeName, routingKey, properties, json.getBytes() );
 //			this.mainChannel.close();
 //			this.mainChannel.getConnection().close();

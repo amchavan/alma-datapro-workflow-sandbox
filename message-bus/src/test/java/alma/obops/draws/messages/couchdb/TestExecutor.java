@@ -2,6 +2,7 @@ package alma.obops.draws.messages.couchdb;
 
 import static alma.obops.draws.messages.TestUtils.MESSAGE_BUS_NAME;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
@@ -9,8 +10,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import alma.obops.draws.messages.AbstractMessage;
@@ -20,38 +21,39 @@ import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.ExecutorClient;
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
-import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.Publisher;
 import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
 import alma.obops.draws.messages.ResponseMessage;
+import alma.obops.draws.messages.Subscriber;
 import alma.obops.draws.messages.TimeLimitExceededException;
 import alma.obops.draws.messages.configuration.CouchDbConfiguration;
 import alma.obops.draws.messages.configuration.CouchDbConfigurationProperties;
+import alma.obops.draws.messages.configuration.CouchDbMessageBrokerConfiguration;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {CouchDbConfiguration.class, CouchDbConfigurationProperties.class})
-@AutoConfigureJdbc
+@SpringBootTest(classes = { CouchDbConfiguration.class, 
+							CouchDbConfigurationProperties.class, 
+						    CouchDbMessageBrokerConfiguration.class
+						    })
+@ActiveProfiles( "couchdb" )
 public class TestExecutor {
 
 	private static final String QUEUE_NAME = "DOUBLER_Q";
-	static Integer globalDoubled = null; 			// needs to be static!
-	private MessageBroker broker = null;
-	private MessageQueue queue;
+	static Integer doubled = null; 			// needs to be static!
 	
 	@Autowired
-	private CouchDbConnection couchDbConn;
+	private MessageBroker broker = null;
+	
+	private Subscriber subscriber;
+	private Publisher publisher;
 
 	// Request: double a number
 	public static class DoubleRequest extends AbstractRequestMessage  {
-		
 		public int number;
 
 		public DoubleRequest() {
-			// empty
-		}
-
-		public DoubleRequest( int number ) {
-			this.number = number;
+			// needed for JSON (de)serialization
 		}
 	}
 
@@ -60,11 +62,7 @@ public class TestExecutor {
 		public int doubled;
 
 		public DoubleResponse() {
-			// empty
-		}
-
-		public DoubleResponse( int doubled ) {
-			this.doubled = doubled;
+			// needed for JSON (de)serialization
 		}
 	}
 
@@ -72,35 +70,21 @@ public class TestExecutor {
 	public static class Doubler implements RequestProcessor {
 
 		@Override
-		public ResponseMessage process(RequestMessage message) {
+		public ResponseMessage process( RequestMessage message ) {
 
 			DoubleRequest request = (DoubleRequest) message;
 			System.out.println( ">>> Received request with number: " + request.number );
-			int doubled = request.number + request.number;
-			return new DoubleResponse( doubled );
-		}
-	}
-	
-	// This client sends a request to double a number to the queue; when the
-	// response arrives the client copies it to a global variable to share it with
-	// the rest of this test case
-	public class BasicExecutorClient {
-		public void request( int number ) throws IOException {
-
-			MessageConsumer consumer = (message) -> {
-				globalDoubled = ((DoubleResponse) message).doubled;
-			};
-			ExecutorClient client = new ExecutorClient( queue, consumer );
-			DoubleRequest request = new DoubleRequest( number ); 
-
-			client.call( request );
+			DoubleResponse response = new DoubleResponse();
+			response.doubled = request.number + request.number;
+			return response;
 		}
 	}
 	
 	@Before
 	public void aaa_setUp() throws IOException {
-		broker = new CouchDbMessageBroker( couchDbConn, MESSAGE_BUS_NAME  );
-		queue = broker.messageQueue( QUEUE_NAME );
+		System.out.println( ">>> SETUP ========================================" );
+		this.publisher = new Publisher( broker, QUEUE_NAME );
+		this.subscriber = new Subscriber( broker, QUEUE_NAME, "test" );
 		
 		DbConnection db = ((CouchDbMessageBroker) broker).getDbConnection(); 
 		db.dbDelete( MESSAGE_BUS_NAME );
@@ -110,14 +94,12 @@ public class TestExecutor {
 	@Test
 	public void testDoubler() throws Exception {
 
-		RequestProcessor processor = new Doubler();
-		Executor executor = new Executor( queue, processor, 5000 );
-		BasicExecutorClient client = new BasicExecutorClient();
-
-		// Define a sender thread
-		Runnable receiver = () -> {	
+		// Start a background thread to run the Doubler Executor
+		RequestProcessor doubler = new Doubler();
+		Executor doublerExecutor = new Executor( this.subscriber, doubler, 5000 );
+		Runnable doublerRunnable = () -> {	
 			try {
-				executor.run();
+				doublerExecutor.run();
 			} 
 			catch (TimeLimitExceededException e) {
 				System.out.println(">>> Timed out: " + e.getMessage());
@@ -126,18 +108,42 @@ public class TestExecutor {
 				throw new RuntimeException( e );
 			}
 		};
-		Thread doublerT = new Thread( receiver );
-		doublerT.start();
+		Thread doublerThread = new Thread( doublerRunnable );
+		doublerThread.start();
 		
-		globalDoubled = null;
-		client.request( 1 );
-		System.out.println( ">>> Received reply with number: " + globalDoubled );
-		assertEquals( 2, globalDoubled.intValue() );
+		// Define the client for that Executor
+		MessageConsumer consumer = (message) -> {
+			if( ! (message instanceof DoubleResponse) ) {
+				String msg = "Not a " + DoubleResponse.class.getSimpleName() + ": " + message;
+				
+				System.out.println( ">>>>> message 2: " + message );
+				System.out.println( ">>>>> Thread: " + Thread.currentThread().getName() );
+				System.out.println( ">>>>> " + msg );
+				throw new RuntimeException( msg );
+			}
+			doubled = ((DoubleResponse) message).doubled;
+		};
 		
-		globalDoubled = null;
-		client.request( 2 );
-		System.out.println( ">>> Received reply with number: " + globalDoubled );
-		assertEquals( 4, globalDoubled.intValue() );
-		doublerT.join();
+		ExecutorClient client = new ExecutorClient( publisher, consumer );
+
+		// Client sends a request to double 1
+		DoubleRequest request = new DoubleRequest();
+		doubled = null;
+		request.number = 1;
+		client.call( request );
+
+//		MessageBroker.sleep( 1500 );	
+		assertNotNull( doubled );
+		System.out.println( ">>> Received reply with number: " + doubled );
+		assertEquals( 2, doubled.intValue() );
+
+		// Client sends a request to double 17
+		doubled = null;
+		request.number = 17;
+		client.call( request );
+		assertNotNull( doubled );
+		System.out.println( ">>> Received reply with number: " + doubled );
+		assertEquals( 34, doubled.intValue() );
+		doublerThread.join();
 	}
 }

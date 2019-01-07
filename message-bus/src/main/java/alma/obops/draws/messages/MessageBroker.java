@@ -24,10 +24,10 @@ public interface MessageBroker {
     public static final TimeZone UT = TimeZone.getTimeZone( "Etc/GMT" );
 
     /**
-     * Shorter ISO format for date/time strings: no milliseconds nor time zone.
+     * Shorter ISO format for date/time strings: no time zone.
      */
-    public static final String ISOTIMEDATESTRING_SHORT = 
-        "yyyy-MM-dd'T'HH:mm:ss";
+    public static final String ISOTIMEDATESTRING = 
+        "yyyy-MM-dd'T'HH:mm:ss.SSS";
 
     /**
      * @return The current date/time in UT
@@ -41,7 +41,7 @@ public interface MessageBroker {
 	 * @return The current date/time in ISO short format, for instance <code>2018-09-18T13:48:31</code>
 	 */
 	public static String nowISO() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat( ISOTIMEDATESTRING_SHORT );
+        SimpleDateFormat dateFormat = new SimpleDateFormat( ISOTIMEDATESTRING );
         dateFormat.setTimeZone( UT );
         String ret = dateFormat.format( now() );
         return ret;
@@ -68,7 +68,7 @@ public interface MessageBroker {
 	 * @throws ParseException 
 	 */
 	public static Date parseIsoDatetime( String isoDatetime ) throws ParseException {
-        SimpleDateFormat dateFormat = new SimpleDateFormat( ISOTIMEDATESTRING_SHORT );
+        SimpleDateFormat dateFormat = new SimpleDateFormat( ISOTIMEDATESTRING );
         dateFormat.setTimeZone( UT );
 		Date ret = dateFormat.parse( isoDatetime ); 
 		return ret;
@@ -273,4 +273,7 @@ public interface MessageBroker {
 	 *                turned off; that's the default condition.
 	 */
 	public void setTokenFactory( TokenFactory factory );
+
+	/** TODO */
+	public Envelope send(String queueName, Message message, long expireTime);
 }

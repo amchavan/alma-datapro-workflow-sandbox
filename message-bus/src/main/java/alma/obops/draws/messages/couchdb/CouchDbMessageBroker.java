@@ -235,6 +235,19 @@ public class CouchDbMessageBroker extends AbstractMessageBroker implements Messa
 		}
 	}
 
+	@Override
+	protected SimpleEnvelope sendOne( String queueName, Message message, long timeToLive ) {
+		SimpleEnvelope se = super.sendOne( queueName, message, timeToLive );
+		CouchDbEnvelope envelope = new CouchDbEnvelope( se );
+		try {
+			dbConn.save( brokerName, envelope );
+			return envelope;
+		} 
+		catch ( Exception e ) {
+			throw new RuntimeException( e );
+		}
+	}
+
 	/**
 	 * Subclassed to support persisting the new state
 	 */
