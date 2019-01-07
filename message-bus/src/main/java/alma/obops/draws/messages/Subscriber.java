@@ -3,7 +3,7 @@ package alma.obops.draws.messages;
 import java.io.IOException;
 
 /**
- * TODO
+ * Subscribes to messages sent to a given address
  * @author mchavan, 07-Jan-2019
  */
 public class Subscriber {
@@ -16,6 +16,11 @@ public class Subscriber {
 		return queue;
 	}
 
+	/**
+	 * @param messageBroker
+	 * @param queueName
+	 * @param serviceName
+	 */
 	public Subscriber( MessageBroker messageBroker, String queueName, String serviceName ) {
 		this.messageBroker = messageBroker;
 		this.messageBroker.setServiceName( serviceName );

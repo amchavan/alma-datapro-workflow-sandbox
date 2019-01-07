@@ -14,7 +14,6 @@ public abstract class AbstractMessage implements Message {
 
 	@Override
 	public Envelope getEnvelope() {
-		// TODO Auto-generated method stub
 		return this.envelope;
 	}
 
