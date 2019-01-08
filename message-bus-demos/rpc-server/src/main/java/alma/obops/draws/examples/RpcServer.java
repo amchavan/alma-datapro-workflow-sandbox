@@ -19,10 +19,10 @@ import alma.obops.draws.examples.common.DatetimeRequest;
 import alma.obops.draws.examples.common.DatetimeResponse;
 import alma.obops.draws.messages.Executor;
 import alma.obops.draws.messages.MessageBroker;
-import alma.obops.draws.messages.MessageQueue;
 import alma.obops.draws.messages.RequestMessage;
 import alma.obops.draws.messages.RequestProcessor;
 import alma.obops.draws.messages.ResponseMessage;
+import alma.obops.draws.messages.Subscriber;
 import alma.obops.draws.messages.TimeLimitExceededException;
 
 @SpringBootApplication
@@ -36,11 +36,10 @@ public class RpcServer implements CommandLineRunner {
 
 	@Override
     public void run( String... args ) throws Exception {
-		
-		broker.setServiceName( "rpc_server" );
-		MessageQueue queue = broker.messageQueue( DATETIME_QUEUE );
+
+		Subscriber subscriber = new Subscriber( broker, DATETIME_QUEUE, "rpc_server" );
 		RequestProcessor processor = new DatetimeProcessor();
-		Executor executor = new Executor( queue, processor, 120*1000 );
+		Executor executor = new Executor( subscriber, processor, 120*1000 );
 
 		try {
 			executor.run();
@@ -65,12 +64,14 @@ public class RpcServer implements CommandLineRunner {
 
 /** Implements this service's logic */
 class DatetimeProcessor implements RequestProcessor {
+	
+	private Logger logger = LoggerFactory.getLogger( DatetimeProcessor.class );
 
 	@Override
 	public ResponseMessage process( RequestMessage message ) {
 
 		DatetimeRequest request = (DatetimeRequest) message;
-		System.out.println(">>> Received request with TZ=" + request.timezone);
+		logger.info(">>> Received request with TZ=" + request.timezone);
 		TimeZone tz = TimeZone.getTimeZone(request.timezone);
 		Calendar c = Calendar.getInstance(tz);
 		return new DatetimeResponse( c.getTime().toString() );

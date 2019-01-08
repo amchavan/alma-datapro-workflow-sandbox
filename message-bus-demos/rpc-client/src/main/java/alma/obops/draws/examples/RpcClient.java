@@ -2,7 +2,7 @@ package alma.obops.draws.examples;
 
 import static alma.obops.draws.examples.common.Constants.DATETIME_QUEUE;
 import static alma.obops.draws.examples.common.Utils.getCommandLineArg;
-import static alma.obops.draws.messages.MessageBroker.*;
+import static alma.obops.draws.messages.MessageBroker.sleep;
 
 import java.io.IOException;
 
@@ -22,7 +22,7 @@ import alma.obops.draws.examples.common.DatetimeResponse;
 import alma.obops.draws.messages.ExecutorClient;
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
-import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.Publisher;
 
 @SpringBootApplication
 @ComponentScan( { "alma.obops.draws.messages", "alma.obops.draws.examples" } )
@@ -47,15 +47,14 @@ public class RpcClient implements CommandLineRunner {
 		if( delayArg != null ) {
 			delay = Integer.parseInt( delayArg );
 		}
-		
-		broker.setServiceName( "rpc_client" );
-		MessageQueue queue = broker.messageQueue( DATETIME_QUEUE, MessageQueue.Type.SEND );
+
+		Publisher publisher = new Publisher( broker, DATETIME_QUEUE );
 		
 		MessageConsumer consumer = (message) -> {
 			logger.info( "Received reply: " + ((DatetimeResponse) message).datetime);
 		};
 		
-		ExecutorClient client = new ExecutorClient( queue, consumer );
+		ExecutorClient client = new ExecutorClient( publisher, consumer );
 		DatetimeRequest request = new DatetimeRequest( "Etc/GMT" );
 		for( int i = 0; i < repeats; i++ ) {
 			try {
