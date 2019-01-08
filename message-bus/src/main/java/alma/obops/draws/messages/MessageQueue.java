@@ -6,8 +6,8 @@ import java.util.List;
 import alma.obops.draws.messages.security.TokenFactory;
 
 /**
- * Allows messages to be sent and subscribed to. Depends on a {@link MessageBroker}
- * providing the transport mechanism.
+ * Allows messages to be subscribed to. Depends on a {@link MessageBroker}
+ * providing the actual transport mechanism.
  * 
  * @author mchavan, 18-Sep-2018
  */
@@ -20,6 +20,9 @@ public class MessageQueue {
 	
 	/**
 	 * Create a queue in the given broker.
+	 * <P>
+	 * This constructor should never be called by client code, use
+	 * {@link MessageBroker#messageQueue(String, String)} instead.
 	 * 
 	 * @param queueName   If it ends with <code>.*</code> it is interpreted as a
 	 *                    group ID; messages set to the queue will be sent to all
@@ -50,12 +53,15 @@ public class MessageQueue {
 	}
 
 	/**
+	 * Client code should never use this method (it's package-private anyway), use
+	 * {@link Subscriber#setAcceptedRoles(List)} instead.
+	 * 
 	 * @return The list of accepted sender roles for this queue. <br>
-	 * Forces messages sent to this queue to have a valid JWT and makes sure that
-	 * the list of roles included in the JWS (claim "roles") includes at least one
-	 * of the accepted roles 
+	 *         Forces messages sent to this queue to have a valid JWT and makes sure
+	 *         that the list of roles included in the JWS (claim "roles") includes
+	 *         at least one of the accepted roles
 	 */
-	public List<String> getAcceptedRoles() {
+	List<String> getAcceptedRoles() {
 		return acceptedRoles;
 	}
 
@@ -92,7 +98,7 @@ public class MessageQueue {
 	 * @throws RuntimeException if no {@link TokenFactory} was set prior to calling
 	 *                          this method
 	 */
-	public void setAcceptedRoles( List<String> acceptedRoles ) {
+	void setAcceptedRoles( List<String> acceptedRoles ) {
 		if( this.messageBroker.getTokenFactory() == null ) {
 			throw new RuntimeException( "No token factory found" );
 		}

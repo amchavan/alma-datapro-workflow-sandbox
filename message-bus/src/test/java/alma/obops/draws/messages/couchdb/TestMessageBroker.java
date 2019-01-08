@@ -49,7 +49,7 @@ public class TestMessageBroker {
 		assertNotNull( couchDbConn );
 		
 		messageBus = new CouchDbMessageBroker( couchDbConn, MESSAGE_BUS_NAME  );
-		queue = new MessageQueue( QUEUE_NAME, "", messageBus );
+		queue = messageBus.messageQueue( QUEUE_NAME, "" );
 		db = ((CouchDbMessageBroker) messageBus).getDbConnection(); 
 		db.dbDelete( MESSAGE_BUS_NAME );
 		db.dbCreate( MESSAGE_BUS_NAME );

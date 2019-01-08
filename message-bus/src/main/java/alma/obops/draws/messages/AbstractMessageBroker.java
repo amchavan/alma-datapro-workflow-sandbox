@@ -196,7 +196,7 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 		if( queueName == null || message == null ) {
 			throw new IllegalArgumentException( "Null arg" );
 		}
-		MessageQueue queue = new MessageQueue( queueName, "" , this );
+		MessageQueue queue = messageQueue( queueName, "" );
 		
 		// Are we sending to a group?
 		if( ! queueName.endsWith( ".*" )) {
