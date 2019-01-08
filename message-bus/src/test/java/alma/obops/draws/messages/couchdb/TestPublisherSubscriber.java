@@ -196,7 +196,10 @@ public class TestPublisherSubscriber {
 		Runnable receiver = () -> {	
 			try {
 				subscriber.listen( mc, 3000 );
-			} 
+			}
+			catch( TimeLimitExceededException e ) {
+				// no-op, expected
+			}
 			catch (IOException e) {
 				throw new RuntimeException( e );
 			}
