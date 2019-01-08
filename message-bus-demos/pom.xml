@@ -1,0 +1,20 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<packaging>pom</packaging>
+
+  	<groupId>alma.obops.draws</groupId>
+  	<artifactId>message-bus-demos</artifactId>
+  	<version>OBOPS-2019.02</version>
+	
+	<name>DRAWS Message Bus demos</name>
+
+	<modules>
+		<module>basic-sender/pom.xml</module>
+		<module>basic-receiver/pom.xml</module>
+		<module>sender/pom.xml</module>
+		<module>receiver/pom.xml</module>
+		<module>rpc-client/pom.xml</module>
+		<module>rpc-server/pom.xml</module>
+	</modules>
+</project>
