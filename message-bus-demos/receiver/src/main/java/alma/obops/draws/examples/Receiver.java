@@ -1,6 +1,6 @@
 package alma.obops.draws.examples;
 
-import static alma.obops.draws.examples.common.Utils.*;
+import static alma.obops.draws.examples.common.Utils.getCommandLineArg;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -16,7 +16,7 @@ import org.springframework.context.annotation.ComponentScan;
 
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
-import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.Subscriber;
 import alma.obops.draws.messages.TimeLimitExceededException;
 
 @SpringBootApplication
@@ -40,9 +40,8 @@ public class Receiver implements CommandLineRunner {
 		if( queueName == null ) {
 			throw new IllegalArgumentException( "No queue name command line argument 'qname'" );
 		}
-		
-		broker.setServiceName( serviceName );
-		MessageQueue queue = broker.messageQueue( queueName );
+
+		Subscriber subscriber = new Subscriber( broker, queueName, serviceName );
 		
 		MessageConsumer consumer = (message) -> {
 			String pid = ManagementFactory.getRuntimeMXBean().getName();
@@ -53,7 +52,7 @@ public class Receiver implements CommandLineRunner {
 		// Listen for messages and pass them on to the consumer; will timeout
 		// if no message is coming
 		try {
-			queue.listen( consumer, 120*1000 );
+			subscriber.listen( consumer, 120*1000 );
 		} 
 		catch( IOException e) {
 			e.printStackTrace();

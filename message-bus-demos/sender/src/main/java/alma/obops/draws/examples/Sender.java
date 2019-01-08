@@ -14,7 +14,7 @@ import org.springframework.context.annotation.ComponentScan;
 import alma.obops.draws.examples.common.Person;
 import alma.obops.draws.messages.Envelope;
 import alma.obops.draws.messages.MessageBroker;
-import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.Publisher;
 
 @SpringBootApplication
 @ComponentScan( { "alma.obops.draws.messages", "alma.obops.draws.examples" } )
@@ -44,16 +44,16 @@ public class Sender implements CommandLineRunner {
 			throw new IllegalArgumentException( "No queue name command line argument 'delay'" );
 		}
 		int delay = Integer.parseInt( delayArg );
-		
-		MessageQueue queue = broker.messageQueue( queueName, MessageQueue.Type.SEND );
-		logger.info( "Sending to " + queue.getName() );
+
+		Publisher publisher = new Publisher( broker, queueName );
+		logger.info( "Sending to " + queueName );
 		
 		/* 
 		 * Main send loop
 		 */
 		for( int i = 0; i < repeats; i++ ) {
 			Person p = new Person( "Person-"+i, 50+i, true );
-			Envelope envelope = queue.send( p );
+			Envelope envelope = publisher.publish( p );
 			System.out.println( ">>> Sent: " + envelope.getMessage() );
 			Thread.sleep( delay * 1000 );
 		}
