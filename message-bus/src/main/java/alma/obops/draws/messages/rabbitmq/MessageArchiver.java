@@ -40,7 +40,7 @@ public class MessageArchiver implements Runnable {
 									byte[] body ) throws IOException {
 
 			String message = new String( body );
-			String msg = ">>>> delivery: " + envelope.getRoutingKey() + ": " + message; 
+			String msg = "delivered: " + envelope.getRoutingKey() + ": " + message; 
 			logger.info( msg );
 			
 			PersistedEnvelope persistedEnvelope;
@@ -53,10 +53,10 @@ public class MessageArchiver implements Runnable {
 				String state = t[1];
 				String timestamp = t[2];
 				
-				Iterable<PersistedEnvelope> all = envelopeRepository.findAll();
-				for (PersistedEnvelope pe : all) {
-					System.out.println( ">>> " + pe );
-				}
+//				Iterable<PersistedEnvelope> all = envelopeRepository.findAll();
+//				for (PersistedEnvelope pe : all) {
+//					System.out.println( ">>> " + pe );
+//				}
 				
 				Optional<PersistedEnvelope> opt = envelopeRepository.findByEnvelopeId( id );
 				persistedEnvelope = opt.get();
@@ -90,7 +90,7 @@ public class MessageArchiver implements Runnable {
 			}
 			else {
 				String json = new String(body, "UTF-8");
-				System.out.println( ">>>> delivered json: " + json );
+//				System.out.println( ">>>> delivered json: " + json );
 				
 				ObjectMapper objectMapper = new ObjectMapper();
 				SimpleEnvelope simpleEnvelope = objectMapper.readValue( json, SimpleEnvelope.class );
@@ -98,10 +98,10 @@ public class MessageArchiver implements Runnable {
 			}
 			envelopeRepository.save( persistedEnvelope );
 
-			Iterable<PersistedEnvelope> all = envelopeRepository.findAll();
-			for (PersistedEnvelope pe : all) {
-				System.out.println( ">>> pe: " + pe );
-			}
+//			Iterable<PersistedEnvelope> all = envelopeRepository.findAll();
+//			for (PersistedEnvelope pe : all) {
+//				System.out.println( ">>> pe: " + pe );
+//			}
 		}
 	}
 	
