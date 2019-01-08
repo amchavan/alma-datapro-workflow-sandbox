@@ -14,7 +14,7 @@ import org.springframework.context.annotation.ComponentScan;
 import alma.obops.draws.examples.common.Person;
 import alma.obops.draws.messages.Envelope;
 import alma.obops.draws.messages.MessageBroker;
-import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.Publisher;
 
 @SpringBootApplication
 @ComponentScan( { "alma.obops.draws.messages", "alma.obops.draws.examples" } )
@@ -33,10 +33,10 @@ public class BasicSender implements CommandLineRunner {
 			throw new IllegalArgumentException( "No queue name command line argument 'qname'" );
 		}
 		
-		MessageQueue queue = broker.messageQueue( queueName, MessageQueue.Type.SEND );
+		Publisher publisher = new Publisher( broker, queueName );
 		Person freddie = new Person( "Freddie Mercury", 45, false );
-		logger.info( "Sending to " + queue.getName() );
-		Envelope envelope = queue.send( freddie );
+		logger.info( "Sending to " + queueName );
+		Envelope envelope = publisher.publish( freddie );
 		System.out.println( ">>> Sent: " + envelope.getMessage() );
 		System.exit( 0 );
 	}

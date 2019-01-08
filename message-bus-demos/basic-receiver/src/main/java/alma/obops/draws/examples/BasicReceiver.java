@@ -17,7 +17,7 @@ import org.springframework.context.annotation.ComponentScan;
 import alma.obops.draws.messages.Envelope;
 import alma.obops.draws.messages.MessageBroker;
 import alma.obops.draws.messages.MessageConsumer;
-import alma.obops.draws.messages.MessageQueue;
+import alma.obops.draws.messages.Subscriber;
 import alma.obops.draws.messages.TimeLimitExceededException;
 
 @SpringBootApplication
@@ -41,9 +41,8 @@ public class BasicReceiver implements CommandLineRunner {
 		if( queueName == null ) {
 			throw new IllegalArgumentException( "No queue name command line argument 'qname'" );
 		}
-		
-		broker.setServiceName( serviceName );
-		MessageQueue queue = broker.messageQueue( queueName );
+
+		Subscriber subscriber = new Subscriber( broker, queueName, serviceName );
 		
 		MessageConsumer consumer = (message) -> {
 			String pid = ManagementFactory.getRuntimeMXBean().getName();
@@ -55,7 +54,7 @@ public class BasicReceiver implements CommandLineRunner {
 		// if no message can be read
 		try {
 			logger.info( "Waiting for message" );
-			Envelope received = queue.receive( 120*1000 );
+			Envelope received = subscriber.receive( 120*1000 );
 			consumer.consume( received.getMessage() );
 		}
 		catch( IOException e) {
