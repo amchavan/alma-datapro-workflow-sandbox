@@ -57,8 +57,6 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	private PersistedEnvelopeRepository envelopeRepository;
 
 	private Date lastDeliveryTime;
-
-	private String serviceName;
 	
 	/**
 	 * Constructor for default connection on localhost
@@ -291,7 +289,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		
 		try {
 			String routingKey = queueName;
-			queueName = makeQueueName( this.serviceName, queueName );
+			queueName = makeQueueName( serviceName, queueName );
 			
 			this.channel.queueDeclare( 
 					queueName, 
