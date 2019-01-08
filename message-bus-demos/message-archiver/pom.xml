@@ -10,7 +10,7 @@
 	</parent>
 	
 	<groupId>alma.obops.draws</groupId>
-	<artifactId>receiver</artifactId>
+	<artifactId>message-archiver</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Generic receiver</name>
 	<description>Generic receiver</description>
