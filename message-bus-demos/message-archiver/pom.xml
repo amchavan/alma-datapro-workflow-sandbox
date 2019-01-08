@@ -11,7 +11,7 @@
 	
 	<groupId>alma.obops.draws</groupId>
 	<artifactId>message-archiver</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>OBOPS-2019.02</version>
 	<name>Generic receiver</name>
 	<description>Generic receiver</description>
 

@@ -11,9 +11,7 @@
 	
 	<groupId>alma.obops.draws</groupId>
 	<artifactId>rpc-client</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>RPC client</name>
-	<description>RPC client</description>
+	<version>OBOPS-2019.02</version>
 
 	<properties>
 		<java.version>1.8</java.version>

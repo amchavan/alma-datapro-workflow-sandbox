@@ -9,9 +9,7 @@
 	</parent>
 	<groupId>alma.obops.draws</groupId>
 	<artifactId>sender</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>sender</name>
-	<description>Generic sender</description>
+	<version>OBOPS-2019.02</version>
 
 	<properties>
 		<java.version>1.8</java.version>

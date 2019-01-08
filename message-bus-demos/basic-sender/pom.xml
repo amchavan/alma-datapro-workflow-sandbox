@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>alma.obops.draws</groupId>
 	<artifactId>basic-sender</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>OBOPS-2019.02</version>
 	<name>basic-sender</name>
 	<description>Basic sender</description>
 

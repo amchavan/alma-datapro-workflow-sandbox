@@ -35,13 +35,13 @@ public class Sender implements CommandLineRunner {
 
 		String repeatsArg = getCommandLineArg( "repeats", args );
 		if( repeatsArg == null ) {
-			throw new IllegalArgumentException( "No queue name command line argument 'repeats'" );
+			repeatsArg = "1";
 		}
 		int repeats = Integer.parseInt( repeatsArg );
 
 		String delayArg = getCommandLineArg( "delay", args );
 		if( delayArg == null ) {
-			throw new IllegalArgumentException( "No queue name command line argument 'delay'" );
+			delayArg = "0";
 		}
 		int delay = Integer.parseInt( delayArg );
 
@@ -54,7 +54,7 @@ public class Sender implements CommandLineRunner {
 		for( int i = 0; i < repeats; i++ ) {
 			Person p = new Person( "Person-"+i, 50+i, true );
 			Envelope envelope = publisher.publish( p );
-			System.out.println( ">>> Sent: " + envelope.getMessage() );
+			logger.info( "Sent: " + envelope.getMessage() );
 			Thread.sleep( delay * 1000 );
 		}
 		

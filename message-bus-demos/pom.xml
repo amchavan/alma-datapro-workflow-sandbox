@@ -10,6 +10,7 @@
 	<name>DRAWS Message Bus demos</name>
 
 	<modules>
+		<module>demos-common/pom.xml</module>
 		<module>basic-sender/pom.xml</module>
 		<module>basic-receiver/pom.xml</module>
 		<module>sender/pom.xml</module>

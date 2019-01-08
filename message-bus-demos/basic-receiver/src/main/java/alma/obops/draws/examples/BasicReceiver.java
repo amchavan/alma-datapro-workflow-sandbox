@@ -46,8 +46,8 @@ public class BasicReceiver implements CommandLineRunner {
 		
 		MessageConsumer consumer = (message) -> {
 			String pid = ManagementFactory.getRuntimeMXBean().getName();
-			String msg = ">>> " + serviceName + " (" + pid + ") received: " + message;
-			System.out.println( msg );
+			String msg = serviceName + " (" + pid + ") received: " + message;
+			logger.info( msg );
 		};
 
 		// Listen for a single message and pass it on to the consumer; will timeout

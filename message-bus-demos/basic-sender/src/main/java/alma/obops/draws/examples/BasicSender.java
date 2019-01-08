@@ -37,7 +37,7 @@ public class BasicSender implements CommandLineRunner {
 		Person freddie = new Person( "Freddie Mercury", 45, false );
 		logger.info( "Sending to " + queueName );
 		Envelope envelope = publisher.publish( freddie );
-		System.out.println( ">>> Sent: " + envelope.getMessage() );
+		logger.info( ">>> Sent to " + queueName + ": " + envelope.getMessage() );
 		System.exit( 0 );
 	}
 	

@@ -6,8 +6,8 @@
 	<groupId>alma.obops.draws.examples</groupId>
 	<artifactId>examples-common</artifactId>
 	<version>OBOPS-2019.02</version>
-	<name>examples-common</name>
-	<description>Common classes fro DRAWS</description>
+	<name>demos-common</name>
+	<description>Common classes for DRAWS message bus demos</description>
 	<packaging>jar</packaging>
 
 	<properties>
