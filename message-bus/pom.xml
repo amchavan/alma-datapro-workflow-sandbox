@@ -133,11 +133,11 @@
           <skipTests>true</skipTests>
         </configuration>
       </plugin>
-
-			<plugin>
-				<!-- Generate a standalone, executable fat jar 
-				     See https://www.baeldung.com/executable-jar-with-maven
-						 or https://maven.apache.org/plugins/maven-assembly-plugin/usage.html -->
+		<!-- Generate a standalone, executable fat jar 
+			 See https://www.baeldung.com/executable-jar-with-maven
+			 or https://maven.apache.org/plugins/maven-assembly-plugin/usage.html -->
+		<!--
+			<plugin>	
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<executions>
@@ -161,6 +161,7 @@
 					</execution>
 				</executions>
 			</plugin>
+		-->
     </plugins>
   </build>
 </project>

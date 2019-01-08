@@ -12,9 +12,10 @@ See this project's [class diagram](https://drive.google.com/file/d/18PNkMJEVu6y0
 ## Build
 
 Clone the Git repository (`git clone https://github.com/amchavan/alma-datapro-workflow-sandbox.git`), change to the *message-bus* directory and run  
-`mvn clean package`  
-That will create two jarfiles in *target*, *message-bus-&lt;version&gt;.jar* and an executable jarfile called *message-bus-&lt;version&gt;-jar-with-dependencies.jar*
+`mvn clean install`  
+That will create (in *target*) and install (in the local Maven repo) jarfile
+*message-bus-&lt;version&gt;.jar* 
 
 ## Examples
 
-See the _message-bud-demos_ module.
+See the [message-bus-demos module](../message-bus-demos/README.md).
