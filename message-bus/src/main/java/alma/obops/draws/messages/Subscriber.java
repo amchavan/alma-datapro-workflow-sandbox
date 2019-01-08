@@ -17,15 +17,25 @@ public class Subscriber {
 	}
 
 	/**
-	 * @param messageBroker
-	 * @param queueName     Address of the messages we subscribe to
-	 * @param serviceName   Identifies the service that's subscribing, as multiple
-	 *                      services could subscribe to the same messages
+	 * @param queueName   Address of the messages we subscribe to
+	 * 
+	 * @param serviceName Identifies the service (application) that's subscribing,
+	 *                    as multiple services could subscribe to the same messages.
+	 *                    <br>
+	 *                    Must be a valid C/Python/Java variable name. <br>
+	 *                    Must be unique system-wide.
 	 */
 	public Subscriber( MessageBroker messageBroker, String queueName, String serviceName ) {
+		if( messageBroker == null || queueName == null || serviceName == null ) {
+			throw new IllegalArgumentException( "Null arg" );
+		}
+		
+		if( ! serviceName.matches( "^[a-zA-Z_][a-zA-Z_0-9]*$" ) ) {
+			throw new RuntimeException( "Invalid serviceName" );
+		}
+
 		this.messageBroker = messageBroker;
-		this.messageBroker.setServiceName( serviceName );
-		this.queue = messageBroker.messageQueue( queueName );
+		this.queue = messageBroker.messageQueue( queueName, serviceName );
 	}
 	
 	/**

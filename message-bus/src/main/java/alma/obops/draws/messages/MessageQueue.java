@@ -12,57 +12,32 @@ import alma.obops.draws.messages.security.TokenFactory;
  * @author mchavan, 18-Sep-2018
  */
 public class MessageQueue {
-	
-	/** Type of the queue */
-	public enum Type {
-		/** 
-		 * The queue is used for sending messages, implementations may or may not
-		 * create an underlying structure
-         */
-		SEND,
-		
-		/** 
-		 * The queue is used for receiving messages
-		 */
-		RECEIVE, 
-		
-		/**
-		 * The queue is used for sending messages, implementations should
-		 * create an underlying structure
-		 */
-		SENDQUEUE
-	}
 
 	private String queueName;
 	private MessageBroker messageBroker;
 	private List<String> acceptedRoles;
-	private Type type;	
-	
-	/**
-	 * Create a {@link Type#RECEIVE} queue in the given broker.
-	 * 
-	 * @param name
-	 *            If it ends with <code>.*</code> it is interpreted as a group ID;
-	 *            messages set to the queue will be sent to all group members
-	 */
-	public MessageQueue( String queueName, MessageBroker messageBus ) {
-		this( queueName, messageBus, Type.RECEIVE );
-	}
+	private String serviceName;
 	
 	/**
 	 * Create a queue in the given broker.
 	 * 
-	 * @param name
-	 *            If it ends with <code>.*</code> it is interpreted as a group ID;
-	 *            messages set to the queue will be sent to all group members
+	 * @param queueName   If it ends with <code>.*</code> it is interpreted as a
+	 *                    group ID; messages set to the queue will be sent to all
+	 *                    group members
+	 * 
+	 * @param serviceName Identifies the service (application) that's subscribing,
+	 *                    as multiple services could subscribe to the same messages.
+	 *                    <br>
+	 *                    Must be a valid C/Python/Java variable name. <br>
+	 *                    Must be unique system-wide.
 	 */
-	public MessageQueue( String queueName, MessageBroker messageBus, Type type ) {
+	public MessageQueue( String queueName, String serviceName, MessageBroker messageBus ) {
 		if( queueName == null || messageBus == null ) {
 			throw new IllegalArgumentException( "Null arg" );
 		}
 		this.queueName = queueName;
+		this.serviceName = serviceName;
 		this.messageBroker = messageBus;
-		this.type = type;
 	}
 
 	/**
@@ -83,7 +58,7 @@ public class MessageQueue {
 	public List<String> getAcceptedRoles() {
 		return acceptedRoles;
 	}
-	
+
 	public MessageBroker getMessageBroker() {
 		return messageBroker;
 	}
@@ -91,9 +66,9 @@ public class MessageQueue {
 	public String getName() {
 		return queueName;
 	}
-
-	public Type getType() {
-		return type;
+	
+	public String getServiceName() {
+		return serviceName;
 	}
 	
 	/**

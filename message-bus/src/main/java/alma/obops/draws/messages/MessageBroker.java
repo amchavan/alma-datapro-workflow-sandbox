@@ -183,15 +183,17 @@ public interface MessageBroker {
 								  int timeout );	
 
 	/**
-	 * @return A {@link MessageQueue.Type#RECEIVE} {@link MessageQueue} with the given name
+	 * @return A {@link MessageQueue} with the given name and service name
+	 * 
+	 * @param serviceName Identifies the service (application) that's subscribing,
+	 *                    as multiple services could subscribe to the same messages.
+	 *                    <br>
+	 *                    Must be a valid C/Python/Java variable name. <br>
+	 *                    Must be unique system-wide.
+	 * 
 	 */
-	public MessageQueue messageQueue( String queueName );
-
-	/**
-	 * @return A {@link MessageQueue} with the given name and type
-	 */
-	public MessageQueue messageQueue( String queueName, MessageQueue.Type type );
-
+	public MessageQueue messageQueue( String queueName, String serviceName );
+	
 	/**
 	 * Find the next message of this queue: that is, the oldest
 	 * non-{@link State#Received} message. That message will be set to
@@ -227,45 +229,6 @@ public interface MessageBroker {
 	public Envelope receive( MessageQueue queue, long timeLimit ) throws IOException, TimeLimitExceededException;
 	
 	/**
-	 * Creates an {@link Envelope} (including meta-data) from the given
-	 * {@link Message} and sends it to a queue.<br>
-	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
-	 * The {@link Message} instance is set to {@link State#Sent}.
-	 * 
-	 * @param queue
-	 *            If the queue name ends with <code>.*</code>
-	 *            it is interpreted as a group ID and the message is sent to all
-	 *            group members
-	 */
-	public Envelope send( MessageQueue queue, Message message );
-	
-	/**
-	 * Creates an {@link Envelope} (including meta-data) from the given
-	 * {@link Message} and sends it to a queue.<br>
-	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
-	 * The {@link Message} instance is set to {@link State#Sent}.
-	 * 
-	 * @param queue
-	 *            If the queue name ends with <code>.*</code>
-	 *            it is interpreted as a group ID and the message is sent to all
-	 *            group members
-	 * 
-	 * @param expireTime
-	 *            Time interval before this instance expires, in msec; if
-	 *            timeToLive=0 this instance never expires
-	 */
-	public Envelope send( MessageQueue queue, Message message, long expireTime );
-	
-	/**
-	 * Tell the broker which service is using it.
-	 * 
-	 * @param serviceName Any string that would be a valid C/Java/Python variable
-	 *                    name; it should be unique among all systems connected to
-	 *                    this broker.
-	 */
-	public void setServiceName( String serviceName );
-
-	/**
 	 * Give the broker a token factory: message passing is only secured if a token
 	 * factory is associated with the broker.
 	 * 
@@ -274,6 +237,26 @@ public interface MessageBroker {
 	 */
 	public void setTokenFactory( TokenFactory factory );
 
-	/** TODO */
-	public Envelope send(String queueName, Message message, long expireTime);
+	public default Envelope send(String queueName, Message message) {
+		return send( queueName, message, 0 );
+	}
+	
+	/**
+	 * Creates an {@link Envelope} (including meta-data) from the given
+	 * {@link Message} and sends it to a queue.<br>
+	 * The {@link Envelope} and {@link Message} instances reference each other.<br>
+	 * The {@link Message} instance is set to {@link State#Sent}.
+	 * 
+	 * @param queueName
+	 *            Name of the queue.<br>
+	 *            <b>BROKEN</b> If the queue name ends with <code>.*</code>
+	 *            it is interpreted as a group ID and the message is sent to all
+	 *            group members
+	 * 
+	 * @param expireTime
+	 *            Time interval before this instance expires, in msec; if
+	 *            expireTime=0 this instance never expires
+	 */
+	public Envelope send( String queueName, Message message, long expireTime );
+
 }

@@ -49,7 +49,7 @@ public class TestMessageBroker {
 		assertNotNull( couchDbConn );
 		
 		messageBus = new CouchDbMessageBroker( couchDbConn, MESSAGE_BUS_NAME  );
-		queue = new MessageQueue( QUEUE_NAME, messageBus );
+		queue = new MessageQueue( QUEUE_NAME, "", messageBus );
 		db = ((CouchDbMessageBroker) messageBus).getDbConnection(); 
 		db.dbDelete( MESSAGE_BUS_NAME );
 		db.dbCreate( MESSAGE_BUS_NAME );
@@ -57,7 +57,7 @@ public class TestMessageBroker {
 
 	@Test
 	public void construction() {
-		MessageQueue queue = messageBus.messageQueue( QUEUE_NAME );
+		MessageQueue queue = messageBus.messageQueue( QUEUE_NAME, "" );
 		assertNotNull( queue );
 		assertEquals( QUEUE_NAME, queue.getName() );
 		assertTrue( messageBus == queue.getMessageBroker() );
@@ -113,7 +113,7 @@ public class TestMessageBroker {
 	
 	@Test
 	public void sendAndFind() throws Exception {
-		Envelope in = messageBus.send( queue, jimi );
+		Envelope in = messageBus.send( QUEUE_NAME, jimi );
 		assertNotNull( in );
 		assertEquals( jimi, in.getMessage() );
 		
@@ -128,7 +128,7 @@ public class TestMessageBroker {
 
 	@Test
 	public void sendAndReceive() throws Exception {
-		messageBus.send( queue, jimi );
+		messageBus.send( QUEUE_NAME, jimi );
 
 		Envelope out = messageBus.receive( queue );
 		assertNotNull( out );
@@ -142,7 +142,7 @@ public class TestMessageBroker {
 		TestMessage in = new TestMessage( "Freddie Mercury", 45, false );
 		
 		Runnable sender = () -> {	
-			messageBus.send( queue, in );
+			messageBus.send( QUEUE_NAME, in );
 			System.out.println( ">>> Sent: " + in );
 		};
 		Thread senderT = new Thread( sender );
@@ -180,7 +180,7 @@ public class TestMessageBroker {
 		
 		// Define a sender thread
 		Runnable sender = () -> {	
-			messageBus.send( queue, in );
+			messageBus.send( QUEUE_NAME, in );
 			System.out.println( ">>> Sent: " + in );
 		};
 		Thread senderT = new Thread( sender );

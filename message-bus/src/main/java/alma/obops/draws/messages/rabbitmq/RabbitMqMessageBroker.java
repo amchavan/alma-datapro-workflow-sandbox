@@ -45,14 +45,8 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	
 	public static final String MESSAGE_PERSISTENCE_QUEUE = "message.persistence.queue";
 	public static final String MESSAGE_STATE_ROUTING_KEY = "new.message.state";
-
-//	private static String extractRoutingKeyFromQueueName( String queueName ) {
-//		int start = queueName.indexOf( "." ) + 1;
-//		int end = queueName.length();
-//		return queueName.substring( start, end );
-//	}
 	
-	private static String makeQueueNameFromRoutingKey( String serviceName, String queueName ) {
+	private static String makeQueueName( String serviceName, String queueName ) {
 		return serviceName + "." + queueName;
 	}
 	
@@ -167,10 +161,7 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		}
 	}
 	
-	
-	/**
-	 * TODO
-	 */
+	@Override
 	public void deleteQueue( MessageQueue queue ) {
 		try {
 			this.channel.queueDelete( queue.getName() );
@@ -185,16 +176,12 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		drainQueue( MESSAGE_PERSISTENCE_QUEUE );
 	}
 
-	/**
-	 * TODO
-	 */
+	/** For testing only */
 	public void drainQueue( MessageQueue queue ) {
 		drainQueue( queue.getName() );
 	}
 
-	/**
-	 * TODO
-	 */
+	/** For testing only */
 	void drainQueue( String queueName ) {
 		try {
 			this.channel.queuePurge( queueName );
@@ -289,37 +276,34 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 	}
 	
 	/**
-	 * @param queueName Will be used as the AMPQ routing key; we'll generate the
-	 *                  actual RabbitMQ queue name from this parameter and the
-	 *                  service name.
-	 * @param type The queue type
+	 * @param queueName   Will be used as the AMPQ routing key; we'll generate the
+	 *                    actual RabbitMQ queue name from this parameter and the
+	 *                    service name.
+	 * 
+	 * @param serviceName Identifies the service (application) that's subscribing,
+	 *                    as multiple services could subscribe to the same messages.
+	 *                    <br>
+	 *                    Must be a valid C/Python/Java variable name. <br>
+	 *                    Must be unique system-wide.
 	 */
 	@Override
-	public MessageQueue messageQueue( String queueName, MessageQueue.Type type ) {
-		if( this.serviceName == null ) {
-			setServiceName( "" );		// make sure we have some service name at all
-		}
+	public MessageQueue messageQueue( String queueName, String serviceName ) {
+		
 		try {
 			String routingKey = queueName;
-			queueName = makeQueueNameFromRoutingKey( this.serviceName, queueName );
+			queueName = makeQueueName( this.serviceName, queueName );
 			
-			// If this queue is for receiving messages or it's used by an
-			// Executor/ExecutorClient pair we need to create an actual RabbitMQ queue,
-			// otherwise we should not
-			
-			if( type == MessageQueue.Type.RECEIVE || type == MessageQueue.Type.SENDQUEUE ) {
-				
-				this.channel.queueDeclare( 
-						queueName, 
-						true, 			// persisted
-						false, 			// non-exclusive
-						false, 			// auto-deleting?
-						null 			// no extra properties
-						);
-			
-				this.channel.queueBind( queueName, exchangeName, routingKey );
-			}
-			MessageQueue ret = new MessageQueue( queueName, this );
+			this.channel.queueDeclare( 
+					queueName, 
+					true, 			// persisted
+					false, 			// non-exclusive
+					false, 			// auto-deleting?
+					null 			// no extra properties
+					);
+		
+			this.channel.queueBind( queueName, exchangeName, routingKey );
+		
+			MessageQueue ret = new MessageQueue( queueName, serviceName, this );
 			return ret;
 		} 
 		catch( IOException e ) {
@@ -372,17 +356,6 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 			throw new RuntimeException( e );
 		}
 		return receivedEnvelope;
-	}
-
-	@Override
-	public Envelope send( MessageQueue queue, Message message, long expireTime ) {
-
-		if( queue == null || message == null ) {
-			throw new IllegalArgumentException( "Null arg" );
-		}
-		
-		Envelope ret = this.sendOne( queue, message, expireTime );
-		return ret;
 	}
 
 	@Override
@@ -440,17 +413,17 @@ public class RabbitMqMessageBroker extends AbstractMessageBroker implements Mess
 		}
 	}
 
-	@Override
-	public void setServiceName( String serviceName ) {
-		if( serviceName == null || serviceName.length() == 0 ) {
-			serviceName = "noservice";
-		}
-		
-		if( ! serviceName.matches( "^[a-zA-Z_][a-zA-Z_0-9]*$" ) ) {
-			throw new RuntimeException( "Invalid serviceName" );
-		}
-		this.serviceName = serviceName;
-	}
+//	@Override
+//	public void setServiceName( String serviceName ) {
+//		if( serviceName == null || serviceName.length() == 0 ) {
+//			serviceName = "noservice";
+//		}
+//		
+//		if( ! serviceName.matches( "^[a-zA-Z_][a-zA-Z_0-9]*$" ) ) {
+//			throw new RuntimeException( "Invalid serviceName" );
+//		}
+//		this.serviceName = serviceName;
+//	}
 
 	/**
 	 * Subclassed to support sending a "state change" event, to persist the envelope

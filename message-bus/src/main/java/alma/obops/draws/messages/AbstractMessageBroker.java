@@ -146,19 +146,10 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 		t.start();
 		return t;
 	}
-
-	/**
-	 * @return A {@link MessageQueue.Type#RECEIVE} {@link MessageQueue} with the given name
-	 */
-	@Override
-	public MessageQueue messageQueue( String queueName ) {
-		MessageQueue ret = messageQueue( queueName, MessageQueue.Type.RECEIVE );
-		return ret;
-	}
 	
 	@Override
-	public MessageQueue messageQueue( String queueName, MessageQueue.Type type ) {
-		MessageQueue ret = new MessageQueue( queueName, this, type );
+	public MessageQueue messageQueue( String queueName, String serviceName ) {
+		MessageQueue ret = new MessageQueue( queueName, serviceName, this );
 		return ret;
 	}
 	
@@ -193,20 +184,22 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	 */
 	protected abstract SimpleEnvelope receiveOne( MessageQueue queue, long timeLimit );
 
+
 	@Override
-	public Envelope send( MessageQueue queue, Message message ) {
-		return send( queue, message, 0 );
+	public Envelope send( String queueName, Message message ) {
+		return send( queueName, message, 0 );
 	}
-
+	
 	@Override
-	public Envelope send( MessageQueue queue, Message message, long expireTime ) {
+	public Envelope send( String queueName, Message message, long expireTime ) {
 
-		if( queue == null || message == null ) {
+		if( queueName == null || message == null ) {
 			throw new IllegalArgumentException( "Null arg" );
 		}
+		MessageQueue queue = new MessageQueue( queueName, "" , this );
 		
 		// Are we sending to a group?
-		if( ! queue.getName().endsWith( ".*" )) {
+		if( ! queueName.endsWith( ".*" )) {
 			Envelope ret = this.sendOne( queue, message, expireTime );	// No, just send this message
 			return ret;
 		}
@@ -220,7 +213,7 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 			}
 			Envelope ret = null;
 			for( String member: members ) {
-				MessageQueue memberQueue = new MessageQueue( member, this, MessageQueue.Type.SEND );
+				MessageQueue memberQueue = new MessageQueue( member, "", this );
 				ret = this.sendOne( memberQueue, message, expireTime );
 			}
 			return ret;
@@ -229,39 +222,6 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 			throw new RuntimeException( e );
 		}
 	}
-	
-	@Override
-	public Envelope send( String queueName, Message message, long expireTime ) {
-
-		if( queueName == null || queueName.length() == 0 || message == null ) {
-			throw new IllegalArgumentException( "Null arg" );
-		}
-		
-		// Are we sending to a group?
-		if( ! queueName.endsWith( ".*" )) {
-			Envelope ret = this.sendOne( queueName, message, expireTime );	// No, just send this message
-			return ret;
-		}
-		
-		// We are sending to a group: loop over all recipients
-		String groupName = queueName;
-		try {
-			List<String> members = groupMembers( groupName );
-			if( members == null ) {
-				throw new RuntimeException( "Receiver group '" + groupName + "' not found" );
-			}
-			Envelope ret = null;
-			for( String member: members ) {
-				MessageQueue memberQueue = new MessageQueue( member, this, MessageQueue.Type.SEND );
-				ret = this.sendOne( memberQueue, message, expireTime );
-			}
-			return ret;
-		} 
-		catch ( Exception e ) {
-			throw new RuntimeException( e );
-		}
-	}
-	
 	
 	/**
 	 * Creates an {@link Envelope} (including meta-data) from the given
@@ -314,11 +274,6 @@ public abstract class AbstractMessageBroker implements MessageBroker {
 	/* FOR TESTING ONLY */
 	public void setSendToken( String sendToken ) {
 		this.sendToken = sendToken;
-	}
-	
-	@Override
-	public void setServiceName( String serviceName ) {
-		// no-op
 	}
 
 	/** 

@@ -297,11 +297,11 @@ public class SimpleEnvelope implements Envelope, Comparable<SimpleEnvelope> {
 			long timeLived = now.getTime() - sent.getTime();
 			long remainingTimeToLive = expireTime - timeLived;
 			
-			System.out.println( ">>> Envelope: " + this );
-			System.out.println( ">>>     now: " + now );
-			System.out.println( ">>>     timeToLive: " + expireTime );
-			System.out.println( ">>>     timeLived: " + timeLived );
-			System.out.println( ">>>     remainingTimeToLive: " + remainingTimeToLive );
+			// System.out.println( ">>> Envelope: " + this );
+			// System.out.println( ">>>     now: " + now );
+			// System.out.println( ">>>     timeToLive: " + expireTime );
+			// System.out.println( ">>>     timeLived: " + timeLived );
+			// System.out.println( ">>>     remainingTimeToLive: " + remainingTimeToLive );
 			return remainingTimeToLive <= 0 ? 0 : remainingTimeToLive;
 		}
 		catch( ParseException e ) {
