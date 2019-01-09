@@ -46,38 +46,44 @@ class SimpleEnvelope(Envelope):
         self._new = False
         if _id is None: self._new = True
         self._id = SimpleEnvelope._makeID() if self._new else _id
-        self._message = message
-        if self._new and self._message is not None: self._message.setEnvelope(self)
-        self._messageClass = message.__class__.__module__ + "," + message.__class__.__qualname__ if self._new else messageClass
-        self._sentTimestamp = sentTimestamp
-        self._receivedTimestamp = receivedTimestamp
-        self._consumedTimestamp = consumedTimestamp
-        self._expiredTimestamp = expiredTimestamp
-        self._originIP = originIP
-        self._queueName = queueName
-        self._state = state
-        self._expireTime = expireTime
-        self._token = None
+        self.message = message
+        if self._new and self.message is not None: self.message.setEnvelope(self)
+        #self.messageClass = message.__class__.__module__ + "," + message.__class__.__qualname__ if self._new else messageClass
+        self.messageClass = message.__class__.__module__ if self._new else messageClass
+        self.sentTimestamp = sentTimestamp
+        self.receivedTimestamp = receivedTimestamp
+        self.consumedTimestamp = consumedTimestamp
+        self.expiredTimestamp = expiredTimestamp
+        self.rejectedTimestamp = None
+        self.originIP = originIP
+        self.queueName = queueName
+        self.state = state
+        self.expireTime = expireTime
+        self.token = None
 
     def serialize(self):
         ret = self.__dict__.copy()
-        if "_message" in ret and ret["_message"] is not None:
-            ret["_message"] = ret["_message"].serialize()
-        if "_state" in ret and ret["_state"] is not None:
-            ret["_state"] = ret["_state"].name
+        if "message" in ret and ret["message"] is not None:
+            ret["message"] = ret["message"].serialize()
+        #ret["messageClass"] = "alma.obops.draws.examples.common.Person"
+        if "state" in ret and ret["state"] is not None:
+            ret["state"] = ret["state"].name
+        if "_new" in ret:
+            del ret["_new"]
         return ret
 
     def deserialize(self, dct):
         self.__dict__ = dct.copy()
-        if "_messageClass" in dct and "_message" in dct:
-            if dct["_messageClass"] is not None and dct["_message"] is not None:
-                cls = SimpleEnvelope._loadClass(dct["_messageClass"].split(",")[0], dct["_messageClass"].split(",")[1], AbstractMessage)
+        if "messageClass" in dct and "message" in dct:
+            if dct["messageClass"] is not None and dct["message"] is not None:
+                #cls = SimpleEnvelope._loadClass(dct["messageClass"].split(",")[0], dct["messageClass"].split(",")[1], AbstractMessage)
+                cls = SimpleEnvelope._loadClass(dct["messageClass"],dct["messageClass"].rsplit(".",1)[1])
                 message = cls()
-                message.deserialize(dct["_message"])
+                message.deserialize(dct["message"])
                 message.setEnvelope(self)
-                self.__dict__["_message"] = message
-        if "_state" in dct and dct["_state"] is not None:
-            self.__dict__["_state"] = State[dct["_state"]]
+                self.__dict__["message"] = message
+        if "state" in dct and dct["state"] is not None:
+            self.__dict__["state"] = State[dct["state"]]
 
     def compareTo(self, other):
         return self.getSentTimestamp().compareTo(other.getSentTimestamp())
@@ -92,102 +98,102 @@ class SimpleEnvelope(Envelope):
             return False
         if (self.__class__ != obj.__class__):
             return False
-        if (self._consumedTimestamp is None) and (obj._consumedTimestamp is not None):
+        if (self.consumedTimestamp is None) and (obj.consumedTimestamp is not None):
             return False
-        if (self._consumedTimestamp is not None) and (not self._consumedTimestamp.equals(obj._consumedTimestamp)):
+        if (self.consumedTimestamp is not None) and (not self.consumedTimestamp.equals(obj.consumedTimestamp)):
             return False
-        if (self._expireTime != obj._expireTime):
+        if (self.expireTime != obj.expireTime):
             return False
-        if (self._expiredTimestamp is None) and (obj._expiredTimestamp is not None):
+        if (self.expiredTimestamp is None) and (obj.expiredTimestamp is not None):
             return False
-        if (self._expiredTimestamp is not None) and (not self._expiredTimestamp.equals(obj._expiredTimestamp)):
+        if (self.expiredTimestamp is not None) and (not self.expiredTimestamp.equals(obj.expiredTimestamp)):
             return False
-        if (self._id is None) and (other.id is None):
+        if (self._id is None) and (obj._id is None):
             return False
         if (self._id is not None) and self._id != obj._id:
             return False
-        if (self._message is None) and (obj.message is not None):
+        if (self.message is None) and (obj.message is not None):
             return False
-        if (self._message is not None) and not self._message.equals(obj._message):
+        if (self.message is not None) and not self.message.equals(obj.message):
             return False
-        if (self._messageClass is None) and (obj._messageClass is not None):
+        if (self.messageClass is None) and (obj.messageClass is not None):
             return False
-        if (self._messageClass is not None) and (self._messageClass != obj._messageClass):
+        if (self.messageClass is not None) and (self.messageClass != obj.messageClass):
             return False
-        if (self._originIP is None) and (obj._originIP is not None):
+        if (self.originIP is None) and (obj.originIP is not None):
             return False
-        if (self._originIP is not None) and self._originIP != obj._originIP:
+        if (self.originIP is not None) and self.originIP != obj.originIP:
             return False
-        if (self._queueName is None) and (obj._queueName is not None):
+        if (self.queueName is None) and (obj.queueName is not None):
             return False
-        if (self._queueName is not None) and self._queueName != obj._queueName:
+        if (self.queueName is not None) and self.queueName != obj.queueName:
             return False
-        if (self._receivedTimestamp is None) and (obj._receivedTimestamp is not None):
+        if (self.receivedTimestamp is None) and (obj.receivedTimestamp is not None):
             return False
-        if (self._receivedTimestamp is not None) and (not self._receivedTimestamp.equals(obj._receivedTimestamp)):
+        if (self.receivedTimestamp is not None) and (not self.receivedTimestamp.equals(obj.receivedTimestamp)):
             return False
-        if (self._sentTimestamp is None) and (obj._sentTimestamp is not None):
+        if (self.sentTimestamp is None) and (obj.sentTimestamp is not None):
             return False
-        if (self._sentTimestamp is not None) and (not self._sentTimestamp.equals(obj._sentTimestamp)):
+        if (self.sentTimestamp is not None) and (not self.sentTimestamp.equals(obj.sentTimestamp)):
             return False
-        if (self._state != obj._state):
+        if (self.state != obj.state):
             return False
         return True
 
     def getConsumedTimestamp(self):
-        return self._consumedTimestamp
+        return self.consumedTimestamp
     
     def getExpiredTimestamp(self):
-        return self._expiredTimestamp
+        return self.expiredTimestamp
     
     def getExpireTime(self):
-        return self._expireTime
+        return self.expireTime
     
     def getId(self):
         return self._id
     
     def getMessage(self):
-        return self._message
+        return self.message
     
     def getMessageClass(self):
-        return self._messageClass
+        return self.messageClass
     
     def getOriginIP(self):
-        return self._originIP
+        return self.originIP
     
     def getQueueName(self):
-        return self._queueName
+        return self.queueName
     
     def getReceivedTimestamp(self):
-        return self._receivedTimestamp
+        return self.receivedTimestamp
     
     def getRejectedTimestamp(self):
-        return self._rejectedTimestamp
+        return self.rejectedTimestamp
     
     def getSentTimestamp(self):
-        return self._sentTimestamp
+        return self.sentTimestamp
     
     def getState(self):
-        return self._state
+        return self.state
 
     def getTimeToLive(self):
         # Was this message read at some point in the past?
         # But wait: does it even expire at all?
-        if((self._expireTime == 0) or (self.getState() != State.Sent)):
+        if((self.expireTime == 0) or (self.getState() != State.Sent)):
             # YES, not expiring
             return -1
         # Should never happen, except maybe in tests
-        if(self._sentTimestamp is None):
+        if(self.sentTimestamp is None):
             return -1
         try:
             sent = parseIsoDatetime(sentTimestamp)
             now = now()
             timeLived = now.getTime() - sent.getTime()
-            remainingTimeToLive = self._expireTime - timeLived
+            remainingTimeToLive = self.expireTime - timeLived
             
             print( ">>> Envelope: " + self )
             print( ">>>     now: " + now )
-            print( ">>>     timeToLive: " + self._expireTime )
+            print( ">>>     timeToLive: " + self.expireTime )
             print( ">>>     timeLived: " + timeLived )
             print( ">>>     remainingTimeToLive: " + remainingTimeToLive )
             return 0 if (remainingTimeToLive <= 0) else remainingTimeToLive
@@ -197,51 +203,51 @@ class SimpleEnvelope(Envelope):
             raise RuntimeException(e)
 
     def getToken(self):
-        return self._token
+        return self.token
     def hashCode(self):
         prime = 31
         result = 1
-        result = prime * result + (0 if (self._consumedTimestamp is None) else consumedTimestamp.hashCode())
-        result = prime * result + int(self._expireTime ^ (self._expireTime >> 32))
-        result = prime * result + (0 if (self._expiredTimestamp is None) else self._expiredTimestamp.hashCode())
+        result = prime * result + (0 if (self.consumedTimestamp is None) else consumedTimestamp.hashCode())
+        result = prime * result + int(self.expireTime ^ (self.expireTime >> 32))
+        result = prime * result + (0 if (self.expiredTimestamp is None) else self.expiredTimestamp.hashCode())
         result = prime * result + (0 if (self._id is None) else self._id.hashCode())
-        result = prime * result + (0 if (self._message is None) else self._message.hashCode())
-        result = prime * result + (0 if (self._messageClass is None) else self._messageClass.hashCode())
-        result = prime * result + (0 if (self._originIP is None) else self._originIP.hashCode())
-        result = prime * result + (0 if (self._queueName is None) else self._queueName.hashCode())
-        result = prime * result + (0 if (self._receivedTimestamp is None) else self._receivedTimestamp.hashCode())
-        result = prime * result + (0 if (self._sentTimestamp is None) else self._sentTimestamp.hashCode())
-        result = prime * result + (0 if (self._state is None) else self._state.hashCode())
+        result = prime * result + (0 if (self.message is None) else self.message.hashCode())
+        result = prime * result + (0 if (self.messageClass is None) else self.messageClass.hashCode())
+        result = prime * result + (0 if (self.originIP is None) else self.originIP.hashCode())
+        result = prime * result + (0 if (self.queueName is None) else self.queueName.hashCode())
+        result = prime * result + (0 if (self.receivedTimestamp is None) else self.receivedTimestamp.hashCode())
+        result = prime * result + (0 if (self.sentTimestamp is None) else self.sentTimestamp.hashCode())
+        result = prime * result + (0 if (self.state is None) else self.state.hashCode())
         return result
     def setConsumedTimestamp(self, consumedTimestamp):
-        self._consumedTimestamp = consumedTimestamp
+        self.consumedTimestamp = consumedTimestamp
     def setExpiredTimestamp(self, expiredTimestamp):
-        self._expiredTimestamp = expiredTimestamp
+        self.expiredTimestamp = expiredTimestamp
     def setExpireTime(self, expireTime):
-        self._expireTime = expireTime
+        self.expireTime = expireTime
     def setId(self, _id):
         self._id = _id
     def setMessage(self, message):
-        self._message = message
+        self.message = message
     def setMessageClass(self, messageClass):
-        self._messageClass = messageClass
+        self.messageClass = messageClass
     def setOriginIP(self, originIP):
-        self._originIP = originIP
+        self.originIP = originIP
     def setQueueName(self, queueName):
-        self._queueName = queueName
+        self.queueName = queueName
     def setReceivedTimestamp(self, receivedTimestamp):
-        self._receivedTimestamp = receivedTimestamp
+        self.receivedTimestamp = receivedTimestamp
     def setRejectedTimestamp(self, rejectedTimestamp):
-        self._rejectedTimestamp = rejectedTimestamp
+        self.rejectedTimestamp = rejectedTimestamp
     def setSentTimestamp(self, sentTimestamp):
-        self._sentTimestamp = sentTimestamp
+        self.sentTimestamp = sentTimestamp
     def setState(self, state):
-        self._state = state
+        self.state = state
     def setToken(self, token):
-        self._token = token
+        self.token = token
     def __str__(self):
-        msg = self.__class__.__qualname__ + "[message=" + str(self._message) + ", sent=" + self._sentTimestamp + ", originIP=" + self._originIP + ", queueName=" + self._queueName + ", state=" + self._state.name
-        if self._token is not None:
-            msg += ", token=" + self._token[0:10] + "..."
+        msg = self.__class__.__qualname__ + "[message=" + str(self.message) + ", sent=" + self.sentTimestamp + ", originIP=" + self.originIP + ", queueName=" + self.queueName + ", state=" + self.state.name
+        if self.token is not None:
+            msg += ", token=" + self.token[0:10] + "..."
         msg += "]"
         return msg

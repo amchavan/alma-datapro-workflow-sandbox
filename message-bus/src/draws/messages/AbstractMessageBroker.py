@@ -35,7 +35,8 @@ class AbstractMessageBroker(MessageBroker):
     def _initEnvelope(self, envelope):
         envelope.setSentTimestamp(MessageBroker.nowISO())
         envelope.setState(State.Sent)
-        envelope.setMessageClass(envelope.getMessage().__class__.__module__ + "," + envelope.getMessage().__class__.__qualname__)
+        #envelope.setMessageClass(envelope.getMessage().__class__.__module__ + "," + envelope.getMessage().__class__.__qualname__)
+        envelope.setMessageClass(envelope.getMessage().__class__.__module__)
         envelope.setToken(self._sendToken)
 
     def _isRejected(self, queue, envelope):

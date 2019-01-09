@@ -15,6 +15,7 @@ from draws.messages.rabbitmq.RecipientGroup import RecipientGroup
 from draws.messages.rabbitmq.MessageArchiver import MessageArchiver
 
 from draws.messages.configuration.PersistedEnvelopeRepository import PersistedEnvelopeRepository
+from draws.messages.configuration.RecipientGroupRepository import RecipientGroupRepository
 
 class RabbitMqMessageBroker(AbstractMessageBroker):
     #Static Variables
@@ -53,7 +54,7 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             #print("handleDelivery(listen): "+ str(body))
 
     #Instance Methods
-    def __init__(self, baseURI=MINIMAL_URI, username=None, password=None, exchangeName=None, envelopeRepository=None, groupRepository=None):
+    def __init__(self, baseURI=MINIMAL_URI, username=None, password=None, exchangeName=MessageBroker.DEFAULT_MESSAGE_BROKER_NAME, envelopeRepository=None, groupRepository=None):
         if baseURI is None:
             raise Exception( "Arg baseURI cannot be null")
         super(RabbitMqMessageBroker, self).__init__()
@@ -70,8 +71,8 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
         self.__envelopeRepository = PersistedEnvelopeRepository() if envelopeRepository is None else envelopeRepository
         self.__groupRepository = RecipientGroupRepository() if groupRepository is None else groupRepository
         try:
-            connection = pika.BlockingConnection(parameters)
-            self.__channel = connection.channel()
+            self.__connection = pika.BlockingConnection(parameters)
+            self.__channel = self.__connection.channel()
             self.__channel.exchange_declare(exchangeName, 'topic')
             self.__channel.queue_declare(RabbitMqMessageBroker.MESSAGE_PERSISTENCE_QUEUE, False, True, False, False, None)
             self.__messageLogListener = MessageArchiver(self.__channel, exchangeName, envelopeRepository, RabbitMqMessageBroker.MESSAGE_PERSISTENCE_QUEUE, RabbitMqMessageBroker.MESSAGE_STATE_ROUTING_KEY)
@@ -80,7 +81,7 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             raise Exception(e)
 
     def closeConnection(self):
-        self.getChannel().getConnection().close()
+        self.getConnection().close()
     def deleteQueue(self, queue):
         try:
             self.__channel.queue_delete(queue.getName())
@@ -100,6 +101,9 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
 
     def getChannel(self):
         return self.__channel
+
+    def getConnection(self):
+        return self.__connection
 
     def getMessageArchiver(self):
         return self.__messageLogListener
@@ -173,14 +177,14 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             while True:
                 autoAck = True
                 response = self.__channel.basic_get(queue.getName(), autoAck)
-                if response is not None:
+                if response[0] is not None:
                     break
                 #Did we time out?
                 nowt = MessageBroker.now()
                 if timeLimit > 0 and (nowt - callTime).total_seconds() >= timeLimit/1000:
                     #YES, throw an exception and exit
                     raise TimeLimitExceededException("After " + timeLimit + "msec")
-                MessageBroker.sleep(WAIT_BETWEEN_POLLING_FOR_GET)
+                MessageBroker.sleep(RabbitMqMessageBroker.__WAIT_BETWEEN_POLLING_FOR_GET)
             body = response[2]
             #print("_receiveOne: "+ queue.getName())
             #print("_receiveOne: "+ str(body))
