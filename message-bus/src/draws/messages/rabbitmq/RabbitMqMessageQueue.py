@@ -6,4 +6,4 @@ class RabbitMqMessageQueue(MessageQueue):
         self.__rmqQueueName = rmqQueueName
 
     def getRmqQueueName(self):
-        return self.__rmqQueueName;
+        return self.__rmqQueueName

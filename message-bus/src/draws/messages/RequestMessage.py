@@ -1,4 +1,7 @@
 from draws.messages.Message import Message
 
 class RequestMessage(Message):
-    pass
+    def getResponseQueueName():
+        raise NotImplementedError
+    def setResponseQueueName():
+        raise NotImplementedError

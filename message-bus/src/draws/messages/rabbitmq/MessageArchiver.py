@@ -6,9 +6,10 @@ from draws.messages.Envelope import State
 from draws.messages.SimpleEnvelope import SimpleEnvelope
 
 from draws.messages.rabbitmq.PersistedEnvelope import PersistedEnvelope
-from draws.messages.rabbitmq.PersistedEnvelopeRepository import PersistedEnvelopeRepository
 
-class PersistenceListener(Thread):
+from draws.messages.configuration.PersistedEnvelopeRepository import PersistedEnvelopeRepository
+
+class MessageArchiver(Thread):
     def __init__(self, channel, exchangeName, envelopeRepository, mpq, msrk):
         super().__init__()
         self.__channel = channel
@@ -19,8 +20,8 @@ class PersistenceListener(Thread):
         #self.__consumer = MessageLogConsumer(channel, envelopeRepository)
     def handleDelivery(self, consumerTag, envelope, properties, body):
         message = str(body)
-        msg = ">>>> handling delivery: " + envelope.routing_key + ": " + message
-        print(msg)
+        msg = ">>>> delivery: " + envelope.routing_key + ": " + message
+        #print(msg)
         persistedEnvelope = None
         if envelope.routing_key == self.__msrk:
             stateMessage = str(body)
@@ -31,7 +32,7 @@ class PersistenceListener(Thread):
             
             _all = self.__envelopeRepository.findAll()
             for pe in _all:
-                print( ">>> " + pe );
+                print( ">>> " + pe )
             
             opt = self.__envelopeRepository.findByEnvelopeId(_id)
             persistedEnvelope = PersistedEnvelopeRepository() if opt is None else opt.get()
@@ -53,7 +54,7 @@ class PersistenceListener(Thread):
             simpleEnvelope = SimpleEnvelope()
             if body is not None:
                 jsons = str(body, "UTF-8")
-                print(">>>> delivered json: " + jsons)
+                #print(">>>> delivered json: " + jsons)
                 simpleEnvelope.deserialize(json.loads(jsons))
             persistedEnvelope = PersistedEnvelope.convert(simpleEnvelope)
         self.__envelopeRepository.save(persistedEnvelope)
@@ -61,7 +62,7 @@ class PersistenceListener(Thread):
         for pe in _all:
             print(">>> pe: " + pe)
     def run(self):
-        autoAck = True;
+        autoAck = True
         self.__channel.basic_consume(self.handleDelivery, self.__mpq, autoAck)
         self.__channel.start_consuming()
     def join(self):

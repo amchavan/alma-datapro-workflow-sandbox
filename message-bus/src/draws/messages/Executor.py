@@ -1,19 +1,20 @@
 from draws.messages.MessageConsumer import MessageConsumer
+from draws.messages.Publisher import Publisher
 
 class Executor:
     class ExecutorConsumer(MessageConsumer):
-        def __init__(self, queue, processor):
-            self.__queue = queue
+        def __init__(self, subscriber, processor):
+            self.__subscriber = subscriber
             self.__processor = processor
         def consume(self, message):
             response = self.__processor.process(message)
-            envelope = message.getEnvelope()
-            responseQueue = self.__queue.getMessageBroker().messageQueue(envelope.getId())
-            responseQueue.send(response, 0)
-    def __init__(self, queue, processor, timeout):
-        self.__queue = queue
+            broker = self.__subscriber.getQueue().getMessageBroker()
+            publisher = Publisher(broker, message.getResponseQueueName())
+            publisher.publish(response, 0)
+    def __init__(self, subscriber, processor, timeout):
+        self.__subscriber = subscriber
         self.__processor = processor
         self.__timeout = timeout
-        self.__consumer = Executor.ExecutorConsumer(queue, processor)
+        self.__consumer = Executor.ExecutorConsumer(subscriber, processor)
     def run(self):
-        self.__queue.listen(self.__consumer, self.__timeout)
+        self.__subscriber.listen(self.__consumer, self.__timeout)
