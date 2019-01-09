@@ -35,6 +35,8 @@ The server itself should _not_ be secured, or you'll need to provide username an
 
 See *RabbitMqConfigurationProperties.java* for more configuration options.
 
+Launch the RabbitMQ server as appropriate for your system; on MacOS you'll need to type `rabbitmq-server` on the terminal.
+
 ### Relational server
 
 The [message archival service](#message-archival) requires a relational database connection, to be configured in _archiveConfig.properties_ as per ALMA conventions. These demos use a MySQL database, to be configured for instance like:
@@ -62,6 +64,8 @@ create table if not exists envelope (
     primary key(id)
 );
 ```
+
+Launch the MySQL server as appropriate for your system; on MacOS you'll need to use the Control Panel.
 
 ## Basic send and receive
 
