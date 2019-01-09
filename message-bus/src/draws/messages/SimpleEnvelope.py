@@ -190,12 +190,6 @@ class SimpleEnvelope(Envelope):
             now = now()
             timeLived = now.getTime() - sent.getTime()
             remainingTimeToLive = self.expireTime - timeLived
-            
-            print( ">>> Envelope: " + self )
-            print( ">>>     now: " + now )
-            print( ">>>     timeToLive: " + self.expireTime )
-            print( ">>>     timeLived: " + timeLived )
-            print( ">>>     remainingTimeToLive: " + remainingTimeToLive )
             return 0 if (remainingTimeToLive <= 0) else remainingTimeToLive
         except ParseException as e:
             # TODO Improve logging of this

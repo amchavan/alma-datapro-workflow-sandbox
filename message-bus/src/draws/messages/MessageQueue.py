@@ -1,16 +1,13 @@
-from enum import Enum
-
-Type = Enum('State', 'SEND RECEIVE SENDQUEUE')
 class MessageQueue:
     def __str__(self):
         return self.__class__.__qualname__ + "[" + self.__queueName + "]"
-    def __init__(self, queueName, messageBus, mqtype=Type.RECEIVE):
+    def __init__(self, queueName, serviceName, messageBus):
         if queueName is None or messageBus is None:
             raise IllegalArgumentException("Null arg")
         self.__queueName = queueName
+        self.__serviceName = serviceName
         self.__messageBroker = messageBus
         self.__acceptedRoles = None
-        self.__type = mqtype
     def delete(self):
         self.__messageBroker.deleteQueue(self)
     def getAcceptedRoles(self):
@@ -19,8 +16,8 @@ class MessageQueue:
         return self.__messageBroker
     def getName(self):
         return self.__queueName
-    def getType(self):
-        return self.__type
+    def getServiceName(self):
+        return self.__serviceName
     def joinGroup(self, groupName):
         self.__messageBroker.joinGroup(self.__queueName, groupName)
     def setAcceptedRoles(self, acceptedRoles):

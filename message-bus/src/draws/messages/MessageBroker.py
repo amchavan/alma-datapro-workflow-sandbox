@@ -57,13 +57,11 @@ class MessageBroker:
 #        raise NotImplementedError
     def listenInThread(self, queue, consumer, timeout):
         raise NotImplementedError
-    def messageQueue(self, queueName, mqtype):
+    def messageQueue(self, queueName, serviceName):
         raise NotImplementedError
     def receive(self, queue, timeLimit=0):
         raise NotImplementedError
+    def setTokenFactory(factory):
+        raise NotImplementedError
     def send(self, queue, message, expireTime=0):
-        raise NotImplementedError
-    def setServiceName(self, serviceName):
-        raise NotImplementedError
-    def setTokenFactory(self, factory):
         raise NotImplementedError

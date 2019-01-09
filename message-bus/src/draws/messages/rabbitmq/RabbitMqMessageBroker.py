@@ -4,7 +4,6 @@ import pika
 import threading
 
 from draws.messages.Envelope import State
-from draws.messages.MessageQueue import Type
 from draws.messages.MessageQueue import MessageQueue
 from draws.messages.MessageBroker import MessageBroker
 from draws.messages.SimpleEnvelope import SimpleEnvelope
@@ -25,7 +24,7 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
     MESSAGE_STATE_ROUTING_KEY = "new.message.state"
     #Static Methods
     @classmethod
-    def makeQueueNameFromRoutingKey(cls, serviceName, queueName):
+    def makeQueueName(cls, serviceName, queueName):
         return serviceName + "." + queueName
         #return queueName
     class RabbitMqListener:
@@ -76,7 +75,6 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             self.__channel.exchange_declare(exchangeName, 'topic')
             self.__channel.queue_declare(RabbitMqMessageBroker.MESSAGE_PERSISTENCE_QUEUE, False, True, False, False, None)
             self.__messageLogListener = MessageArchiver(self.__channel, exchangeName, envelopeRepository, RabbitMqMessageBroker.MESSAGE_PERSISTENCE_QUEUE, RabbitMqMessageBroker.MESSAGE_STATE_ROUTING_KEY)
-            self.__serviceName = None
         except Exception as e:
             raise Exception(e)
 
@@ -153,18 +151,15 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             #    break
             MessageBroker.sleep(100)
     
-    def messageQueue(self, queueName, mqtype=Type.RECEIVE):
-        if self.__serviceName is None:
-            self.setServiceName("")
+    def messageQueue(self, queueName, serviceName):
         routingKey = queueName
-        queueName = RabbitMqMessageBroker.makeQueueNameFromRoutingKey(self.__serviceName, queueName)
-        if mqtype == Type.RECEIVE or mqtype == Type.SENDQUEUE:
-            try:
-                self.__channel.queue_declare(queueName, False, True, False, False, None)
-                self.__channel.queue_bind(queueName, self.__exchangeName, routingKey)
-            except Exception as e:
-                raise Exception(e)
-        ret = MessageQueue(queueName, self)
+        queueName = RabbitMqMessageBroker.makeQueueName(serviceName, queueName)
+        try:
+            self.__channel.queue_declare(queueName, False, True, False, False, None)
+            self.__channel.queue_bind(queueName, self.__exchangeName, routingKey)
+        except Exception as e:
+            raise Exception(e)
+        ret = MessageQueue(queueName, serviceName, self)
         return ret
     
     def _receiveOne(self, queue, timeLimit):
@@ -215,14 +210,6 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             return envelope
         except (TimeLimitExceededException, Exception) as e:
             raise Exception(e)
-
-    def setServiceName(self, serviceName):
-            if serviceName is None or len(serviceName) == 0:
-                serviceName = "noservice"
-            if re.match("^[a-zA-Z_][a-zA-Z_0-9]*$", serviceName) is None:
-                raise Exception( "Invalid serviceName" )
-            self.__serviceName = serviceName
-
 
     def _setState(self, envelope, state):
         timestamp = super()._setState(envelope, state)
