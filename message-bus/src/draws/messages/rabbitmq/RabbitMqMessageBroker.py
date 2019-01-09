@@ -1,8 +1,10 @@
+import re
 import json
 import pika
 import threading
 
 from draws.messages.Envelope import State
+from draws.messages.MessageQueue import Type
 from draws.messages.MessageQueue import MessageQueue
 from draws.messages.MessageBroker import MessageBroker
 from draws.messages.SimpleEnvelope import SimpleEnvelope
@@ -10,19 +12,28 @@ from draws.messages.AbstractMessageBroker import AbstractMessageBroker
 from draws.messages.TimeLimitExceededException import TimeLimitExceededException
 
 from draws.messages.rabbitmq.RecipientGroup import RecipientGroup
-from draws.messages.rabbitmq.PersistenceListener import PersistenceListener
+from draws.messages.rabbitmq.MessageArchiver import MessageArchiver
+
+from draws.messages.configuration.PersistedEnvelopeRepository import PersistedEnvelopeRepository
 
 class RabbitMqMessageBroker(AbstractMessageBroker):
-    __WAIT_BETWEEN_POLLING_FOR_GET = 500;
-    MINIMAL_URI = "amqp://@";
-    MESSAGE_PERSISTENCE_QUEUE = "message.persistence.queue";
-    MESSAGE_STATE_ROUTING_KEY = "new.message.state";
+    #Static Variables
+    __WAIT_BETWEEN_POLLING_FOR_GET = 500
+    MINIMAL_URI = "amqp://@"
+    MESSAGE_PERSISTENCE_QUEUE = "message.persistence.queue"
+    MESSAGE_STATE_ROUTING_KEY = "new.message.state"
+    #Static Methods
+    @classmethod
+    def makeQueueNameFromRoutingKey(cls, serviceName, queueName):
+        return serviceName + "." + queueName
+        #return queueName
     class RabbitMqListener:
-        def __init__(self, channel, rmqmb, consumer, autoAck=False):
+        def __init__(self, channel, rmqmb, consumer, queue, autoAck=False):
             self.__channel = channel
             self.__rmqmb = rmqmb
             self.__consumer = consumer
             self._consumed = False
+            self.__queue = queue
             self._autoAck = autoAck
         def isConsumed(self):
             return self._consumed
@@ -34,17 +45,18 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
                 receivedEnvelope.deserialize(dct)
             if not self._autoAck:
                 self.__channel.basic_ack(envelope.delivery_tag, False)
-            self.__rmqmb._computeState(receivedEnvelope)
+            self.__rmqmb._computeState(self.__queue, receivedEnvelope)
             if receivedEnvelope.getState() == State.Received:    
                 self.__consumer.consume(receivedEnvelope.getMessage())
                 self.__rmqmb._setState(receivedEnvelope, State.Consumed)
                 self._consumed = True
             #print("handleDelivery(listen): "+ str(body))
 
+    #Instance Methods
     def __init__(self, baseURI=MINIMAL_URI, username=None, password=None, exchangeName=None, envelopeRepository=None, groupRepository=None):
         if baseURI is None:
             raise Exception( "Arg baseURI cannot be null")
-        super().__init__()
+        super(RabbitMqMessageBroker, self).__init__()
         parameters = pika.ConnectionParameters()
         try:
             parameters.host = "localhost"
@@ -62,21 +74,25 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             self.__channel = connection.channel()
             self.__channel.exchange_declare(exchangeName, 'topic')
             self.__channel.queue_declare(RabbitMqMessageBroker.MESSAGE_PERSISTENCE_QUEUE, False, True, False, False, None)
-            self.__messageLogListener = PersistenceListener(self.__channel, exchangeName, envelopeRepository, RabbitMqMessageBroker.MESSAGE_PERSISTENCE_QUEUE, RabbitMqMessageBroker.MESSAGE_STATE_ROUTING_KEY)
+            self.__messageLogListener = MessageArchiver(self.__channel, exchangeName, envelopeRepository, RabbitMqMessageBroker.MESSAGE_PERSISTENCE_QUEUE, RabbitMqMessageBroker.MESSAGE_STATE_ROUTING_KEY)
+            self.__serviceName = None
         except Exception as e:
             raise Exception(e)
 
+    def closeConnection(self):
+        self.getChannel().getConnection().close()
     def deleteQueue(self, queue):
         try:
             self.__channel.queue_delete(queue.getName())
         except Exception as e:
-            raise Exception(e);
+            raise Exception(e)
 
 
     # FOR TESTING ONLY
     def drainLoggingQueue(self):
         self.drainQueue(RabbitMqMessageBroker.MESSAGE_PERSISTENCE_QUEUE)
-    def drainQueue(self, queueName):
+    def drainQueue(self, queue):
+        queueName = queue.getName() if isinstance(queue, MessageQueue) else queue
         try:
             self.__channel.queue_purge(queueName)
         except Exception as e:
@@ -85,12 +101,12 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
     def getChannel(self):
         return self.__channel
 
-    def getMessageLogListener(self):
+    def getMessageArchiver(self):
         return self.__messageLogListener
 
     def groupMembers(self, groupName):
         if groupName is None or (not groupName.endsWith(".*")):
-            raise IllegalArgumentException("Invalid group name: " + groupName);
+            raise IllegalArgumentException("Invalid group name: " + groupName)
 
         oGroup = self.__groupRepository.findByName(groupName)
         if oGroup.isPresent():
@@ -98,57 +114,17 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
         return null
 
     def joinGroup(self, queueName, groupName):
-        if groupName is None or (not groupName.endsWith(".*")):
-            raise IllegalArgumentException("Invalid group name: " + groupName)
-        if queueName is None:
-            raise IllegalArgumentException("Null queueName")
+        pass
+        #if groupName is None or (not groupName.endsWith(".*")):
+        #    raise IllegalArgumentException("Invalid group name: " + groupName)
+        #if queueName is None:
+        #    raise IllegalArgumentException("Null queueName")
 
-        oGroup = self.__groupRepository.findByName(groupName)
-        group = oGroup.get() if oGroup.isPresent() else RecipientGroup(groupName)
-        group.addMember(queueName)
-        self.__groupRepository.save(group)
+        #oGroup = self.__groupRepository.findByName(groupName)
+        #group = oGroup.get() if oGroup.isPresent() else RecipientGroup(groupName)
+        #group.addMember(queueName)
+        #self.__groupRepository.save(group)
 
-#    /**
-#     * Wait until a message arrives, set its state to {@link State#Received} or
-#     * {@link State#Expired}.
-#     * 
-#     * @param timeLimit
-#     *            If greater than 0 it represents the number of msec to wait for a
-#     *            message to arrive before timing out: upon timeout a
-#     *            {@link TimeLimitExceededException} is thrown.
-#     * 
-#     * @return The message we received.
-#     */
-#    // This does not work, no time to understand why -- amchavan, 18-Oct-2018
-#    @SuppressWarnings("unused")
-#    private Envelope receiveOneEXPERIMENTAL( MessageQueue queue, long timeLimit ) {
-#        
-#        OneReceiver receiver1 = new OneReceiver( channel, queue, timeLimit );
-#        SimpleEnvelope receivedEnvelope = (SimpleEnvelope) receiver1.receive();
-#        
-#        // See if the message has expired
-#        String now = nowISO();
-#        final long timeToLive = receivedEnvelope.getTimeToLive();
-#        if( timeToLive != 0 ) {
-#            receivedEnvelope.setState( State.Received );
-#            receivedEnvelope.setReceivedTimestamp( now );
-#        }
-#        else {
-#            receivedEnvelope.setState( State.Expired );
-#            receivedEnvelope.setExpiredTimestamp( now );
-#        }
-#                
-#        // Signal the state change to the message log as well
-#        try {
-#            sendNewStateEvent( receivedEnvelope.getId(), receivedEnvelope.getState(), now );
-#        } 
-#        catch (IOException e) {
-#            throw new RuntimeException( e );
-#        }
-#        return receivedEnvelope;
-#    }
-
-    
     def listen(self, queue, consumer, timeout):
         if queue is None or consumer is None:
             raise IllegalArgumentException("Null arg")
@@ -156,7 +132,7 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
         lastDeliveryTime = MessageBroker.now()
         
         #Start waiting for delivered messages, then consume them
-        rmql = RabbitMqMessageBroker.RabbitMqListener(self.__channel, self, consumer, autoAck)
+        rmql = RabbitMqMessageBroker.RabbitMqListener(self.__channel, self, consumer, queue, autoAck)
         consumerTag = self.__channel.basic_consume(rmql.handleDelivery, queue.getName(), autoAck)
         
         thr = threading.Thread(target=self.__channel.start_consuming)
@@ -168,26 +144,30 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             if timeout > 0 and (nowt - lastDeliveryTime).total_seconds() >= timeout/1000:
                 self.__channel.stop_consuming()
                 thr.join()
-                raise TimeLimitExceededException("After " + str(timeout) + " msec");
+                raise TimeLimitExceededException("After " + str(timeout) + " msec")
             #if rmql.isConsumed():
             #    break
-            MessageBroker.sleep(100);
+            MessageBroker.sleep(100)
     
-    def messageQueue(self, queueName):
+    def messageQueue(self, queueName, mqtype=Type.RECEIVE):
+        if self.__serviceName is None:
+            self.setServiceName("")
+        routingKey = queueName
+        queueName = RabbitMqMessageBroker.makeQueueNameFromRoutingKey(self.__serviceName, queueName)
+        if mqtype == Type.RECEIVE or mqtype == Type.SENDQUEUE:
+            try:
+                self.__channel.queue_declare(queueName, False, True, False, False, None)
+                self.__channel.queue_bind(queueName, self.__exchangeName, routingKey)
+            except Exception as e:
+                raise Exception(e)
         ret = MessageQueue(queueName, self)
-        try:
-            self.__channel.queue_declare(queueName, False, True, False, False, None)
-            routingKey = queueName
-            self.__channel.queue_bind(queueName, self.__exchangeName, routingKey)
-        except Exception as e:
-            raise Exception(e)
         return ret
     
     def _receiveOne(self, queue, timeLimit):
         receivedEnvelope = None
-        callTime = MessageBroker.now();
+        callTime = MessageBroker.now()
         try:
-            response = None;
+            response = None
             
             #Loop until we receive a message
             while True:
@@ -202,6 +182,7 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
                     raise TimeLimitExceededException("After " + timeLimit + "msec")
                 MessageBroker.sleep(WAIT_BETWEEN_POLLING_FOR_GET)
             body = response[2]
+            #print("_receiveOne: "+ queue.getName())
             #print("_receiveOne: "+ str(body))
             receivedEnvelope = SimpleEnvelope()
             if body is not None:
@@ -210,18 +191,34 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
         except Exception as e:
             raise Exception(e)
         return receivedEnvelope
+
+    def send(self, queue, message, expireTime):
+        if queue is None or message is None:
+            raise Exception("Null arg")
+        if not isinstance(queue, MessageQueue) and len(queue) == 0:
+            raise Exception("Null arg")
+        return self._sendOne(queue, message, expireTime)
     
     def _sendOne(self, queue, message, expireTime):
-        envelope = super()._sendOne(queue, message, expireTime)
+        envelope = super(RabbitMqMessageBroker, self)._sendOne(queue, message, expireTime)
+        #print("Env!" + str(envelope))
         try:
             jsons = json.dumps(envelope, default=SimpleEnvelope.serialize)
-            #print("_sendOne: "+ str(jsons))
             properties = pika.BasicProperties(delivery_mode=2)
-            routingKey = queue.getName(); #The API calls "queue" what RabbitMQ calls "routing key"
+            routingKey = queue.getName() if isinstance(queue, MessageQueue) else queue
+            #print("_sendOne: "+ routingKey)
             self.__channel.basic_publish(self.__exchangeName, routingKey, jsons, properties)
             return envelope
         except (TimeLimitExceededException, Exception) as e:
             raise Exception(e)
+
+    def setServiceName(self, serviceName):
+            if serviceName is None or len(serviceName) == 0:
+                serviceName = "noservice"
+            if re.match("^[a-zA-Z_][a-zA-Z_0-9]*$", serviceName) is None:
+                raise Exception( "Invalid serviceName" )
+            self.__serviceName = serviceName
+
 
     def _setState(self, envelope, state):
         timestamp = super()._setState(envelope, state)

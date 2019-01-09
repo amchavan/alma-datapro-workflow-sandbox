@@ -1,4 +1,7 @@
-import jwt
+#import jwt
+import json
+from jose import jwk
+from jose import jws
 import time
 import pytz
 import base64
@@ -6,67 +9,72 @@ import numbers
 import datetime
 
 from draws.messages.security.TokenFactory import TokenFactory
-from draws.messages.security.InvalidSignatureException import InvalidSignatureException
 
 class JWTFactory(TokenFactory):
-    __SECRET_KEY = "oeRaYY7Wo24sDqKSX3IM9ASGmdGPmkTd9jo1QTy4b7P9Ze5_9hKolVX8xNrQDcNRfVEdTZNOuOyqEGhXEbdJI-ZQ19k_o9MI0y3eZN2lp9jow55FfXMiINEdt1XR85VipRLSOkT6kSpzs2x-jbLDiz9iFVzkd81YKxMgPA7VfZeQUm4n-mOmnWMaVX30zGFU4L3oPBctYKkl4dYfqYWqRNfrgPJVi5DGFjywgxx0ASEiJHtV72paI3fDR2XwlSkyhhmY-ICjCRmsJN4fX1pdoL8a18-aQrvyu4j0Os6dVPYIoPvvY0SAZtWYKHfM15g7A3HD4cVREf9cUsprCRK93w="
-    __TIME_TO_LIVE_CLAIM = "ttl";
-    __signatureAlgorithm = "HS256"
+    #Static Variables
+    TIME_TO_LIVE_CLAIM = "ttl"
+    EXPIRES_CLAIM = "exp"
+    ROLES_CLAIM = "roles"
+    TIME_TO_LIVE = 10000
+    __JWKS = {"kty":"RSA","d":"g_JYrlcTrwMPWM0ONWdJsw9f6jQoyNZBAdt8CPcSQmZA4iuBnX2LwIih3NgunBWA1TfERAoyD3mRiPU-yBidgQ","e":"AQAB","use":"sig","kid":"testkey","alg":"RS256","n":"hDLlR76CTTQjnRyA0NqpBDcdq_Nc3fqPNXplLXUf9PSbolxm_SyYfUiTO2NhHy74Z13nZgWwpkJiM7K0QdlU5w"}
     __UT = pytz.utc
-    _instance = None;
+    ISOTIMEDATESTRING = "%Y-%m-%d'T'%H:%M:%S.%f"
 
-    @classmethod
-    def getFactory(cls):
-        if JWTFactory._instance is None:
-            JWTFactory._instance = JWTFactory(); 
-        return JWTFactory._instance;
+    #Instance Methods
+    def __init__(self):
+        self.__rsaJWK = jwk.construct(JWTFactory.__JWKS)
+        self.__rsaPublicJWK = self.__rsaJWK.public_key()
     
     def create(self, claims=None):
         if claims is None:
             claims = {}
             claims["sub"] = "user"
-            claims["role"] = "admin"
-            claims[JWTFactory.__TIME_TO_LIVE_CLAIM] = 10000
-            return self.create(claims);
+            claims["roles"] = ["MASTER/USER","OBOPS/AOD"]
+            return self.create(claims)
+        claims[JWTFactory.TIME_TO_LIVE_CLAIM] = JWTFactory.TIME_TO_LIVE
         #The JWT signature algorithm we will be using to sign the token
         nowMillis = time.time()
-        #nowMillis = datetime.datetime.now(tz=JWTFactory.__UT)
         now = datetime.datetime.fromtimestamp(nowMillis, tz=JWTFactory.__UT)
-        claims["iat"] = now
-        #We will sign our JWT with our ApiKey secret
-        apiKeySecretBytes = base64.b64decode(JWTFactory.__SECRET_KEY)
+        #claims["iat"] = datetime.datetime.strftime(now, JWTFactory.ISOTIMEDATESTRING)
         #See if caller specified a TTL, convert that to an expiration time
         exp = None
         ttl = None
-        if JWTFactory.__TIME_TO_LIVE_CLAIM in claims:
-            ttl = claims[JWTFactory.__TIME_TO_LIVE_CLAIM]
+        if JWTFactory.TIME_TO_LIVE_CLAIM in claims:
+            ttl = claims[JWTFactory.TIME_TO_LIVE_CLAIM]
         if ttl is not None and isinstance(ttl, numbers.Number):
             ttlMillis = ttl/1000
             if (ttlMillis > 0):
-                expMillis = nowMillis + ttlMillis;
+                expMillis = nowMillis + ttlMillis
                 exp = datetime.datetime.fromtimestamp(expMillis, tz=JWTFactory.__UT)
-                claims["exp"] = exp
-            del claims[JWTFactory.__TIME_TO_LIVE_CLAIM]
-        return jwt.encode(claims, apiKeySecretBytes, algorithm=JWTFactory.__signatureAlgorithm).decode()
+                claims["exp"] = datetime.datetime.strftime(exp, JWTFactory.ISOTIMEDATESTRING)
+            #del claims[JWTFactory.__TIME_TO_LIVE_CLAIM]
+        try:
+            signature = jws.sign(claims, self.__rsaJWK.prepared_key.exportKey(), algorithm='RS256')
+        except Exception as e:
+            print("Signing error!")
+            raise e
+        return signature
     
-    def decode(self, encoded):
-        apiKeySecretBytes = base64.b64decode(JWTFactory.__SECRET_KEY)
+    def decode(self, token):
+        if not self.isValid(token):
+            raise Exception( "Invalid JWK: " + token)
         #This line will throw an exception if it is not a signed JWS (as expected)
         claims = {}
         try:
-            claims = jwt.decode(encoded.encode(), apiKeySecretBytes, algorithms=[JWTFactory.__signatureAlgorithm])
-        except jwt.InvalidSignatureError as e:
-            raise InvalidSignatureException(e)
-        except jwt.ExpiredSignatureError as e:
-            print("Expired message... continuing anyway.")
+            claims = json.loads(jws.verify(token, self.__rsaPublicJWK.prepared_key.exportKey().decode(), algorithms='RS256'))
+        except Exception as e:
+            raise Exception("Invalid signature error!!")
         ret = {}
         for claim in claims:
-            ret[claim] = claims[claim]
-        return ret;
+            if claim in ["exp", "iat"]:
+                ret[claim] = datetime.datetime.strptime(claims[claim], JWTFactory.ISOTIMEDATESTRING)
+            else:
+                ret[claim] = claims[claim]
+        return ret
     
     def isValid(self, token):
         try:
-            self.decode(token)
-        except InvalidSignatureException as e:
-            return False;
-        return True;
+            jws.verify(token, self.__rsaPublicJWK.prepared_key.exportKey().decode(), algorithms='RS256')
+        except Exception as e:
+            return False
+        return True

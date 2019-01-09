@@ -39,7 +39,7 @@ class SimpleEnvelope(Envelope):
         _id = MessageBroker.nowISO()
         _id += "-"
         _id += str(uuid.uuid4()).replace("-", "")
-        return _id;
+        return _id
 
     def __init__(self, _id=None, message=None, messageClass=None, sentTimestamp=None, receivedTimestamp=None, consumedTimestamp=None, expiredTimestamp=None, originIP=None, queueName=None, state=None, expireTime=0):
         super()
@@ -240,4 +240,8 @@ class SimpleEnvelope(Envelope):
     def setToken(self, token):
         self._token = token
     def __str__(self):
-        return self.__class__.__qualname__ + "[message=" + self._message + ", sent=" + self._sentTimestamp + ", originIP=" + self._originIP + ", queueName=" + self._queueName + ", state=" + self._state.name + "]";
+        msg = self.__class__.__qualname__ + "[message=" + str(self._message) + ", sent=" + self._sentTimestamp + ", originIP=" + self._originIP + ", queueName=" + self._queueName + ", state=" + self._state.name
+        if self._token is not None:
+            msg += ", token=" + self._token[0:10] + "..."
+        msg += "]"
+        return msg

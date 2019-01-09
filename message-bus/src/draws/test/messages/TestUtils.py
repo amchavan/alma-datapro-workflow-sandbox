@@ -1,7 +1,8 @@
 from draws.messages.AbstractMessage import AbstractMessage
 
 class TestUtils:
-    MESSAGE_BUS_NAME = "test-message-bus";
+    #Static Variables
+    MESSAGE_BUS_NAME = "test-message-bus"
     
     # CouchDB constants
     #public static final String TEST_DB_NAME = MESSAGE_BUS_NAME;
@@ -11,7 +12,7 @@ class TestUtils:
     #public static final String SELECTOR = "look.at.this";
     
     #RabbitMQ constants
-    RABBITMQ_URL = "localhost";
+    RABBITMQ_URL = "localhost"
     
     #@classmethod
     #class TestRecord extends CouchDbRecord {
@@ -78,10 +79,11 @@ class TestUtils:
 
 
 class TestMessage(AbstractMessage):
+    #Instance Methods
     def __init__(self, name=None, age=None, alive=None):
-        self.name = name;
-        self.age = age;
-        self.alive = alive;
+        self.name = name
+        self.age = age
+        self.alive = alive
     def serialize(self):
         ret = super().serialize()
         return ret
@@ -99,7 +101,7 @@ class TestMessage(AbstractMessage):
         if self.__class__ != obj.__class__:
             return False
         if self.age != obj.age:
-            return False;
+            return False
         if self.alive != obj.alive:
             return False
         if self.name is None and obj.name is not None:
@@ -117,4 +119,4 @@ class TestMessage(AbstractMessage):
         return result
     
     def __str__(self):
-        return "TestRecord[name=" + self.name + ", age=" + self.age + ", alive=" + self.alive + "]"
+        return "TestRecord[name=" + self.name + ", age=" + str(self.age) + ", alive=" + str(self.alive) + "]"

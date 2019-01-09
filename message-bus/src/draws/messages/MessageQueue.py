@@ -1,24 +1,29 @@
+from enum import Enum
+
+Type = Enum('State', 'SEND RECEIVE SENDQUEUE')
 class MessageQueue:
-    def __init__(self, queueName, messageBus):
+    def __str__(self):
+        return self.__class__.__qualname__ + "[" + self.__queueName + "]"
+    def __init__(self, queueName, messageBus, mqtype=Type.RECEIVE):
         if queueName is None or messageBus is None:
             raise IllegalArgumentException("Null arg")
         self.__queueName = queueName
         self.__messageBroker = messageBus
-    def getMessageBroker(self):
-        return self.__messageBroker;
-    def getName(self):
-        return self.__queueName;
-    def send(self, message, timeToLive=0):
-        return self.__messageBroker.send(self, message, timeToLive)
+        self.__acceptedRoles = None
+        self.__type = mqtype
     def delete(self):
         self.__messageBroker.deleteQueue(self)
-    def receive(self, timeout=0):
-        return self.__messageBroker.receive(self, timeout)
+    def getAcceptedRoles(self):
+        return self.__acceptedRoles
+    def getMessageBroker(self):
+        return self.__messageBroker
+    def getName(self):
+        return self.__queueName
+    def getType(self):
+        return self.__type
     def joinGroup(self, groupName):
         self.__messageBroker.joinGroup(self.__queueName, groupName)
-    def listen(self, consumer, timeout):
-        self.__messageBroker.listen(self, consumer, timeout);
-    def listenInThread(self, consumer, timeout):
-        return self.__messageBroker.listenInThread(self, consumer, timeout)
-    def __str__(self):
-        return self.__class__.__qualname__ + "[" + self.__queueName + "]"
+    def setAcceptedRoles(self, acceptedRoles):
+        if self.__messageBroker.getTokenFactory() is None:
+            raise Exception("No token factory found")
+        this.acceptedRoles = acceptedRoles
