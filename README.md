@@ -2,8 +2,9 @@
 
 This project is a playground for the new architecture of ALMA's Data Processing Workflow system, based on a message passing backbone (currently RabbitQM)
 <!--
-Place project URL here
--->
+**************
+Obsolete stuff
+**************
 It defines
 * a ['pipes and filters' pipeline](pipes-and-filters/README.md)  made of components interacting by way of a message queue
 * a [message-passing RPC mode](rpc/README.md), where the client sends a computing request message to the server's queue
@@ -30,3 +31,5 @@ Start the RabbitMQ server (from any location):
 ```
 rabbitmq-server
 ```
+
+-->

@@ -17,5 +17,8 @@
 		<module>receiver/pom.xml</module>
 		<module>rpc-client/pom.xml</module>
 		<module>rpc-server/pom.xml</module>
+		<module>message-archiver/pom.xml</module>
+		<module>secure-sender/pom.xml</module>
+		<module>secure-receiver/pom.xml</module>
 	</modules>
 </project>

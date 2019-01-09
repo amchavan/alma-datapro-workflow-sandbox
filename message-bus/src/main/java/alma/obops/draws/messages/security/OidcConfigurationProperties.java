@@ -7,7 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
 
 /**
- * Extract CouchDB connection properties from the ALMA properties file
+ * Extract OIDC authentication server connection properties from the OBOPS properties file
  * 
  * @author amchavan, 13-Nov-2018
  */

@@ -6,11 +6,9 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>2.1.1.RELEASE</version>
-		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	
 	<groupId>alma.obops.draws</groupId>
-	<artifactId>message-archiver</artifactId>
+	<artifactId>secure-receiver</artifactId>
 	<version>OBOPS-2019.02</version>
 
 	<properties>
@@ -21,11 +19,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
-		</dependency>
-		
-		<dependency>
-		    <groupId>mysql</groupId>
-		    <artifactId>mysql-connector-java</artifactId>
 		</dependency>
 
 		<dependency>
