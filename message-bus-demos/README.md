@@ -15,7 +15,7 @@ All examples try to show something sensible on the console. Message subscribers 
 
 ## Build
 
-Make sure you have built the [message bus](../README.md) first.
+Make sure you have built the [message bus](../message-bus/README.md) first.
 
 Then: if needed, clone the Git repository (`git clone https://github.com/amchavan/alma-datapro-workflow-sandbox.git`), change to the *message-bus-demos* directory and run  
 `mvn clean package`  
