@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Message name="TestMsg">
+    <entry name="name" type="String"/>
+    <entry name="age" type="int"/>
+    <entry name="alive" type="boolean"/>
+</Message>

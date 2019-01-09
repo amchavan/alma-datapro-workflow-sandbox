@@ -41,4 +41,4 @@ class TestMessage(AbstractMessage):
         return result
     
     def __str__(self):
-        return "TestRecord[name=" + self.name + ", age=" + str(self.age) + ", alive=" + str(self.alive) + "]"
+        return "TestMessage[name=" + self.name + ", age=" + str(self.age) + ", alive=" + str(self.alive) + "]"
