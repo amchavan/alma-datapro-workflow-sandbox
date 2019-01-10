@@ -20,6 +20,11 @@ Make sure you have built the [message bus](../message-bus/README.md) first.
 Then: if needed, clone the Git repository (`git clone https://github.com/amchavan/alma-datapro-workflow-sandbox.git`), change to the *message-bus-demos* directory and run  
 `mvn clean package`  
 That will create several jarfiles in the *target* subdirectories, for instance *basic-sender/target/basic-sender-&lt;version&gt;.jar*
+After that, run
+`pip3 install --upgrade --user demos-common/src/main/python/`  
+`pip3 install --upgrade --user basic-receiver/src/main/python/`  
+`pip3 install --upgrade --user basic-sender/src/main/python/`  
+to install message-bus-demos to local Python installation area.
 
 **NOTE** The following examples assume the current working directory is *message-bus-demos*.
 
@@ -80,10 +85,8 @@ java -jar basic-sender/target/*.jar qname=example.queue
 For Python:
 
 ```bash
-cd /path/to/repo/root
-export PYTHONPATH=$PWD/message-bus-demos/demos-common/src/main/python:$PWD/message-bus/src/main/python:$PYTHONPATH
-python3 message-bus-demos/basic-receiver/src/main/python/draws/examples/BasicReceiver.py -q example.queue -s receiver
-python3 message-bus-demos/basic-sender/src/main/python/draws/examples/BasicSender.py -q example.queue
+python3 -m draws.examples.BasicReceiver.py -q example.queue -s receiver
+python3 -m draws.examples.BasicSender.py -q example.queue
 ```
 
 Parameter `qname` identifies the queue a message will be published to. Parameter `sname` identifies which service is subscribing — there may be multiple subscribers for the same message, see below.
