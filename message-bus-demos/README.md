@@ -71,9 +71,19 @@ Launch the MySQL server as appropriate for your system; on MacOS you'll need to 
 
 Modules `basic-sender` and `basic-receiver` exchange a simple message. Launch them as follows, on two separate terminal windows:
 
+For Java:
+
 ```bash
 java -jar basic-receiver/target/*.jar qname=example.queue sname=receiver
 java -jar basic-sender/target/*.jar qname=example.queue
+```
+For Python:
+
+```bash
+cd /path/to/repo/root
+export PYTHONPATH=$PWD/message-bus-demos/demos-common/src/main/python:$PWD/message-bus/src/main/python:$PYTHONPATH
+python3 message-bus-demos/basic-receiver/src/main/python/draws/examples/BasicReceiver.py -q example.queue -s receiver
+python3 message-bus-demos/basic-sender/src/main/python/draws/examples/BasicSender.py -q example.queue
 ```
 
 Parameter `qname` identifies the queue a message will be published to. Parameter `sname` identifies which service is subscribing — there may be multiple subscribers for the same message, see below.
