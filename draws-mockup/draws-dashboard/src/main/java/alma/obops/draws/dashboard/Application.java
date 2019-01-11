@@ -1,13 +1,13 @@
-package alma.obops.ousboard;
+package alma.obops.draws.dashboard;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class OusboardApplication {
+public class Application {
 
 	public static void main(String[] args) {
-		SpringApplication.run(OusboardApplication.class, args);
+		SpringApplication.run(Application.class, args);
 	}
 
 }

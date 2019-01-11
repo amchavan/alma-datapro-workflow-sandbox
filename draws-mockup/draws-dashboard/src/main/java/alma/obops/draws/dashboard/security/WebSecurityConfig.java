@@ -1,4 +1,4 @@
-package alma.obops.ousboard.security;
+package alma.obops.draws.dashboard.security;
 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
