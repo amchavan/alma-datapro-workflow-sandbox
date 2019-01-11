@@ -1,0 +1,74 @@
+<div>
+
+  <div>
+    <page-header></page-header>
+  </div>
+
+  <div class="ui main text container">
+    <h1 style="margin-bottom: 0.2em;" class="ui header"></h1>
+  </div>
+
+  <div style="overflow: scroll">
+    <table class="ui table">
+      <thead>
+      <tr>
+        <th>FullyObserved</th>
+        <th>ReadyForProcessing</th>
+        <th>Processing</th>
+        <th>ProcessingProblem</th>
+        <th>ReadyForReview</th>
+        <th>Reviewing</th>
+        <th>Verified</th>
+        <th>DeliveryInProgress</th>
+        <th>QA3InProgress</th>
+        <th>Delivered</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr class="cell_top">
+        <td>
+          <ous-widget *ngFor="let ous of appService.fullyObservedOUSs"
+                      [entityId]="ous.entityId" [timestamp] = "ous.timestamp" class="ui cards"></ous-widget>
+        </td>
+        <td>
+          <ous-widget *ngFor="let ous of appService.readyForProcessingOUSs"
+                      [entityId]="ous.entityId" [timestamp] = "ous.timestamp" class="ui cards"></ous-widget>
+        </td>
+        <td>
+          <ous-widget *ngFor="let ous of appService.processingOUSs"
+                      [entityId]="ous.entityId" [timestamp] = "ous.timestamp" class="ui cards"></ous-widget>
+        </td>
+        <td>
+          <ous-widget *ngFor="let ous of appService.processingProblemOUSs"
+                      [entityId]="ous.entityId" [timestamp] = "ous.timestamp" class="ui cards"></ous-widget>
+        </td>
+        <td>
+          <ous-widget *ngFor="let ous of appService.readyForReviewOUSs"
+                      [entityId]="ous.entityId" [timestamp] = "ous.timestamp" class="ui cards"></ous-widget>
+        </td>
+        <td>
+          <ous-widget *ngFor="let ous of appService.reviewingOUSs"
+                      [entityId]="ous.entityId" [timestamp] = "ous.timestamp" class="ui cards"></ous-widget>
+        </td>
+        <td>
+          <ous-widget *ngFor="let ous of appService.verifiedOUSs"
+                      [entityId]="ous.entityId" [timestamp] = "ous.timestamp" class="ui cards"></ous-widget>
+        </td>
+        <td>
+          <ous-widget *ngFor="let ous of appService.deliveryInProgressOUSs"
+                      [entityId]="ous.entityId" [timestamp] = "ous.timestamp" class="ui cards"></ous-widget>
+        </td>
+        <td>
+          <ous-widget *ngFor="let ous of appService.qa3InProgressOUSs"
+                      [entityId]="ous.entityId" [timestamp] = "ous.timestamp" class="ui cards"></ous-widget>
+        </td>
+        <td>
+          <ous-widget *ngFor="let ous of appService.deliveredOUSs"
+                      [entityId]="ous.entityId" [timestamp] = "ous.timestamp" class="ui cards"></ous-widget>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Spring Security configuration information
+-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:sec="http://www.springframework.org/schema/security"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans    http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.0.xsd
+        http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context-4.0.xsd"
+    default-autowire="byName">
+
+	<context:property-placeholder location="file:${ACSDATA}/config/obopsConfig.properties"/>
+
+	<!-- Role management -->
+	<sec:http auto-config='true' entry-point-ref="casEntryPoint" use-expressions="true">
+        <sec:intercept-url pattern="/login-check" access="isAuthenticated()" />
+        <sec:intercept-url pattern="/account/**"    access="permitAll" />
+		<sec:intercept-url pattern="/do-logout/**"    access="permitAll" />
+		<sec:intercept-url pattern="/dr/**" access="isAuthenticated()" />
+		<sec:intercept-url pattern="/**"            access="denyAll" />
+
+    <sec:logout logout-success-url="${cas.url}/logout" invalidate-session="true"/>
+
+    <sec:custom-filter ref="casFilter"                 position="CAS_FILTER"/>
+    <sec:custom-filter ref="requestSingleLogoutFilter" before="LOGOUT_FILTER"/>
+    <sec:custom-filter ref="singleLogoutFilter"        before="CAS_FILTER"/>
+</sec:http>
+
+<!-- CAS filters (login, logout, logout request) -->
+	<bean id="casFilter" class="org.springframework.security.cas.web.CasAuthenticationFilter"/>
+	<bean id="singleLogoutFilter" class="org.jasig.cas.client.session.SingleSignOutFilter"/>
+	<bean id="requestSingleLogoutFilter" class="org.springframework.security.web.authentication.logout.LogoutFilter">
+		<constructor-arg value="${cas.url}/logout"/>
+		<constructor-arg>
+			<bean class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler"/>
+		</constructor-arg>
+		<property name="filterProcessesUrl" value="/j_spring_cas_security_logout"/>
+	</bean>
+
+	<!-- Declare an authentication manager; it will look for authentication providers -->
+	<sec:authentication-manager alias="authenticationManager">
+		<sec:authentication-provider ref="casAuthenticationProvider" />
+	</sec:authentication-manager>
+
+	<!-- Where do we go when we need authentication -->
+	<bean id="casEntryPoint" class="org.springframework.security.cas.web.CasAuthenticationEntryPoint">
+		<property name="loginUrl" value="${cas.url}/login" />
+		<property name="serviceProperties" ref="serviceProperties"/>
+	</bean>
+
+	<!-- Which service (application) we are authenticating  -->
+	<bean id="serviceProperties" class="org.springframework.security.cas.ServiceProperties">
+		<property name="service" value="${obops.dratool.rest.server.url}/j_spring_cas_security_check" />
+		<property name="sendRenew" value="false" />
+	</bean>
+
+	<!-- Provides authentication services to the CAS processing filter -->
+    <bean id="authUserDetailsService" class="alma.obops.dratool.security.AlmaUserDetailsService" />
+
+	<bean id="casAuthenticationProvider" class="org.springframework.security.cas.authentication.CasAuthenticationProvider">
+		<property name="authenticationUserDetailsService" ref="authUserDetailsService"/>
+		<property name="ticketValidator">
+			<bean class="org.jasig.cas.client.validation.Cas20ServiceTicketValidator">
+				<constructor-arg index="0" value="${cas.url}" />
+			</bean>
+		</property>
+		<property name="key" value="0xFFF-1" />
+	</bean>
+
+	<!-- Log failed authentication attempts to commons-logging -->
+	<bean id="loggerListener" class="org.springframework.security.authentication.event.LoggerListener" />
+
+</beans>
