@@ -53,14 +53,47 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             #print("handleDelivery(listen): "+ str(body))
 
     #Instance Methods
-    def __init__(self, baseURI=MINIMAL_URI, username=None, password=None, exchangeName=MessageBroker.DEFAULT_MESSAGE_BROKER_NAME, envelopeRepository=None, groupRepository=None):
-        if baseURI is None:
-            raise Exception( "Arg baseURI cannot be null")
+    def __parsePropsFile(self, path):
+        propsFile = open(path, 'r')
+        props = {}
+        for l in propsFile.readlines():
+            tmp = l.replace('\n', '')
+            tmp = tmp.replace("#.*", '')
+            tmp = tmp.strip()
+            if tmp == '':
+                continue
+            if '=' not in tmp:
+                print("[Warning] Skipping line '" + tmp + "'.")
+                continue
+            tmp = tmp.split('=')
+            props[tmp[0]] = tmp[1]
+    def __initFromProperties(self, baseURI, username, password, envelopeRepository, groupRepository):
+        props = {}
+        if "ACSDATA" not in os.environ:
+            print("[Warning] ACSDATA environment variable not defined")
+        else:
+            path = os.environ["ACSDATA"] + '/config/archiveConfig.properties'
+            if not os.path.exists(path) or not os.path.isfile(path):
+                print("[Warning] File '$ACSDATA/config/archiveConfig.properties' doesn't exist or it's not a regular file.")
+            else:
+                props = self.__parsePropsFile(path)
+        if baseURI not None:
+            props['archive.rabbitmq.connection'] = baseURI
+        if username not None:
+            props['archive.rabbitmq.username'] = username
+        if password not None:
+            props['archive.rabbitmq.password'] = password
+
+    def __init__(self, baseURI=None, username=None, password=None, exchangeName=MessageBroker.DEFAULT_MESSAGE_BROKER_NAME, envelopeRepository=None, groupRepository=None):
         super(RabbitMqMessageBroker, self).__init__()
+        props = self.__initFromProperties(baseURI, username, password, envelopeRepository, groupRepository)
+        if 'archive.rabbitmq.connection' not in props:
+            raise Exception("Connection argument cannot be null. Either provide a valide '$ACSDATA/config/archiveConfig.properties' file or pass the baseURI argument.")
         parameters = pika.ConnectionParameters()
         try:
-            parameters.host = "localhost"
-            parameters.port = 5672
+            conn = props['archive.rabbitmq.connection'].split(':')
+            parameters.host = conn[1].replace('//','')
+            parameters.port = conn[2]
         except URISyntaxException | NoSuchAlgorithmException | KeyManagementException as e:
             raise Exception( e )
         if not username is None and not password is None:
