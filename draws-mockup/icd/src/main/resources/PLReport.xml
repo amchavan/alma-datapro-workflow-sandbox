@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Message name="PLReport" package="draws.mock.messages.gen">
+    <entry name="ousUID" type="String"/>
+    <entry name="timestamp" type="String"/>
+    <entry name="source" type="String"/>
+    <entry name="report" type="String"/>
+    <entry name="productsDir" type="String"/>
+</Message>
+
