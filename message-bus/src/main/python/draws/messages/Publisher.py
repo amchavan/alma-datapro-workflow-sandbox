@@ -5,4 +5,4 @@ class Publisher():
     def getMessageBroker(self):
         return self.__messageBroker
     def publish(self, message, timeToLive=0):
-        self.__messageBroker.send(self.__messageAddress, message, timeToLive)
+        return self.__messageBroker.send(self.__messageAddress, message, timeToLive)

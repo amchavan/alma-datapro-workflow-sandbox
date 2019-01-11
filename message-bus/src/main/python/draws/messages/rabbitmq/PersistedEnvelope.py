@@ -9,7 +9,7 @@ class PersistedEnvelope:
         ret._envelopeId         = envelope.getId()
         ret._consumedTimestamp  = envelope.getConsumedTimestamp()
         ret._expiredTimestamp   = envelope.getExpiredTimestamp()
-        ret._messageClass       = envelope.getMessageClass()
+        ret.messageClass       = envelope.getMessageClass()
         ret._originIp           = envelope.getOriginIP()
         ret._queueName          = envelope.getQueueName()
         ret._receivedTimestamp  = envelope.getReceivedTimestamp()
@@ -29,8 +29,8 @@ class PersistedEnvelope:
         self._envelopeId = None
         self._consumedTimestamp = None
         self._expiredTimestamp = None
-        self._message = None
-        self._messageClass = None
+        self.message = None
+        self.messageClass = None
         self._originIp = None 
         self._queueName = None
         self._receivedTimestamp = None
@@ -40,7 +40,7 @@ class PersistedEnvelope:
         self._timeToLive = None
     
     def asSimpleEnvelope(self):
-        deserializedMessage = SimpleEnvelope.deserializeMessage(self._messageClass, self._message)
+        deserializedMessage = SimpleEnvelope.deserializeMessage(self.messageClass, self.message)
         ret = SimpleEnvelope(envelopeId, deserializedMessage, messageClass, sentTimestamp, receivedTimestamp, consumedTimestamp, expiredTimestamp, originIp, queueName, State.valueOf( state ), timeToLive )
         return ret
 

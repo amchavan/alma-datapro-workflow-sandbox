@@ -15,6 +15,9 @@ Clone the Git repository (`git clone https://github.com/amchavan/alma-datapro-wo
 `mvn clean install`  
 That will create (in *target*) and install (in the local Maven repo) jarfile
 *message-bus-&lt;version&gt;.jar* 
+After that, run
+`pip3 install --upgrade --user src/main/python/`  
+to install message-bus to local Python installation area.
 
 ## Examples
 

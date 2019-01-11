@@ -26,7 +26,9 @@ from draws.messages.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
 from draws.messages.configuration.RecipientGroupRepository import RecipientGroupRepository
 from draws.messages.configuration.PersistedEnvelopeRepository import PersistedEnvelopeRepository
 
-from draws.test.messages.TestUtils import TestMessage
+from draws.test.messages.TestMessage import TestMessage
+from draws.test.messages.DoubleRequest import DoubleRequest
+from draws.test.messages.DoubleResponse import DoubleResponse
 from draws.test.messages.security.MockedTokenFactory import MockedTokenFactory
 
 
@@ -207,26 +209,12 @@ class TestTokenSecurityRabbitMQ(unittest.TestCase):
 class TestExecutor(unittest.TestCase):
     __QUEUE_NAME = "test.executor.queue"
     __EXCHANGE_NAME = "unit-test-exchange"
-    #Request: double a number
-    class DoubleRequest(AbstractRequestMessage):
-        #needed for JSON (de)serialization
-        def __init__(self):
-            super().__init__()
-            self.number = None
-
-    #Response: a doubled number
-    class DoubleResponse(AbstractMessage, ResponseMessage):
-        #needed for JSON (de)serialization
-        def __init__(self):
-            super().__init__()
-            self.doubled = None
-
     #Doubles its input
     class Doubler(RequestProcessor):
         def process(self, message):
             request = message
             print(">>> Received request with number: " + str(request.number))
-            response = TestExecutor.DoubleResponse()
+            response = DoubleResponse()
             response.doubled = request.number + request.number
             return response
 
@@ -234,8 +222,8 @@ class TestExecutor(unittest.TestCase):
         def __init__(self):
             self.doubled = None
         def consume(self, message):
-            if not isinstance(message, TestExecutor.DoubleResponse):
-                msg = "Not a " + TestExecutor.DoubleResponse.__qualname__ + ": " + str(message)
+            if not isinstance(message, DoubleResponse):
+                msg = "Not a " + DoubleResponse.__qualname__ + ": " + str(message)
                 print(">>>>> message 2: " + str(message))
                 print(">>>>> Thread: " + threading.currentThread().getName())
                 print(">>>>> " + msg)
@@ -272,7 +260,7 @@ class TestExecutor(unittest.TestCase):
         client = ExecutorClient(self.publisher, consumer)
         
         #Client sends a request to double 1
-        request = TestExecutor.DoubleRequest()
+        request = DoubleRequest()
         consumer.doubled = None
         request.number = 1
         client.call(request)

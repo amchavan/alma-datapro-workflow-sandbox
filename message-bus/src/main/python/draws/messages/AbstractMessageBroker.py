@@ -1,5 +1,4 @@
 from draws.messages.Envelope import State
-from draws.messages.MessageQueue import Type
 from draws.messages.MessageQueue import MessageQueue
 from draws.messages.MessageBroker import MessageBroker
 from draws.messages.SimpleEnvelope import SimpleEnvelope
@@ -35,7 +34,8 @@ class AbstractMessageBroker(MessageBroker):
     def _initEnvelope(self, envelope):
         envelope.setSentTimestamp(MessageBroker.nowISO())
         envelope.setState(State.Sent)
-        envelope.setMessageClass(envelope.getMessage().__class__.__module__ + "," + envelope.getMessage().__class__.__qualname__)
+        #envelope.setMessageClass(envelope.getMessage().__class__.__module__ + "," + envelope.getMessage().__class__.__qualname__)
+        envelope.setMessageClass(envelope.getMessage().__class__.__module__)
         envelope.setToken(self._sendToken)
 
     def _isRejected(self, queue, envelope):
@@ -78,8 +78,8 @@ class AbstractMessageBroker(MessageBroker):
         t.start()
         return t
 
-    def messageQueue(self, queueName, mqtype=Type.RECEIVE):
-        return MessageQueue(queueName, self, mqtype)
+    def messageQueue(self, queueName, serviceName):
+        return MessageQueue(queueName, self, serviceName)
     
     def receive(self, queue, timeLimit=0):
         #Wait for the first valid message we get and return it
@@ -94,10 +94,10 @@ class AbstractMessageBroker(MessageBroker):
         raise NotImplementedError
 
     def send(self, queue, message, expireTime=0):
-
         if queue is None or message is None:
             raise IllegalArgumentException( "Null arg" )
         queueName = queue.getName() if isinstance(queue, MessageQueue) else queue
+        queue = messageQueue(queueName, "")
         
         #Are we sending to a group?
         if not queueName.endswith(".*"):
@@ -105,14 +105,14 @@ class AbstractMessageBroker(MessageBroker):
             return ret
         
         #We are sending to a group: loop over all recipients
-        groupName = queueName
+        groupName = queue.getName()
         try:
             members = self.groupMembers(groupName)
             if members is None:
                 raise Exception("Receiver group '" + groupName + "' not found")
             ret = None
             for member in members:
-                memberQueue = MessageQueue(member, self, Type.SEND)
+                memberQueue = MessageQueue(member, "", self)
                 ret = self._sendOne(memberQueue, message, expireTime)
             return ret
         except Exception as e:
@@ -124,17 +124,9 @@ class AbstractMessageBroker(MessageBroker):
         self._initEnvelope(envelope)
         return envelope
 
-#    def setAcceptedRoles(acceptedRoles):
-#        if self._tokenFactory is None:
-#            raise Exception("No token factory found")
-#        self.acceptedRoles = acceptedRoles
-    
     #FOR TESTING ONLY
     def setSendToken(self, sendToken):
         self._sendToken = sendToken
-
-    def setServiceName(self, serviceName):
-        pass
 
     def _setState(self, envelope, state):
         envelope.setState(state)

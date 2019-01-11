@@ -4,7 +4,6 @@ import pika
 import threading
 
 from draws.messages.Envelope import State
-from draws.messages.MessageQueue import Type
 from draws.messages.MessageQueue import MessageQueue
 from draws.messages.MessageBroker import MessageBroker
 from draws.messages.SimpleEnvelope import SimpleEnvelope
@@ -15,6 +14,7 @@ from draws.messages.rabbitmq.RecipientGroup import RecipientGroup
 from draws.messages.rabbitmq.MessageArchiver import MessageArchiver
 
 from draws.messages.configuration.PersistedEnvelopeRepository import PersistedEnvelopeRepository
+from draws.messages.configuration.RecipientGroupRepository import RecipientGroupRepository
 
 class RabbitMqMessageBroker(AbstractMessageBroker):
     #Static Variables
@@ -24,7 +24,7 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
     MESSAGE_STATE_ROUTING_KEY = "new.message.state"
     #Static Methods
     @classmethod
-    def makeQueueNameFromRoutingKey(cls, serviceName, queueName):
+    def makeQueueName(cls, serviceName, queueName):
         return serviceName + "." + queueName
         #return queueName
     class RabbitMqListener:
@@ -53,7 +53,7 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             #print("handleDelivery(listen): "+ str(body))
 
     #Instance Methods
-    def __init__(self, baseURI=MINIMAL_URI, username=None, password=None, exchangeName=None, envelopeRepository=None, groupRepository=None):
+    def __init__(self, baseURI=MINIMAL_URI, username=None, password=None, exchangeName=MessageBroker.DEFAULT_MESSAGE_BROKER_NAME, envelopeRepository=None, groupRepository=None):
         if baseURI is None:
             raise Exception( "Arg baseURI cannot be null")
         super(RabbitMqMessageBroker, self).__init__()
@@ -70,17 +70,16 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
         self.__envelopeRepository = PersistedEnvelopeRepository() if envelopeRepository is None else envelopeRepository
         self.__groupRepository = RecipientGroupRepository() if groupRepository is None else groupRepository
         try:
-            connection = pika.BlockingConnection(parameters)
-            self.__channel = connection.channel()
+            self.__connection = pika.BlockingConnection(parameters)
+            self.__channel = self.__connection.channel()
             self.__channel.exchange_declare(exchangeName, 'topic')
             self.__channel.queue_declare(RabbitMqMessageBroker.MESSAGE_PERSISTENCE_QUEUE, False, True, False, False, None)
             self.__messageLogListener = MessageArchiver(self.__channel, exchangeName, envelopeRepository, RabbitMqMessageBroker.MESSAGE_PERSISTENCE_QUEUE, RabbitMqMessageBroker.MESSAGE_STATE_ROUTING_KEY)
-            self.__serviceName = None
         except Exception as e:
             raise Exception(e)
 
     def closeConnection(self):
-        self.getChannel().getConnection().close()
+        self.getConnection().close()
     def deleteQueue(self, queue):
         try:
             self.__channel.queue_delete(queue.getName())
@@ -100,6 +99,9 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
 
     def getChannel(self):
         return self.__channel
+
+    def getConnection(self):
+        return self.__connection
 
     def getMessageArchiver(self):
         return self.__messageLogListener
@@ -149,18 +151,15 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             #    break
             MessageBroker.sleep(100)
     
-    def messageQueue(self, queueName, mqtype=Type.RECEIVE):
-        if self.__serviceName is None:
-            self.setServiceName("")
+    def messageQueue(self, queueName, serviceName):
         routingKey = queueName
-        queueName = RabbitMqMessageBroker.makeQueueNameFromRoutingKey(self.__serviceName, queueName)
-        if mqtype == Type.RECEIVE or mqtype == Type.SENDQUEUE:
-            try:
-                self.__channel.queue_declare(queueName, False, True, False, False, None)
-                self.__channel.queue_bind(queueName, self.__exchangeName, routingKey)
-            except Exception as e:
-                raise Exception(e)
-        ret = MessageQueue(queueName, self)
+        queueName = RabbitMqMessageBroker.makeQueueName(serviceName, queueName)
+        try:
+            self.__channel.queue_declare(queueName, False, True, False, False, None)
+            self.__channel.queue_bind(queueName, self.__exchangeName, routingKey)
+        except Exception as e:
+            raise Exception(e)
+        ret = MessageQueue(queueName, serviceName, self)
         return ret
     
     def _receiveOne(self, queue, timeLimit):
@@ -173,14 +172,14 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             while True:
                 autoAck = True
                 response = self.__channel.basic_get(queue.getName(), autoAck)
-                if response is not None:
+                if response[0] is not None:
                     break
                 #Did we time out?
                 nowt = MessageBroker.now()
                 if timeLimit > 0 and (nowt - callTime).total_seconds() >= timeLimit/1000:
                     #YES, throw an exception and exit
                     raise TimeLimitExceededException("After " + timeLimit + "msec")
-                MessageBroker.sleep(WAIT_BETWEEN_POLLING_FOR_GET)
+                MessageBroker.sleep(RabbitMqMessageBroker.__WAIT_BETWEEN_POLLING_FOR_GET)
             body = response[2]
             #print("_receiveOne: "+ queue.getName())
             #print("_receiveOne: "+ str(body))
@@ -211,14 +210,6 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             return envelope
         except (TimeLimitExceededException, Exception) as e:
             raise Exception(e)
-
-    def setServiceName(self, serviceName):
-            if serviceName is None or len(serviceName) == 0:
-                serviceName = "noservice"
-            if re.match("^[a-zA-Z_][a-zA-Z_0-9]*$", serviceName) is None:
-                raise Exception( "Invalid serviceName" )
-            self.__serviceName = serviceName
-
 
     def _setState(self, envelope, state):
         timestamp = super()._setState(envelope, state)

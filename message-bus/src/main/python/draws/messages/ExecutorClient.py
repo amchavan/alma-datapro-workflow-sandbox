@@ -23,7 +23,6 @@ class ExecutorClient:
         subscriber = Subscriber(self.__publisher.getMessageBroker(), responseQueueName, "temp")
         request.setResponseQueueName(responseQueueName)
         self.__publisher.publish(request)
-        MessageBroker.sleep(50)
         response = subscriber.receive(timeout)
         subscriber.getQueue().delete()
         self.__consumer.consume(response.getMessage())
