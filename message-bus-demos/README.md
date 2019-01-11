@@ -85,8 +85,8 @@ java -jar basic-sender/target/*.jar qname=example.queue
 For Python:
 
 ```bash
-python3 -m draws.examples.BasicReceiver.py -q example.queue -s receiver
-python3 -m draws.examples.BasicSender.py -q example.queue
+python3 -m draws.examples.BasicReceiver -q example.queue -s receiver
+python3 -m draws.examples.BasicSender -q example.queue
 ```
 
 Parameter `qname` identifies the queue a message will be published to. Parameter `sname` identifies which service is subscribing — there may be multiple subscribers for the same message, see below.

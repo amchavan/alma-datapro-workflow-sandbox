@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<xsl:output method="text"/>
 	<xsl:variable name="className" select="/Message/@name"/>
 	<xsl:template match="/Message">
-		<xsl:text>import alma.obops.draws.messages.AbstractMessage;
+		<xsl:text>package </xsl:text><xsl:value-of select="@package"/><xsl:text>;
+
+import alma.obops.draws.messages.AbstractMessage;
 
 </xsl:text>
 		<xsl:text>public class </xsl:text><xsl:value-of select="$className"/><xsl:text>extends AbstractMessage {

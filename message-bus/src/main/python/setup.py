@@ -2,7 +2,8 @@ from setuptools import setup
 
 dependencies = [
     "python-jose",
-    "pika"
+    "pika",
+    "lxml"
 ]
 
 setup(name='drawsmb',
