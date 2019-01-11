@@ -12,4 +12,3 @@ $(foreach mod,$(MODULES),$(eval $(call makeModule,$(mod))))
 all: $(MODULES)
 	@mvn clean package
 	@echo "All done"
-

@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import pika
@@ -55,8 +56,10 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
     #Instance Methods
     def __parsePropsFile(self, path):
         propsFile = open(path, 'r')
+        lines = propsFile.readlines()
+        propsFile.close()
         props = {}
-        for l in propsFile.readlines():
+        for l in lines:
             tmp = l.replace('\n', '')
             tmp = tmp.replace("#.*", '')
             tmp = tmp.strip()
@@ -67,6 +70,7 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
                 continue
             tmp = tmp.split('=')
             props[tmp[0]] = tmp[1]
+        return props
     def __initFromProperties(self, baseURI, username, password, envelopeRepository, groupRepository):
         props = {}
         if "ACSDATA" not in os.environ:
@@ -77,12 +81,13 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
                 print("[Warning] File '$ACSDATA/config/archiveConfig.properties' doesn't exist or it's not a regular file.")
             else:
                 props = self.__parsePropsFile(path)
-        if baseURI not None:
+        if baseURI is not None:
             props['archive.rabbitmq.connection'] = baseURI
-        if username not None:
+        if username is not None:
             props['archive.rabbitmq.username'] = username
-        if password not None:
+        if password is not None:
             props['archive.rabbitmq.password'] = password
+        return props
 
     def __init__(self, baseURI=None, username=None, password=None, exchangeName=MessageBroker.DEFAULT_MESSAGE_BROKER_NAME, envelopeRepository=None, groupRepository=None):
         super(RabbitMqMessageBroker, self).__init__()
