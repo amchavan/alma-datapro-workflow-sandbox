@@ -3,16 +3,16 @@
   <div>
     <page-header></page-header>
   </div>
-
-  <div class="ui top attached tabular menu">
-      <div class="active item">ObsUnitSets</div>
-      <div class="item">Tab2</div>
-    </div>
-    <div class="ui bottom attached active tab segment">
-      <ous-table></ous-table>
-    </div>
-    <div class="ui bottom attached tab segment">
-      <p>C</p>
-    </div>
-
+  <sui-tabset>
+      <div class="ui top attached tabular menu">
+          <a class="item" suiTabHeader="1">ObsUnitSets</a>
+          <a class="item" suiTabHeader="2">Messages</a>
+          <a class="item" suiTabHeader="3">TODO</a>
+      </div>
+      <div class="ui bottom attached segment" suiTabContent="1">
+          <ous-table></ous-table>
+      </div>
+      <div class="ui bottom attached segment" suiTabContent="2">TODO</div>
+      <div class="ui bottom attached segment" suiTabContent="3">TODO</div>
+  </sui-tabset>
 </div>

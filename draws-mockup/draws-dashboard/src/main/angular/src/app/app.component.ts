@@ -11,7 +11,6 @@ export class AppComponent implements OnInit{
   }
 
   ngOnInit(): void {
-    $('.top.menu .item').tab();
   }
 
 }
