@@ -1,5 +1,4 @@
 import {Component, OnInit} from '@angular/core';
-import {AppService} from "./app.service";
 
 @Component({
   selector: 'app-root',
@@ -8,13 +7,11 @@ import {AppService} from "./app.service";
 })
 export class AppComponent implements OnInit{
 
-  constructor(public appService : AppService){
+  constructor(){
   }
 
   ngOnInit(): void {
-
-    this.appService.loadOUSs();
-
+    $('.top.menu .item').tab();
   }
 
 }

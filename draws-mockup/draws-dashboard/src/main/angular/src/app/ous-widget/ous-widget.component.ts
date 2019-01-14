@@ -1,4 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
+import { Ous } from '../ous';
 
 @Component({
   selector: 'ous-widget',
@@ -7,8 +8,10 @@ import { Component, Input, OnInit } from '@angular/core';
 })
 export class OusWidgetComponent implements OnInit {
 
-  @Input('entityId') entityId: string;
-  @Input('timestamp') timestamp: string;
+  @Input('ous') ous: Ous;
+  // @Input('entityId') entityId: string;
+  // @Input('timestamp') timestamp: string;
+  // @Input('substate') substate: string;
 
   constructor() { }
 

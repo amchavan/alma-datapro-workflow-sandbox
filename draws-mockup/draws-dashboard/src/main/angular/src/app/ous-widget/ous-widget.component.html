@@ -1,13 +1,13 @@
 <div class="card" style="width: auto">
   <div class="content">
-    <div class="small" style="color: grey">
-      Member ObsUnitSet
+    <div>
+      {{ous.entityId}}
     </div>
-    <div class="small">
-      {{entityId}}
+    <div class="small" style="color: gray">
+      {{ous.substate}}
     </div>
-    <div class="small" style="white-space: nowrap; color: blue">
-      {{timestamp | date:'dd/MM/yyyy HH:mm:ss'}}
+    <div class="small" style="white-space: nowrap;">
+      {{ous.timestamp | date:'dd/MM/yyyy HH:mm:ss'}}
     </div>
   </div>
 </div>

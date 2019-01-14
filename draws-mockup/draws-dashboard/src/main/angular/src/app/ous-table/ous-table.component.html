@@ -1,0 +1,63 @@
+<div style="overflow: scroll">
+  <table class="ui table">
+    <thead>
+    <tr>
+      <th>FullyObserved</th>
+      <th>ReadyForProcessing</th>
+      <th>Processing</th>
+      <th>ProcessingProblem</th>
+      <th>ReadyForReview</th>
+      <th>Reviewing</th>
+      <th>Verified</th>
+      <th>DeliveryInProgress</th>
+      <th>QA3InProgress</th>
+      <th>Delivered</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr class="cell_top">
+      <td>
+        <ous-widget *ngFor="let ous of appService.fullyObservedOUSs"
+                    [ous]="ous" class="ui cards"></ous-widget>
+      </td>
+      <td>
+        <ous-widget *ngFor="let ous of appService.readyForProcessingOUSs"
+                    [ous]="ous" class="ui cards"></ous-widget>
+      </td>
+      <td>
+        <ous-widget *ngFor="let ous of appService.processingOUSs"
+                    [ous]="ous" class="ui cards"></ous-widget>
+      </td>
+      <td>
+        <ous-widget *ngFor="let ous of appService.processingProblemOUSs"
+                    [ous]="ous" class="ui cards"></ous-widget>
+      </td>
+      <td>
+        <ous-widget *ngFor="let ous of appService.readyForReviewOUSs"
+                    [ous]="ous" class="ui cards"></ous-widget>
+      </td>
+      <td>
+        <ous-widget *ngFor="let ous of appService.reviewingOUSs"
+                    [ous]="ous" class="ui cards"></ous-widget>
+      </td>
+      <td>
+        <ous-widget *ngFor="let ous of appService.verifiedOUSs"
+                    [ous]="ous" class="ui cards"></ous-widget>
+      </td>
+      <td>
+        <ous-widget *ngFor="let ous of appService.deliveryInProgressOUSs"
+                    [ous]="ous" class="ui cards"></ous-widget>
+      </td>
+      <td>
+        <ous-widget *ngFor="let ous of appService.qa3InProgressOUSs"
+                    [ous]="ous" class="ui cards"></ous-widget>
+      </td>
+      <td>
+        <ous-widget *ngFor="let ous of appService.deliveredOUSs"
+                    [ous]="ous" class="ui cards"></ous-widget>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+
+</div>

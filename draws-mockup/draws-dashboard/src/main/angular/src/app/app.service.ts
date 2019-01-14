@@ -2,6 +2,7 @@ import {Ous} from "./ous";
 import {HttpClient, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
 import {Injectable} from "@angular/core";
 import {AppConfig} from "./app.config";
+import { throwError } from "rxjs";
 
 @Injectable({providedIn: 'root'})
 export class AppService {
@@ -17,26 +18,25 @@ export class AppService {
   qa3InProgressOUSs : Ous[];
   deliveredOUSs : Ous[];
 
-  constructor(public http: HttpClient, public config : AppConfig){
+  constructor( public http: HttpClient, public config : AppConfig ){
   }
 
 
   loadOUSs() {
 
-      this.fullyObservedOUSs = this.requestOusByState("FullyObserved");
-      this.readyForProcessingOUSs = this.requestOusByState("ReadyForProcessing");
-      this.processingOUSs = this.requestOusByState("Processing");
-      this.processingProblemOUSs = this.requestOusByState("ProcessingProblem");
-      this.readyForReviewOUSs = this.requestOusByState("ReadyForReview");
-      this.reviewingOUSs = this.requestOusByState("Reviewing");
-      this.verifiedOUSs = this.requestOusByState("Verified");
-      this.deliveryInProgressOUSs = this.requestOusByState("DeliveryInProgress");
-      this.qa3InProgressOUSs = this.requestOusByState("QA3InProgress");
-      this.deliveredOUSs = this.requestOusByState("Delivered");
-
+      this.requestOusByState("FullyObserved");
+      this.requestOusByState("ReadyForProcessing");
+      this.requestOusByState("Processing");
+      this.requestOusByState("ProcessingProblem");
+      this.requestOusByState("ReadyForReview");
+      this.requestOusByState("Reviewing");
+      this.requestOusByState("Verified");
+      this.requestOusByState("DeliveryInProgress");
+      this.requestOusByState("QA3InProgress");
+      this.requestOusByState("Delivered");
   }
 
-  readObsUnitSets(state : string, obsUnitSets : Ous[]) {
+  setObsUnitSetsByState( state : string, obsUnitSets : Ous[] ) {
     if ( state == "FullyObserved") {
       this.fullyObservedOUSs = obsUnitSets;
     } else if ( state == "ReadyForProcessing") {
@@ -48,7 +48,7 @@ export class AppService {
     } else if ( state == "ReadyForReview") {
       this.readyForReviewOUSs = obsUnitSets;
     } else if ( state == "Reviewing") {
-      this.reviewingOUSs == obsUnitSets;
+      this.reviewingOUSs = obsUnitSets;
     } else if ( state == "Verified") {
       this.verifiedOUSs = obsUnitSets;
     } else if ( state == "DeliveryInProgress") {
@@ -58,7 +58,9 @@ export class AppService {
     } else if ( state == "Delivered") {
       this.deliveredOUSs = obsUnitSets;
     }
-
+    else {
+      throwError;
+    }
   }
 
   requestOusByState(state : string ) : Ous[] {
@@ -72,16 +74,13 @@ export class AppService {
     this.http.get(requestURL, {headers:headers}).subscribe(
       data => {
         result = data as Ous [];
-        this.readObsUnitSets(state, result);
-        console.log(state+" "+JSON.stringify(result))
+        this.setObsUnitSetsByState( state, result );
+        console.log( state+" "+JSON.stringify( result ))
       },
       (err: HttpErrorResponse) => {
         console.log (err.message);
       }
-    );
-
-    return result;
+    )
+    return null;
   }
-
-
 }

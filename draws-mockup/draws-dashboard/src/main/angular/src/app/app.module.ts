@@ -8,12 +8,14 @@ import {AppService} from "./app.service";
 import {HttpClientModule } from "@angular/common/http";
 import {SuiModule} from "ng2-semantic-ui";
 import {AppConfig} from "./app.config";
+import { OusTableComponent } from './ous-table/ous-table.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     PageHeaderComponent,
-    OusWidgetComponent
+    OusWidgetComponent,
+    OusTableComponent
   ],
   imports: [
     BrowserModule,
