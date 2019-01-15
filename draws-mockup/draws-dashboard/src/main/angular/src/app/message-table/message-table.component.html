@@ -4,16 +4,16 @@
       <tr>
         <th>Queue</th>
         <th>State</th>
-        <th>Timestamp</th>
+        <th>Sent timestamp</th>
         <th>Message body</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let message of messages" >
-            <td>{{message.queue}}</td>
+      <tr *ngFor="let message of appService.messages" >
+            <td>{{message.queueName}}</td>
             <td>{{message.state}}</td>
-            <td>{{message.timestamp}}</td>
-            <td>{{message.body}}</td>
+            <td>{{message.sentTimestamp}}</td>
+            <td>{{message.message}}</td>
       </tr>
     </tbody>
   </table>

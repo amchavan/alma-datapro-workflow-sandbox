@@ -12,6 +12,8 @@ import org.apache.http.message.BasicHeader;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import alma.obops.draws.dashboard.persistence.envelope.Record;
+
 /**
  * An interface to CouchDB
  * @author mchavan

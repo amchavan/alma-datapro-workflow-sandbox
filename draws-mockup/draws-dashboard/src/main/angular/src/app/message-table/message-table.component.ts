@@ -16,6 +16,5 @@ export class MessageTableComponent implements OnInit {
 
   ngOnInit() {
     this.appService.loadMessages();
-    this.messages = this.appService.messages;
   }
 }

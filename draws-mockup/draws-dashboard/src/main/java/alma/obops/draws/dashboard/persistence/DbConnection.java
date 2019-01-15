@@ -2,6 +2,8 @@ package alma.obops.draws.dashboard.persistence;
 
 import java.io.IOException;
 
+import alma.obops.draws.dashboard.persistence.envelope.Record;
+
 /**
  * Describes a generic interface to a database of {@link #Record}s
  * 

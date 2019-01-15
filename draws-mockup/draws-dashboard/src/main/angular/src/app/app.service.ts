@@ -66,7 +66,7 @@ export class AppService {
     }
   }
 
-  requestOusByState(state : string ) : Ous[] {
+  requestOusByState(state : string ) {
     let result = [];
 
     let requestURL = this.config.serverPath+"/"+this.config.ousAPI+"?"+this.config.stateAPIParameter+"="+state;
@@ -83,18 +83,32 @@ export class AppService {
       (err: HttpErrorResponse) => {
         console.log (err.message);
       }
-    )
-    return null;
+    );
   }
 
   loadMessages() {
 
-    var msg = new Message;
-    msg.body = '{"name":"abcd","value":"1"}';
-    msg.queue = "test.queue";
-    msg.state = "Sent";
-    msg.timestamp = "2018-12-10T16:16:07"
+    var result:Message[];
 
-    this.messages = [msg];
+    let requestURL = this.config.serverPath+"/"+this.config.messagesAPI;
+    let headers = new HttpHeaders();
+    headers.append("Authorization", "Basic " + btoa(this.config.username+":"+this.config.password));
+    headers.append("Content-Type", "application/x-www-form-urlencoded");
+
+    this.http.get(requestURL, {headers:headers}).subscribe(
+      data => {
+        result = data as Message [];
+        console.log( ">>> Got messages: " + result.length )
+        result.forEach( message => { 
+          if( message.sentTimestamp != undefined ) {
+            message.sentTimestamp = message.sentTimestamp.replace( 'T', ' ' );
+          }
+        });
+        this.messages = result;
+      },
+      (err: HttpErrorResponse) => {
+        console.log (err.message);
+      }
+    );
   }
 }

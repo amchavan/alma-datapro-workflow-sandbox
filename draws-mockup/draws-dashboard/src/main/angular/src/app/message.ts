@@ -1,6 +1,6 @@
 export class Message {
   queue : string;
-  timestamp : string;
+  sentTimestamp : string;
   state : string;
-  body : string;
+  message : string;
 }

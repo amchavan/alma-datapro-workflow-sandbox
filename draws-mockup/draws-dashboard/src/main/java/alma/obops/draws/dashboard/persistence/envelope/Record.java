@@ -1,4 +1,4 @@
-package alma.obops.draws.dashboard.persistence;
+package alma.obops.draws.dashboard.persistence.envelope;
 
 public interface Record {
 
