@@ -16,10 +16,11 @@
 .ui.inverted.almacolor.menu .active.item, .ui.inverted.almacolor.button {
   background-color: white !important; color: #25386f !important }
 
-.bold { font-weight: bold;}
+/* .bold { font-weight: bold;} */
 
 .cell_top > td { vertical-align: top;  }
 
+/*
 .small { font-size: x-small}
 
 td, th {
@@ -32,5 +33,5 @@ th, table {
   border-bottom: 5px solid white !important;
   border-top: none !important;
 }
-
+*/
 

@@ -1,0 +1,20 @@
+<div>
+  <table class="ui celled table">
+    <thead>
+      <tr>
+        <th>Queue</th>
+        <th>State</th>
+        <th>Timestamp</th>
+        <th>Message body</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let message of messages" >
+            <td>{{message.queue}}</td>
+            <td>{{message.state}}</td>
+            <td>{{message.timestamp}}</td>
+            <td>{{message.body}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

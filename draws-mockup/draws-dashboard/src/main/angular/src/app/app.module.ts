@@ -9,13 +9,15 @@ import {HttpClientModule } from "@angular/common/http";
 import {SuiModule} from "ng2-semantic-ui";
 import {AppConfig} from "./app.config";
 import { OusTableComponent } from './ous-table/ous-table.component';
+import { MessageTableComponent } from './message-table/message-table.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     PageHeaderComponent,
     OusWidgetComponent,
-    OusTableComponent
+    OusTableComponent,
+    MessageTableComponent
   ],
   imports: [
     BrowserModule,

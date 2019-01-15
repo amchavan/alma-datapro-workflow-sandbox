@@ -3,6 +3,7 @@ import {HttpClient, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
 import {Injectable} from "@angular/core";
 import {AppConfig} from "./app.config";
 import { throwError } from "rxjs";
+import { Message } from "./message";
 
 @Injectable({providedIn: 'root'})
 export class AppService {
@@ -18,9 +19,11 @@ export class AppService {
   qa3InProgressOUSs : Ous[];
   deliveredOUSs : Ous[];
 
-  constructor( public http: HttpClient, public config : AppConfig ){
-  }
+  messages : Message[];
 
+  constructor( public http: HttpClient, public config : AppConfig ){
+
+  }
 
   loadOUSs() {
 
@@ -82,5 +85,16 @@ export class AppService {
       }
     )
     return null;
+  }
+
+  loadMessages() {
+
+    var msg = new Message;
+    msg.body = '{"name":"abcd","value":"1"}';
+    msg.queue = "test.queue";
+    msg.state = "Sent";
+    msg.timestamp = "2018-12-10T16:16:07"
+
+    this.messages = [msg];
   }
 }
