@@ -2,7 +2,7 @@ import {Ous} from "./ous";
 import {HttpClient, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
 import {Injectable} from "@angular/core";
 import {AppConfig} from "./app.config";
-import { throwError } from "rxjs";
+import { throwError, Observable } from "rxjs";
 import { Message } from "./message";
 
 @Injectable({providedIn: 'root'})
@@ -89,26 +89,19 @@ export class AppService {
   loadMessages() {
 
     var result:Message[];
-
     let requestURL = this.config.serverPath+"/"+this.config.messagesAPI;
     let headers = new HttpHeaders();
     headers.append("Authorization", "Basic " + btoa(this.config.username+":"+this.config.password));
     headers.append("Content-Type", "application/x-www-form-urlencoded");
-
-    this.http.get(requestURL, {headers:headers}).subscribe(
-      data => {
-        result = data as Message [];
-        console.log( ">>> Got messages: " + result.length )
-        result.forEach( message => { 
+    this.http.get<Message[]>( requestURL, {headers:headers} )
+      .subscribe( messages => {
+        this.messages = messages;
+        messages.forEach( message => {
           if( message.sentTimestamp != undefined ) {
             message.sentTimestamp = message.sentTimestamp.replace( 'T', ' ' );
+            }
           }
-        });
-        this.messages = result;
-      },
-      (err: HttpErrorResponse) => {
-        console.log (err.message);
-      }
-    );
+        );
+      });
   }
 }
