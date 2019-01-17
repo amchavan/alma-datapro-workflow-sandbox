@@ -1,6 +1,6 @@
-package alma.obops.draws.messages.security;
+package alma.icd.adapt.messagebus.security;
 
-import static alma.obops.draws.messages.TestUtils.MESSAGE_BUS_NAME;
+import static alma.icd.adapt.messagebus.TestUtils.MESSAGE_BUS_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -19,22 +19,24 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.nimbusds.jose.JOSEException;
 
-import alma.obops.draws.messages.DbConnection;
-import alma.obops.draws.messages.Envelope;
-import alma.obops.draws.messages.Envelope.State;
-import alma.obops.draws.messages.Publisher;
-import alma.obops.draws.messages.Subscriber;
-import alma.obops.draws.messages.TestUtils.TestMessage;
-import alma.obops.draws.messages.TimeLimitExceededException;
-import alma.obops.draws.messages.configuration.CouchDbConfiguration;
-import alma.obops.draws.messages.configuration.CouchDbConfigurationProperties;
-import alma.obops.draws.messages.configuration.EmbeddedDataSourceConfiguration;
-import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
-import alma.obops.draws.messages.configuration.PersistenceConfiguration;
-import alma.obops.draws.messages.configuration.RecipientGroupRepository;
-import alma.obops.draws.messages.couchdb.CouchDbConnection;
-import alma.obops.draws.messages.couchdb.CouchDbMessageBroker;
-import alma.obops.draws.messages.rabbitmq.PersistedEnvelope;
+import alma.icd.adapt.messagebus.DbConnection;
+import alma.icd.adapt.messagebus.Envelope;
+import alma.icd.adapt.messagebus.Publisher;
+import alma.icd.adapt.messagebus.Subscriber;
+import alma.icd.adapt.messagebus.TimeLimitExceededException;
+import alma.icd.adapt.messagebus.Envelope.State;
+import alma.icd.adapt.messagebus.TestUtils.TestMessage;
+import alma.icd.adapt.messagebus.configuration.CouchDbConfiguration;
+import alma.icd.adapt.messagebus.configuration.CouchDbConfigurationProperties;
+import alma.icd.adapt.messagebus.configuration.EmbeddedDataSourceConfiguration;
+import alma.icd.adapt.messagebus.configuration.PersistedEnvelopeRepository;
+import alma.icd.adapt.messagebus.configuration.PersistenceConfiguration;
+import alma.icd.adapt.messagebus.configuration.RecipientGroupRepository;
+import alma.icd.adapt.messagebus.couchdb.CouchDbConnection;
+import alma.icd.adapt.messagebus.couchdb.CouchDbMessageBroker;
+import alma.icd.adapt.messagebus.rabbitmq.PersistedEnvelope;
+import alma.icd.adapt.messagebus.security.JWTFactory;
+import alma.icd.adapt.messagebus.security.TokenFactory;
 
 
 @RunWith(SpringRunner.class)

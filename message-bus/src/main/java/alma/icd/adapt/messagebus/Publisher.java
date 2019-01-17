@@ -1,6 +1,6 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
-import alma.obops.draws.messages.Envelope.State;
+import alma.icd.adapt.messagebus.Envelope.State;
 
 /**
  * Publishes messages to queue

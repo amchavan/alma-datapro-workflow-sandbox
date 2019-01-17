@@ -1,6 +1,6 @@
-package alma.obops.draws.messages.couchdb;
+package alma.icd.adapt.messagebus.couchdb;
 
-import static alma.obops.draws.messages.TestUtils.MESSAGE_BUS_NAME;
+import static alma.icd.adapt.messagebus.TestUtils.MESSAGE_BUS_NAME;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
@@ -13,17 +13,19 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureJdbc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import alma.obops.draws.messages.DbConnection;
-import alma.obops.draws.messages.Envelope;
-import alma.obops.draws.messages.Envelope.State;
-import alma.obops.draws.messages.MessageBroker;
-import alma.obops.draws.messages.MessageConsumer;
-import alma.obops.draws.messages.Publisher;
-import alma.obops.draws.messages.Subscriber;
-import alma.obops.draws.messages.TestUtils.TestMessage;
-import alma.obops.draws.messages.configuration.CouchDbConfiguration;
-import alma.obops.draws.messages.configuration.CouchDbConfigurationProperties;
-import alma.obops.draws.messages.TimeLimitExceededException;
+import alma.icd.adapt.messagebus.DbConnection;
+import alma.icd.adapt.messagebus.Envelope;
+import alma.icd.adapt.messagebus.MessageBroker;
+import alma.icd.adapt.messagebus.MessageConsumer;
+import alma.icd.adapt.messagebus.Publisher;
+import alma.icd.adapt.messagebus.Subscriber;
+import alma.icd.adapt.messagebus.TimeLimitExceededException;
+import alma.icd.adapt.messagebus.Envelope.State;
+import alma.icd.adapt.messagebus.TestUtils.TestMessage;
+import alma.icd.adapt.messagebus.configuration.CouchDbConfiguration;
+import alma.icd.adapt.messagebus.configuration.CouchDbConfigurationProperties;
+import alma.icd.adapt.messagebus.couchdb.CouchDbConnection;
+import alma.icd.adapt.messagebus.couchdb.CouchDbMessageBroker;
 
 
 @RunWith(SpringRunner.class)

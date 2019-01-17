@@ -1,9 +1,9 @@
-package alma.obops.draws.messages.couchdb;
+package alma.icd.adapt.messagebus.couchdb;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import alma.obops.draws.messages.Record;
+import alma.icd.adapt.messagebus.Record;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

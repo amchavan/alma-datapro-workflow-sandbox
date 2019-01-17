@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.couchdb;
+package alma.icd.adapt.messagebus.couchdb;
 
 import java.io.IOException;
 
@@ -10,9 +10,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import alma.obops.draws.messages.Envelope.State;
-import alma.obops.draws.messages.Message;
-import alma.obops.draws.messages.SimpleEnvelope;
+import alma.icd.adapt.messagebus.Message;
+import alma.icd.adapt.messagebus.SimpleEnvelope;
+import alma.icd.adapt.messagebus.Envelope.State;
 
 /**
  * We need a special Jackson deserializer for the {@link SimpleEnvelope}, as the
@@ -24,7 +24,7 @@ import alma.obops.draws.messages.SimpleEnvelope;
 	"message": {
 		...
 	},
-	"messageClass": "alma.obops.draws.messages....",
+	"messageClass": "alma.icd.adapt.messagebus....",
 	"sentTimestamp": "2018-09-12T14:21:19",
 	"originIP": "134.171.73.110",
 	"queueName": "xtss",

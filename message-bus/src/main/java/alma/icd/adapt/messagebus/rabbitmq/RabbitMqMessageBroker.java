@@ -1,6 +1,6 @@
-package alma.obops.draws.messages.rabbitmq;
+package alma.icd.adapt.messagebus.rabbitmq;
 
-import static alma.obops.draws.messages.MessageBroker.now;
+import static alma.icd.adapt.messagebus.MessageBroker.now;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -20,17 +20,17 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.GetResponse;
 
-import alma.obops.draws.messages.AbstractMessageBroker;
-import alma.obops.draws.messages.Envelope;
-import alma.obops.draws.messages.Envelope.State;
-import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
-import alma.obops.draws.messages.configuration.RecipientGroupRepository;
-import alma.obops.draws.messages.Message;
-import alma.obops.draws.messages.MessageBroker;
-import alma.obops.draws.messages.MessageConsumer;
-import alma.obops.draws.messages.MessageQueue;
-import alma.obops.draws.messages.SimpleEnvelope;
-import alma.obops.draws.messages.TimeLimitExceededException;
+import alma.icd.adapt.messagebus.AbstractMessageBroker;
+import alma.icd.adapt.messagebus.Envelope;
+import alma.icd.adapt.messagebus.Message;
+import alma.icd.adapt.messagebus.MessageBroker;
+import alma.icd.adapt.messagebus.MessageConsumer;
+import alma.icd.adapt.messagebus.MessageQueue;
+import alma.icd.adapt.messagebus.SimpleEnvelope;
+import alma.icd.adapt.messagebus.TimeLimitExceededException;
+import alma.icd.adapt.messagebus.Envelope.State;
+import alma.icd.adapt.messagebus.configuration.PersistedEnvelopeRepository;
+import alma.icd.adapt.messagebus.configuration.RecipientGroupRepository;
 
 /**
  * @author mchavan 27-Sep-2018

@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.security;
+package alma.icd.adapt.messagebus.security;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;

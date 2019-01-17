@@ -1,25 +1,25 @@
-package alma.obops.draws.messages.couchdb;
+package alma.icd.adapt.messagebus.couchdb;
 
-import static alma.obops.draws.messages.MessageBroker.now;
-import static alma.obops.draws.messages.MessageBroker.nowISO;
-import static alma.obops.draws.messages.MessageBroker.sleep;
+import static alma.icd.adapt.messagebus.MessageBroker.now;
+import static alma.icd.adapt.messagebus.MessageBroker.nowISO;
+import static alma.icd.adapt.messagebus.MessageBroker.sleep;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import alma.obops.draws.messages.AbstractMessageBroker;
-import alma.obops.draws.messages.DbConnection;
-import alma.obops.draws.messages.Envelope;
-import alma.obops.draws.messages.Envelope.State;
-import alma.obops.draws.messages.Message;
-import alma.obops.draws.messages.MessageBroker;
-import alma.obops.draws.messages.MessageConsumer;
-import alma.obops.draws.messages.MessageQueue;
-import alma.obops.draws.messages.Record;
-import alma.obops.draws.messages.SimpleEnvelope;
-import alma.obops.draws.messages.TimeLimitExceededException;
+import alma.icd.adapt.messagebus.AbstractMessageBroker;
+import alma.icd.adapt.messagebus.DbConnection;
+import alma.icd.adapt.messagebus.Envelope;
+import alma.icd.adapt.messagebus.Message;
+import alma.icd.adapt.messagebus.MessageBroker;
+import alma.icd.adapt.messagebus.MessageConsumer;
+import alma.icd.adapt.messagebus.MessageQueue;
+import alma.icd.adapt.messagebus.Record;
+import alma.icd.adapt.messagebus.SimpleEnvelope;
+import alma.icd.adapt.messagebus.TimeLimitExceededException;
+import alma.icd.adapt.messagebus.Envelope.State;
 
 public class CouchDbMessageBroker extends AbstractMessageBroker implements MessageBroker {
 	

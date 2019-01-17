@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.couchdb;
+package alma.icd.adapt.messagebus.couchdb;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;

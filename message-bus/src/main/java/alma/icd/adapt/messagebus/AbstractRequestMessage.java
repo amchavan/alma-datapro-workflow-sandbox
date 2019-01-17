@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
 /**
  * @author mchavan 21-Dec-2018

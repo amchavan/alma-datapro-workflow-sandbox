@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.configuration;
+package alma.icd.adapt.messagebus.configuration;
 
 import java.util.Optional;
 
@@ -7,7 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Component;
 
-import alma.obops.draws.messages.rabbitmq.RecipientGroup;
+import alma.icd.adapt.messagebus.rabbitmq.RecipientGroup;
 
 @Component
 public interface RecipientGroupRepository extends CrudRepository<RecipientGroup, String> {

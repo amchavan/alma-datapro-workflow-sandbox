@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.rabbitmq;
+package alma.icd.adapt.messagebus.rabbitmq;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
@@ -6,10 +6,10 @@ import org.springframework.data.relational.core.mapping.Table;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import alma.obops.draws.messages.Envelope;
-import alma.obops.draws.messages.Envelope.State;
-import alma.obops.draws.messages.Message;
-import alma.obops.draws.messages.SimpleEnvelope;
+import alma.icd.adapt.messagebus.Envelope;
+import alma.icd.adapt.messagebus.Message;
+import alma.icd.adapt.messagebus.SimpleEnvelope;
+import alma.icd.adapt.messagebus.Envelope.State;
 
 @Table( "envelope" )
 public class PersistedEnvelope {

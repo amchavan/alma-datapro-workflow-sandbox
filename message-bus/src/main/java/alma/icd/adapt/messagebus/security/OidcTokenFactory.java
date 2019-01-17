@@ -1,7 +1,7 @@
-package alma.obops.draws.messages.security;
+package alma.icd.adapt.messagebus.security;
 
-import static alma.obops.draws.messages.HttpUtils.httpGetMap;
-import static alma.obops.draws.messages.HttpUtils.httpGetString;
+import static alma.icd.adapt.messagebus.HttpUtils.httpGetMap;
+import static alma.icd.adapt.messagebus.HttpUtils.httpGetString;
 
 import java.util.Map;
 

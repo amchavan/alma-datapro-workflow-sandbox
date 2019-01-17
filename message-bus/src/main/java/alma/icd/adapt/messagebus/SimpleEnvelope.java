@@ -1,7 +1,7 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
-import static alma.obops.draws.messages.MessageBroker.now;
-import static alma.obops.draws.messages.MessageBroker.parseIsoDatetime;
+import static alma.icd.adapt.messagebus.MessageBroker.now;
+import static alma.icd.adapt.messagebus.MessageBroker.parseIsoDatetime;
 
 import java.text.ParseException;
 import java.util.Date;

@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.security;
+package alma.icd.adapt.messagebus.security;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;

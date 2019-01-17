@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.rabbitmq;
+package alma.icd.adapt.messagebus.rabbitmq;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -16,22 +16,23 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import alma.obops.draws.messages.AbstractMessage;
-import alma.obops.draws.messages.AbstractRequestMessage;
-import alma.obops.draws.messages.Executor;
-import alma.obops.draws.messages.ExecutorClient;
-import alma.obops.draws.messages.MessageBroker;
-import alma.obops.draws.messages.MessageConsumer;
-import alma.obops.draws.messages.Publisher;
-import alma.obops.draws.messages.RequestMessage;
-import alma.obops.draws.messages.RequestProcessor;
-import alma.obops.draws.messages.ResponseMessage;
-import alma.obops.draws.messages.Subscriber;
-import alma.obops.draws.messages.TimeLimitExceededException;
-import alma.obops.draws.messages.configuration.EmbeddedDataSourceConfiguration;
-import alma.obops.draws.messages.configuration.PersistedRabbitMqBrokerConfiguration;
-import alma.obops.draws.messages.configuration.PersistenceConfiguration;
-import alma.obops.draws.messages.configuration.RabbitMqConfigurationProperties;
+import alma.icd.adapt.messagebus.AbstractMessage;
+import alma.icd.adapt.messagebus.AbstractRequestMessage;
+import alma.icd.adapt.messagebus.Executor;
+import alma.icd.adapt.messagebus.ExecutorClient;
+import alma.icd.adapt.messagebus.MessageBroker;
+import alma.icd.adapt.messagebus.MessageConsumer;
+import alma.icd.adapt.messagebus.Publisher;
+import alma.icd.adapt.messagebus.RequestMessage;
+import alma.icd.adapt.messagebus.RequestProcessor;
+import alma.icd.adapt.messagebus.ResponseMessage;
+import alma.icd.adapt.messagebus.Subscriber;
+import alma.icd.adapt.messagebus.TimeLimitExceededException;
+import alma.icd.adapt.messagebus.configuration.EmbeddedDataSourceConfiguration;
+import alma.icd.adapt.messagebus.configuration.PersistedRabbitMqBrokerConfiguration;
+import alma.icd.adapt.messagebus.configuration.PersistenceConfiguration;
+import alma.icd.adapt.messagebus.configuration.RabbitMqConfigurationProperties;
+import alma.icd.adapt.messagebus.rabbitmq.RabbitMqMessageBroker;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { PersistenceConfiguration.class,

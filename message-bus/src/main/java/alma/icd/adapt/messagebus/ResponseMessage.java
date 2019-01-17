@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
 /**
  * All messages sent as a response by an RPC (request/reply) service must implement

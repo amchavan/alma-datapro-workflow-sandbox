@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
 /** Defines procedures that consume a message */
 public interface MessageConsumer {

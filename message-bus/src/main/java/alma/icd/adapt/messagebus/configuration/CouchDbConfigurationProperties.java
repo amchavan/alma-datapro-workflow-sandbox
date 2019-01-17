@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.configuration;
+package alma.icd.adapt.messagebus.configuration;
 
 import javax.validation.constraints.NotBlank;
 

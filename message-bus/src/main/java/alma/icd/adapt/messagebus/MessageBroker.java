@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -9,8 +9,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-import alma.obops.draws.messages.Envelope.State;
-import alma.obops.draws.messages.security.TokenFactory;
+import alma.icd.adapt.messagebus.Envelope.State;
+import alma.icd.adapt.messagebus.security.TokenFactory;
 
 /**
  * Describes the functions implementing the message passing machinery.

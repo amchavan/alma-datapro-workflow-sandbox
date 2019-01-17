@@ -2,9 +2,9 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>alma.obops.draws</groupId>
+  <groupId>alma.icd.adapt</groupId>
   <artifactId>message-bus</artifactId>
-  <version>OBOPS-2019.02</version>
+  <version>ADAPT-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>messages</name>
@@ -150,7 +150,7 @@
 							<archive>
 								<manifest>
 									<mainClass>
-										alma.obops.draws.messages.examples.ExampleDispatcher
+										alma.icd.adapt.messagebus.examples.ExampleDispatcher
 									</mainClass>
 								</manifest>
 							</archive>

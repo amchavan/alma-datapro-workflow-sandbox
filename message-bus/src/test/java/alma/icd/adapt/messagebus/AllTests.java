@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -7,9 +7,9 @@ import org.junit.runners.Suite.SuiteClasses;
 @RunWith(Suite.class)
 @SuiteClasses({ 
 	TestSerialization.class, 
-	alma.obops.draws.messages.rabbitmq.AllTests.class, 
-	alma.obops.draws.messages.couchdb.AllTests.class,
-	alma.obops.draws.messages.security.AllTests.class,
+	alma.icd.adapt.messagebus.rabbitmq.AllTests.class, 
+	alma.icd.adapt.messagebus.couchdb.AllTests.class,
+	alma.icd.adapt.messagebus.security.AllTests.class,
 	
 	})
 public class AllTests {

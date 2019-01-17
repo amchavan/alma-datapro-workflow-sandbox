@@ -1,7 +1,7 @@
-package alma.obops.draws.messages.rabbitmq;
+package alma.icd.adapt.messagebus.rabbitmq;
 
-import static alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker.MESSAGE_PERSISTENCE_QUEUE;
-import static alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker.MESSAGE_STATE_ROUTING_KEY;
+import static alma.icd.adapt.messagebus.rabbitmq.RabbitMqMessageBroker.MESSAGE_PERSISTENCE_QUEUE;
+import static alma.icd.adapt.messagebus.rabbitmq.RabbitMqMessageBroker.MESSAGE_STATE_ROUTING_KEY;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -12,12 +12,13 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP.BasicProperties;
+
+import alma.icd.adapt.messagebus.SimpleEnvelope;
+import alma.icd.adapt.messagebus.configuration.PersistedEnvelopeRepository;
+
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
-
-import alma.obops.draws.messages.SimpleEnvelope;
-import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
 
 public class MessageArchiver implements Runnable {
 	

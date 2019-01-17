@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
 import static org.junit.Assert.assertEquals;
 
@@ -8,8 +8,9 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import alma.obops.draws.messages.TestUtils.TestMessage;
-import alma.obops.draws.messages.couchdb.CouchDbEnvelope;
+import alma.icd.adapt.messagebus.SimpleEnvelope;
+import alma.icd.adapt.messagebus.TestUtils.TestMessage;
+import alma.icd.adapt.messagebus.couchdb.CouchDbEnvelope;
 
 public class TestSerialization {
 

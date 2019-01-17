@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.couchdb;
+package alma.icd.adapt.messagebus.couchdb;
 
 import java.io.IOException;
 import java.util.ArrayList;

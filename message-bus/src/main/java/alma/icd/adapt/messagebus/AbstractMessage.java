@@ -1,9 +1,9 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import alma.obops.draws.messages.Envelope;
-import alma.obops.draws.messages.Message;
+import alma.icd.adapt.messagebus.Envelope;
+import alma.icd.adapt.messagebus.Message;
 
 public abstract class AbstractMessage implements Message {
 

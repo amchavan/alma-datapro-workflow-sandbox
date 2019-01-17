@@ -1,13 +1,13 @@
-package alma.obops.draws.messages.configuration;
+package alma.icd.adapt.messagebus.configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import alma.obops.draws.messages.security.JWTFactory;
-import alma.obops.draws.messages.security.OidcConfigurationProperties;
-import alma.obops.draws.messages.security.OidcTokenFactory;
-import alma.obops.draws.messages.security.TokenFactory;
+import alma.icd.adapt.messagebus.security.JWTFactory;
+import alma.icd.adapt.messagebus.security.OidcConfigurationProperties;
+import alma.icd.adapt.messagebus.security.OidcTokenFactory;
+import alma.icd.adapt.messagebus.security.TokenFactory;
 
 /**
  * Bean factory for the message brokers.

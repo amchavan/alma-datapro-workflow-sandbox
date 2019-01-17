@@ -1,11 +1,11 @@
-package alma.obops.draws.messages.couchdb;
+package alma.icd.adapt.messagebus.couchdb;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import alma.obops.draws.messages.couchdb.CouchDbRecord;
+import alma.icd.adapt.messagebus.couchdb.CouchDbRecord;
 
 /**
  * Defines a group of receivers, analogous to a WhatsApp group

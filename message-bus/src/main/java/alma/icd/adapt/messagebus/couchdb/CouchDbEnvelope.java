@@ -1,13 +1,13 @@
-package alma.obops.draws.messages.couchdb;
+package alma.icd.adapt.messagebus.couchdb;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import alma.obops.draws.messages.Message;
-import alma.obops.draws.messages.Record;
-import alma.obops.draws.messages.SimpleEnvelope;
+import alma.icd.adapt.messagebus.Message;
+import alma.icd.adapt.messagebus.Record;
+import alma.icd.adapt.messagebus.SimpleEnvelope;
 
 /**
  * Wrapper for user messages, adding message metadata like timestamp and ID.

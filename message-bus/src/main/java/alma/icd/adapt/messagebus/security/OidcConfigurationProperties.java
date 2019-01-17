@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.security;
+package alma.icd.adapt.messagebus.security;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

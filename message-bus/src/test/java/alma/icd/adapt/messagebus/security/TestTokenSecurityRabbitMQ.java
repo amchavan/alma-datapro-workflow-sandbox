@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.security;
+package alma.icd.adapt.messagebus.security;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -15,20 +15,22 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import alma.obops.draws.messages.Envelope;
-import alma.obops.draws.messages.Envelope.State;
-import alma.obops.draws.messages.MessageBroker;
-import alma.obops.draws.messages.Publisher;
-import alma.obops.draws.messages.Subscriber;
-import alma.obops.draws.messages.TestUtils.TestMessage;
-import alma.obops.draws.messages.TimeLimitExceededException;
-import alma.obops.draws.messages.configuration.EmbeddedDataSourceConfiguration;
-import alma.obops.draws.messages.configuration.PersistedEnvelopeRepository;
-import alma.obops.draws.messages.configuration.PersistedRabbitMqBrokerConfiguration;
-import alma.obops.draws.messages.configuration.PersistenceConfiguration;
-import alma.obops.draws.messages.configuration.RabbitMqConfigurationProperties;
-import alma.obops.draws.messages.rabbitmq.PersistedEnvelope;
-import alma.obops.draws.messages.rabbitmq.RabbitMqMessageBroker;
+import alma.icd.adapt.messagebus.Envelope;
+import alma.icd.adapt.messagebus.MessageBroker;
+import alma.icd.adapt.messagebus.Publisher;
+import alma.icd.adapt.messagebus.Subscriber;
+import alma.icd.adapt.messagebus.TimeLimitExceededException;
+import alma.icd.adapt.messagebus.Envelope.State;
+import alma.icd.adapt.messagebus.TestUtils.TestMessage;
+import alma.icd.adapt.messagebus.configuration.EmbeddedDataSourceConfiguration;
+import alma.icd.adapt.messagebus.configuration.PersistedEnvelopeRepository;
+import alma.icd.adapt.messagebus.configuration.PersistedRabbitMqBrokerConfiguration;
+import alma.icd.adapt.messagebus.configuration.PersistenceConfiguration;
+import alma.icd.adapt.messagebus.configuration.RabbitMqConfigurationProperties;
+import alma.icd.adapt.messagebus.rabbitmq.PersistedEnvelope;
+import alma.icd.adapt.messagebus.rabbitmq.RabbitMqMessageBroker;
+import alma.icd.adapt.messagebus.security.JWTFactory;
+import alma.icd.adapt.messagebus.security.TokenFactory;
 
 
 @RunWith(SpringRunner.class)

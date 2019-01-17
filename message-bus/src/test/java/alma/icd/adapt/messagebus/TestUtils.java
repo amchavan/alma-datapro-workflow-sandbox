@@ -1,7 +1,7 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
-import alma.obops.draws.messages.AbstractMessage;
-import alma.obops.draws.messages.couchdb.CouchDbRecord;
+import alma.icd.adapt.messagebus.AbstractMessage;
+import alma.icd.adapt.messagebus.couchdb.CouchDbRecord;
 
 public class TestUtils {
 

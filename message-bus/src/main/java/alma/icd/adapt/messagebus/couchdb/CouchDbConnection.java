@@ -1,6 +1,6 @@
-package alma.obops.draws.messages.couchdb;
+package alma.icd.adapt.messagebus.couchdb;
 
-import static alma.obops.draws.messages.HttpUtils.*;
+import static alma.icd.adapt.messagebus.HttpUtils.*;
 
 import java.io.IOException;
 import java.util.Base64;
@@ -12,8 +12,8 @@ import org.apache.http.message.BasicHeader;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import alma.obops.draws.messages.DbConnection;
-import alma.obops.draws.messages.Record;
+import alma.icd.adapt.messagebus.DbConnection;
+import alma.icd.adapt.messagebus.Record;
 
 /**
  * An interface to CouchDB

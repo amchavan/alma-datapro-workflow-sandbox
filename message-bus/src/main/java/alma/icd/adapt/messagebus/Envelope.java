@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
 /**
  * An {@link Envelope} includes a {@link Message} providing metadata like

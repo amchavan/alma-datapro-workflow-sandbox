@@ -1,9 +1,9 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
 import java.io.IOException;
 import java.util.List;
 
-import alma.obops.draws.messages.security.TokenFactory;
+import alma.icd.adapt.messagebus.security.TokenFactory;
 
 /**
  * Subscribes to messages sent to a given address

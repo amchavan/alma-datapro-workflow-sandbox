@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.couchdb;
+package alma.icd.adapt.messagebus.couchdb;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -8,8 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import alma.obops.draws.messages.configuration.CouchDbConfiguration;
-import alma.obops.draws.messages.configuration.CouchDbConfigurationProperties;
+import alma.icd.adapt.messagebus.configuration.CouchDbConfiguration;
+import alma.icd.adapt.messagebus.configuration.CouchDbConfigurationProperties;
 
 
 @RunWith(SpringRunner.class)

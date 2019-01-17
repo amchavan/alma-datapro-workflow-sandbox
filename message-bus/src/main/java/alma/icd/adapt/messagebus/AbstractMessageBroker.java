@@ -1,14 +1,14 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
-import static alma.obops.draws.messages.MessageBroker.nowISO;
-import static alma.obops.draws.messages.MessageBroker.ourIP;
+import static alma.icd.adapt.messagebus.MessageBroker.nowISO;
+import static alma.icd.adapt.messagebus.MessageBroker.ourIP;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import alma.obops.draws.messages.Envelope.State;
-import alma.obops.draws.messages.security.TokenFactory;
+import alma.icd.adapt.messagebus.Envelope.State;
+import alma.icd.adapt.messagebus.security.TokenFactory;
 
 /**
  * @author mchavan 10-Oct-2018

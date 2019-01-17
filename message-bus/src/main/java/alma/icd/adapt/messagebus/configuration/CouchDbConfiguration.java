@@ -1,10 +1,10 @@
-package alma.obops.draws.messages.configuration;
+package alma.icd.adapt.messagebus.configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import alma.obops.draws.messages.couchdb.CouchDbConnection;
+import alma.icd.adapt.messagebus.couchdb.CouchDbConnection;
 
 /**
  * Configure a CouchDB connection from the ALMA properties file

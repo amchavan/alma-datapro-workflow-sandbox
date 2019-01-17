@@ -5,7 +5,7 @@
 	<xsl:template match="/Message">
 		<xsl:text>package </xsl:text><xsl:value-of select="@package"/><xsl:text>;
 
-import alma.obops.draws.messages.AbstractMessage;
+import alma.icd.adapt.messagebus.AbstractMessage;
 
 </xsl:text>
 		<xsl:text>public class </xsl:text><xsl:value-of select="$className"/><xsl:text>extends AbstractMessage {

@@ -1,4 +1,4 @@
-package alma.obops.draws.messages.rabbitmq;
+package alma.icd.adapt.messagebus.rabbitmq;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;

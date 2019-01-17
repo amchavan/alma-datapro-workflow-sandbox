@@ -1,8 +1,8 @@
-package alma.obops.draws.messages.security;
+package alma.icd.adapt.messagebus.security;
 
-import static alma.obops.draws.messages.security.JWTFactory.EXPIRES_CLAIM;
-import static alma.obops.draws.messages.security.JWTFactory.TIME_TO_LIVE;
-import static alma.obops.draws.messages.security.JWTFactory.TIME_TO_LIVE_CLAIM;
+import static alma.icd.adapt.messagebus.security.JWTFactory.EXPIRES_CLAIM;
+import static alma.icd.adapt.messagebus.security.JWTFactory.TIME_TO_LIVE;
+import static alma.icd.adapt.messagebus.security.JWTFactory.TIME_TO_LIVE_CLAIM;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -19,6 +19,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.nimbusds.jose.JOSEException;
+
+import alma.icd.adapt.messagebus.security.JWTFactory;
+import alma.icd.adapt.messagebus.security.TokenFactory;
 
 public class TestJWTFactory {
 	

@@ -1,4 +1,4 @@
-package alma.obops.draws.messages;
+package alma.icd.adapt.messagebus;
 
 import java.io.BufferedReader;
 import java.io.IOException;
