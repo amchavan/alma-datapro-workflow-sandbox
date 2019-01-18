@@ -8,9 +8,9 @@
 		<version>2.1.1.RELEASE</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>alma.obops.draws</groupId>
+	<groupId>alma.icd.adapt</groupId>
 	<artifactId>basic-sender</artifactId>
-	<version>OBOPS-2019.02</version>
+	<version>ADAPT-SNAPSHOT</version>
 	<name>basic-sender</name>
 	<description>Basic sender</description>
 
@@ -25,15 +25,15 @@
 		</dependency>
 
 		<dependency>
-			<groupId>alma.obops.draws</groupId>
+			<groupId>alma.icd.adapt</groupId>
 			<artifactId>message-bus</artifactId>
-			<version>OBOPS-2019.02</version>
+			<version>ADAPT-SNAPSHOT</version>
 		</dependency>
 		
 		<dependency>
-			<groupId>alma.obops.draws.examples</groupId>
+			<groupId>alma.adapt.examples</groupId>
 			<artifactId>examples-common</artifactId>
-			<version>OBOPS-2019.02</version>
+			<version>ADAPT-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

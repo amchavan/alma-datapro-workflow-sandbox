@@ -1,6 +1,11 @@
 package alma.icd.adapt.messagebus.couchdb;
 
-import static alma.icd.adapt.messagebus.HttpUtils.*;
+import static alma.icd.adapt.messagebus.HttpUtils.httpDelete;
+import static alma.icd.adapt.messagebus.HttpUtils.httpGet;
+import static alma.icd.adapt.messagebus.HttpUtils.httpPost;
+import static alma.icd.adapt.messagebus.HttpUtils.httpPut;
+import static alma.icd.adapt.messagebus.HttpUtils.readBody;
+import static alma.icd.adapt.messagebus.HttpUtils.urlEncode;
 
 import java.io.IOException;
 import java.util.Base64;

@@ -14,32 +14,6 @@ import alma.icd.adapt.messagebus.Envelope.State;
 @Table( "envelope" )
 public class PersistedEnvelope {
 
-	/**
-	 * Cannot use the original envelope ID as the ID for persistence when using
-	 * Spring Data JDBC -- for an explanation see
-	 * https://stackoverflow.com/questions/50371775/why-does-spring-data-jdbc-not-save-my-car-object
-	 */
-	@Id
-	Long id;
-	
-	String envelopeId;
-	String consumedTimestamp;
-	String expiredTimestamp;
-	String message;				// message gets converted to a JSON string before storing
-	String messageClass;
-	String originIp; 
-	String queueName;
-	String receivedTimestamp;
-	String sentTimestamp;
-	String rejectedTimestamp;
-	String state;
-	Long timeToLive;
-	
-	/** No-arg constructor needed by Spring Data */
-	public PersistedEnvelope() {
-		// empty
-	}
-	
 	public static PersistedEnvelope convert( Envelope envelope ) {
 		PersistedEnvelope ret = new PersistedEnvelope();
 		ret.envelopeId         = envelope.getId();
@@ -65,7 +39,32 @@ public class PersistedEnvelope {
 		
 		return ret;
 	}
+	
+	/**
+	 * Cannot use the original envelope ID as the ID for persistence when using
+	 * Spring Data JDBC -- for an explanation see
+	 * https://stackoverflow.com/questions/50371775/why-does-spring-data-jdbc-not-save-my-car-object
+	 */
+	@Id
+	Long id;
 
+	String envelopeId;
+	String consumedTimestamp;
+	String expiredTimestamp;
+	String message;				// message gets converted to a JSON string before storing
+	String messageClass;
+	String originIp;
+	String queueName;
+	String receivedTimestamp;
+	String sentTimestamp;
+	String rejectedTimestamp;
+	String state;
+	Long timeToLive;
+
+	/** No-arg constructor needed by Spring Data */
+	public PersistedEnvelope() {
+		// empty
+	}
 	public SimpleEnvelope asSimpleEnvelope() {
 		Message deserializedMessage = SimpleEnvelope.deserializeMessage(messageClass, message);
 		SimpleEnvelope ret = new SimpleEnvelope( envelopeId, 
@@ -80,6 +79,48 @@ public class PersistedEnvelope {
 												 State.valueOf( state ), 
 												 timeToLive );
 		return ret;
+	}
+	public String getConsumedTimestamp() {
+		return consumedTimestamp;
+	}
+	public String getEnvelopeId() {
+		return envelopeId;
+	}
+	public String getExpiredTimestamp() {
+		return expiredTimestamp;
+	}
+	public Long getId() {
+		return id;
+	} 
+	public String getMessage() {
+		return message;
+	}
+	public String getMessageClass() {
+		return messageClass;
+	}
+	public String getOriginIp() {
+		return originIp;
+	}
+	public String getQueueName() {
+		return queueName;
+	}
+	public String getReceivedTimestamp() {
+		return receivedTimestamp;
+	}
+	public String getRejectedTimestamp() {
+		return rejectedTimestamp;
+	}
+	
+	public String getSentTimestamp() {
+		return sentTimestamp;
+	}
+	
+	public String getState() {
+		return state;
+	}
+
+	public Long getTimeToLive() {
+		return timeToLive;
 	}
 
 	@Override

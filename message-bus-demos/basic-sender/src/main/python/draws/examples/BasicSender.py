@@ -4,7 +4,7 @@ import argparse
 from draws.messages.Publisher import Publisher
 from draws.messages.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
 
-from alma.obops.draws.examples.common.Person import Person
+from alma.adapt.examples.common.Person import Person
 
 class BasicSender:
     #private Logger logger = LoggerFactory.getLogger( BasicReceiver.class );

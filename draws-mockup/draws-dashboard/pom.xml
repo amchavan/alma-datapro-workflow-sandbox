@@ -9,9 +9,9 @@
 		<version>2.1.1.RELEASE</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>alma.obops.draws</groupId>
+	<groupId>alma.icd.adapt</groupId>
 	<artifactId>dashboard</artifactId>
-	<version>OBOPS-2019FEB-SNAPSHOT</version>
+	<version>ADAPT-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<properties>
@@ -68,6 +68,12 @@
 			</exclusions>
 		</dependency>
 
+		<dependency>
+		    <groupId>alma.icd.adapt</groupId>
+		    <artifactId>message-bus</artifactId>
+		    <version>ADAPT-SNAPSHOT</version>
+		</dependency>
+		
 	</dependencies>
 	<build>
 
