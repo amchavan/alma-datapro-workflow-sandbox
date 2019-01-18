@@ -1,0 +1,2 @@
+include draws/resources/Msg2Java.xslt
+include draws/resources/Msg2Py.xslt
