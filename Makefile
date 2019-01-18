@@ -11,3 +11,6 @@ $(foreach mod,$(MODULES),$(eval $(call makeModule,$(mod))))
 
 all: $(MODULES)
 	@echo "All done"
+
+test: $(MODULES)
+	@echo "All done"
