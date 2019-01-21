@@ -1,4 +1,4 @@
-MODULES:=icd aqua-batch-helper aqua-qa2 data-tracker dra draws-dashboard icd pipeline pldriver product-ingestor xtss
+MODULES:=icd aqua-batch-helper aqua-qa2 data-tracker dra draws-dashboard pipeline pldriver product-ingestor xtss
 
 #1: Module name
 define makeModule

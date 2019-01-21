@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Message name="XTSSSetState" package="adapt.mock.messagebus.gen">
-    <entry name="fileType" type="String"/>
-    <entry name="cachedAt" type="String"/>
-    <entry name="name" type="String"/>
-</Message>
-

@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Message name="XTSSSetState" package="adapt.mock.messagebus.gen">
-    <entry name="ousUID" type="String"/>
-    <entry name="state" type="String"/>
-</Message>
