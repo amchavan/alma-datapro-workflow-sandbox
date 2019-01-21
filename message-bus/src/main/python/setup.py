@@ -6,14 +6,14 @@ dependencies = [
     "lxml"
 ]
 
-setup(name='drawsmb',
+setup(name='adaptmb',
       version='0.1',
-      description='DRAWS Message Bus API',
+      description='ADAPT Python Message Bus API',
       url='http://www.almaobservatory.org',
       author='ALMA',
       author_email='test@alma.cl',
       license='LGPL',
-      packages=['draws', 'draws/messages', 'draws/messages/rabbitmq', 'draws/messages/security', 'draws/messages/configuration', 'draws/resources'],
+      packages=['adapt', 'adapt/messages', 'adapt/messages/rabbitmq', 'adapt/messages/security', 'adapt/messages/configuration', 'adapt/resources'],
       install_requires=dependencies,
       include_package_data=True,
       zip_safe=False)

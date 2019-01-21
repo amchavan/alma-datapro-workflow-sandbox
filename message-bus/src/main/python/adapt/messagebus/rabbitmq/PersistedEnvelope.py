@@ -1,6 +1,6 @@
 import json
 
-from draws.messages.SimpleEnvelope import SimpleEnvelope
+from adapt.messagebus.SimpleEnvelope import SimpleEnvelope
 
 class PersistedEnvelope:
     @classmethod

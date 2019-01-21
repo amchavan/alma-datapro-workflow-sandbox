@@ -3,7 +3,7 @@
 	<xsl:output method="text"/>
 	<xsl:variable name="className" select="/Message/@name"/>
 	<xsl:template match="/Message">
-		<xsl:text>from draws.messages.AbstractMessage import AbstractMessage
+		<xsl:text>from adapt.messagebus.AbstractMessage import AbstractMessage
 
 </xsl:text>
 		<xsl:text>class </xsl:text><xsl:value-of select="$className"/><xsl:text>(AbstractMessage):

@@ -1,6 +1,6 @@
-from draws.messages.Envelope import Envelope
-from draws.messages.RequestMessage import RequestMessage
-from draws.messages.AbstractMessage import AbstractMessage
+from adapt.messagebus.Envelope import Envelope
+from adapt.messagebus.RequestMessage import RequestMessage
+from adapt.messagebus.AbstractMessage import AbstractMessage
 
 class AbstractRequestMessage(AbstractMessage, RequestMessage):
     def __init__(self):

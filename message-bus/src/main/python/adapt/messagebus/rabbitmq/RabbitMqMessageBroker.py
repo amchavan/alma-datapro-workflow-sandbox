@@ -4,18 +4,18 @@ import json
 import pika
 import threading
 
-from draws.messages.Envelope import State
-from draws.messages.MessageQueue import MessageQueue
-from draws.messages.MessageBroker import MessageBroker
-from draws.messages.SimpleEnvelope import SimpleEnvelope
-from draws.messages.AbstractMessageBroker import AbstractMessageBroker
-from draws.messages.TimeLimitExceededException import TimeLimitExceededException
+from adapt.messagebus.Envelope import State
+from adapt.messagebus.MessageQueue import MessageQueue
+from adapt.messagebus.MessageBroker import MessageBroker
+from adapt.messagebus.SimpleEnvelope import SimpleEnvelope
+from adapt.messagebus.AbstractMessageBroker import AbstractMessageBroker
+from adapt.messagebus.TimeLimitExceededException import TimeLimitExceededException
 
-from draws.messages.rabbitmq.RecipientGroup import RecipientGroup
-from draws.messages.rabbitmq.MessageArchiver import MessageArchiver
+from adapt.messagebus.rabbitmq.RecipientGroup import RecipientGroup
+from adapt.messagebus.rabbitmq.MessageArchiver import MessageArchiver
 
-from draws.messages.configuration.PersistedEnvelopeRepository import PersistedEnvelopeRepository
-from draws.messages.configuration.RecipientGroupRepository import RecipientGroupRepository
+from adapt.messagebus.configuration.PersistedEnvelopeRepository import PersistedEnvelopeRepository
+from adapt.messagebus.configuration.RecipientGroupRepository import RecipientGroupRepository
 
 class RabbitMqMessageBroker(AbstractMessageBroker):
     #Static Variables

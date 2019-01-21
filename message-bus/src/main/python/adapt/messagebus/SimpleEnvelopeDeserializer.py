@@ -1,5 +1,5 @@
-from draws.messages.Envelope.Envelope import State
-from draws.messages.SimpleEnvelope import SimpleEnvelope
+from adapt.messagebus.Envelope.Envelope import State
+from adapt.messagebus.SimpleEnvelope import SimpleEnvelope
 
 import json
 

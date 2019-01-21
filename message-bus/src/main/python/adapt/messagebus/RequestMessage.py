@@ -1,4 +1,4 @@
-from draws.messages.Message import Message
+from adapt.messagebus.Message import Message
 
 class RequestMessage(Message):
     def getResponseQueueName():

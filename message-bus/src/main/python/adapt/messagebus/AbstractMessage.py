@@ -1,5 +1,5 @@
-from draws.messages.Message import Message
-from draws.messages.Envelope import Envelope
+from adapt.messagebus.Message import Message
+from adapt.messagebus.Envelope import Envelope
 
 class AbstractMessage(Message):
     def __init__(self):

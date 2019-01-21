@@ -8,7 +8,7 @@ import base64
 import numbers
 import datetime
 
-from draws.messages.security.TokenFactory import TokenFactory
+from adapt.messagebus.security.TokenFactory import TokenFactory
 
 class JWTFactory(TokenFactory):
     #Static Variables

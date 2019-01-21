@@ -2,12 +2,12 @@ import json
 
 from threading import Thread
 
-from draws.messages.Envelope import State
-from draws.messages.SimpleEnvelope import SimpleEnvelope
+from adapt.messagebus.Envelope import State
+from adapt.messagebus.SimpleEnvelope import SimpleEnvelope
 
-from draws.messages.rabbitmq.PersistedEnvelope import PersistedEnvelope
+from adapt.messagebus.rabbitmq.PersistedEnvelope import PersistedEnvelope
 
-from draws.messages.configuration.PersistedEnvelopeRepository import PersistedEnvelopeRepository
+from adapt.messagebus.configuration.PersistedEnvelopeRepository import PersistedEnvelopeRepository
 
 class MessageArchiver(Thread):
     def __init__(self, channel, exchangeName, envelopeRepository, mpq, msrk):

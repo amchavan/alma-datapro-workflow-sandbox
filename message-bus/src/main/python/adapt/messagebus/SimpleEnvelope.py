@@ -3,10 +3,10 @@ import json
 import inspect
 import importlib
 
-from draws.messages.Envelope import Envelope
-from draws.messages.Envelope import State
-from draws.messages.MessageBroker import MessageBroker
-from draws.messages.AbstractMessage import AbstractMessage
+from adapt.messagebus.Envelope import Envelope
+from adapt.messagebus.Envelope import State
+from adapt.messagebus.MessageBroker import MessageBroker
+from adapt.messagebus.AbstractMessage import AbstractMessage
 
 class SimpleEnvelope(Envelope):
     @classmethod
@@ -65,7 +65,7 @@ class SimpleEnvelope(Envelope):
         ret = self.__dict__.copy()
         if "message" in ret and ret["message"] is not None:
             ret["message"] = ret["message"].serialize()
-        #ret["messageClass"] = "alma.obops.draws.examples.common.Person"
+        #ret["messageClass"] = "alma.obops.adapt.examples.common.Person"
         if "state" in ret and ret["state"] is not None:
             ret["state"] = ret["state"].name
         if "_new" in ret:
