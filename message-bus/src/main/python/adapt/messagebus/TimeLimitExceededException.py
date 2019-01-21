@@ -1,3 +1,3 @@
 class TimeLimitExceededException(Exception):
     def __init__(self, message=None):
-        super().__init__(message)
+        super(TimeLimitExceededException, self).__init__(message)

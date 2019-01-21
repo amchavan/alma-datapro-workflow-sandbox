@@ -1,6 +1,6 @@
 import re
 
-class Subscriber():
+class Subscriber(object):
     def __init__(self, messageBroker, queueName, serviceName):
         if messageBroker is None or queueName is None or serviceName is None:
             raise Exception("Null arg")

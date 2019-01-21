@@ -1,5 +1,5 @@
 
-class TestUtils:
+class TestUtils(object):
     #Static Variables
     MESSAGE_BUS_NAME = "test-message-bus"
     

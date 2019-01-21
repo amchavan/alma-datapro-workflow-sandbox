@@ -1,4 +1,4 @@
-class RecipientGroupRepository:
+class RecipientGroupRepository(object):
     #@Query( "select * " + 
     #        "from Recipient_Group " + 
     #        "where group_name = :groupName" )

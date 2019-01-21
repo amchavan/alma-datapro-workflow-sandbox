@@ -1,4 +1,4 @@
-class Publisher():
+class Publisher(object):
     def __init__(self, messageBroker, messageAddress):
         self.__messageBroker = messageBroker
         self.__messageAddress = messageAddress

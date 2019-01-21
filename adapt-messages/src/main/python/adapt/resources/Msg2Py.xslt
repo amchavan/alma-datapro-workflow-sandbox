@@ -10,10 +10,10 @@
     def __init__(self, </xsl:text><xsl:apply-templates select="entry" mode="genParams"/><xsl:text>):
 </xsl:text><xsl:apply-templates select="entry" mode="genAssign"/>
 		<xsl:text>    def serialize(self):
-        ret = super().serialize()
+        ret = super(</xsl:text><xsl:value-of select="$className"/><xsl:text>).serialize()
         return ret
     def deserialize(self, dct):
-        super().deserialize(dct)
+        super(</xsl:text><xsl:value-of select="$className"/><xsl:text>).deserialize(dct)
     def __eq__(self, obj):
         if self is obj:
             return True
@@ -24,7 +24,7 @@
 </xsl:text><xsl:apply-templates select="entry" mode="genEquals"/>
 		<xsl:text>        return True
     def __str__(self):
-        return self.__class__.__qualname__ + "[" + </xsl:text><xsl:apply-templates select="entry" mode="genStr"/><xsl:text>"]"
+        return self.__class__.__name__ + "[" + </xsl:text><xsl:apply-templates select="entry" mode="genStr"/><xsl:text>"]"
 </xsl:text>
 	</xsl:template>
 

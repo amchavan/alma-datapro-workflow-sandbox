@@ -1,7 +1,7 @@
 from adapt.messagebus.MessageConsumer import MessageConsumer
 from adapt.messagebus.Publisher import Publisher
 
-class Executor:
+class Executor(object):
     class ExecutorConsumer(MessageConsumer):
         def __init__(self, subscriber, processor):
             self.__subscriber = subscriber

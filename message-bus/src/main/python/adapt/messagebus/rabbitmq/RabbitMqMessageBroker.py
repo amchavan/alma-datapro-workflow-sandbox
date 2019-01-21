@@ -28,7 +28,7 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
     def makeQueueName(cls, serviceName, queueName):
         return serviceName + "." + queueName
         #return queueName
-    class RabbitMqListener:
+    class RabbitMqListener(object):
         def __init__(self, channel, rmqmb, consumer, queue, autoAck=False):
             self.__channel = channel
             self.__rmqmb = rmqmb
@@ -42,7 +42,7 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             lastDeliveryTime = MessageBroker.now()
             receivedEnvelope = SimpleEnvelope()
             if body is not None:
-                dct = json.loads(str(body, "UTF-8"))
+                dct = json.loads(unicode(body, "UTF-8"))
                 receivedEnvelope.deserialize(dct)
             if not self._autoAck:
                 self.__channel.basic_ack(envelope.delivery_tag, False)
@@ -223,7 +223,7 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             #print("_receiveOne: "+ str(body))
             receivedEnvelope = SimpleEnvelope()
             if body is not None:
-                dct = json.loads(str(body, "UTF-8"))
+                dct = json.loads(unicode(body, "UTF-8"))
                 receivedEnvelope.deserialize(dct)
         except Exception as e:
             raise Exception(e)
@@ -250,7 +250,7 @@ class RabbitMqMessageBroker(AbstractMessageBroker):
             raise Exception(e)
 
     def _setState(self, envelope, state):
-        timestamp = super()._setState(envelope, state)
+        timestamp = super(RabbitMqMessageBroker, self)._setState(envelope, state)
         stateChange = envelope.getId() + "@" + str(state) + "@" + timestamp
         self.__channel.basic_publish(self.__exchangeName, RabbitMqMessageBroker.MESSAGE_STATE_ROUTING_KEY, stateChange, None)
         return timestamp

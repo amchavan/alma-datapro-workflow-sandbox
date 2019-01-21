@@ -7,10 +7,10 @@ class TestMessage(AbstractMessage):
         self.age = age
         self.alive = alive
     def serialize(self):
-        ret = super().serialize()
+        ret = super(TestMessage, self).serialize()
         return ret
     def deserialize(self, dct):
-        super().deserialize(dct)
+        super(TestMessage, self).deserialize(dct)
 
     def __eq__(self, obj):
         return self.equals(obj)

@@ -1,4 +1,4 @@
-class Record:
+class Record(object):
     def getId(self):
         raise NotImplementedError
     def getVersion(self):

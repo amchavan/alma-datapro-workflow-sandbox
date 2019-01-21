@@ -6,7 +6,7 @@ import time
 import socket
 import datetime
 
-class MessageBroker:
+class MessageBroker(object):
     #Static Variables
     DEFAULT_MESSAGE_BROKER_NAME = "alma"
     UT = pytz.utc

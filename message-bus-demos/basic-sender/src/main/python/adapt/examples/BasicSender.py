@@ -6,7 +6,7 @@ from adapt.messagebus.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroke
 
 from alma.adapt.examples.common.Person import Person
 
-class BasicSender:
+class BasicSender(object):
     #private Logger logger = LoggerFactory.getLogger( BasicReceiver.class );
     def __init__(self):
         self.__broker = RabbitMqMessageBroker("amqp://localhost:5672", "guest", "guest")

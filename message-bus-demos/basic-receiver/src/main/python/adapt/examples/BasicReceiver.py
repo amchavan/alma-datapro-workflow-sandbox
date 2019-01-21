@@ -4,7 +4,7 @@ import argparse
 from adapt.messagebus.Subscriber import Subscriber
 from adapt.messagebus.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
 
-class BasicReceiver:
+class BasicReceiver(object):
     def __init__(self):
         self.__broker = RabbitMqMessageBroker("amqp://localhost:5672", "guest", "guest")
     def run(self, args):

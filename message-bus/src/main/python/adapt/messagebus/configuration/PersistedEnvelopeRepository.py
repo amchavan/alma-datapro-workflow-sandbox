@@ -1,4 +1,4 @@
-class PersistedEnvelopeRepository:
+class PersistedEnvelopeRepository(object):
     #@Query( "select * "
     #		+ "from envelope "
     #		+ "where state = :state" )

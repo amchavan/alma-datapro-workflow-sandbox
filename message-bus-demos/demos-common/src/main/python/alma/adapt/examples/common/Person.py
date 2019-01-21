@@ -6,4 +6,4 @@ class Person(AbstractMessage):
         self.age = age
         self.alive = alive
     def __str__(self):
-        return self.__class__.__qualname__ + "[name=" + self.name + ", age=" + str(self.age) + ", alive=" + str(self.alive) + "]"
+        return self.__class__.__name__ + "[name=" + self.name + ", age=" + str(self.age) + ", alive=" + str(self.alive) + "]"

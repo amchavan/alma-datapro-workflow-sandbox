@@ -1,4 +1,4 @@
-class TokenFactory:
+class TokenFactory(object):
     def isValid(token):
         raise NotImplementedError
     def create(claims):

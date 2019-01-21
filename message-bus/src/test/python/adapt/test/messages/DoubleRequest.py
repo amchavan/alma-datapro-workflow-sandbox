@@ -4,5 +4,5 @@ from adapt.messagebus.AbstractRequestMessage import AbstractRequestMessage
 class DoubleRequest(AbstractRequestMessage):
     #needed for JSON (de)serialization
     def __init__(self):
-        super().__init__()
+        super(DoubleRequest, self).__init__()
         self.number = None

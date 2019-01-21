@@ -5,5 +5,5 @@ from adapt.messagebus.ResponseMessage import ResponseMessage
 class DoubleResponse(AbstractMessage, ResponseMessage):
     #needed for JSON (de)serialization
     def __init__(self):
-        super().__init__()
+        super(DoubleResponse, self).__init__()
         self.doubled = None

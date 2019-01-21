@@ -1,7 +1,7 @@
 from setuptools import setup
 
 dependencies = [
-    "adapt-mock-icd",
+    "adaptmb-messages",
     "adaptmb"
 ]
 

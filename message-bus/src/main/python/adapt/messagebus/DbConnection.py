@@ -1,4 +1,4 @@
-class DbConnection:
+class DbConnection(object):
     def dbCreate(self, dbName):
         raise NotImplementedError
     def dbDelete(self, dbName):

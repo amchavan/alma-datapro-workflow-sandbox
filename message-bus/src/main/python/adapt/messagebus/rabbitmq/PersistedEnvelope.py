@@ -2,7 +2,7 @@ import json
 
 from adapt.messagebus.SimpleEnvelope import SimpleEnvelope
 
-class PersistedEnvelope:
+class PersistedEnvelope(object):
     @classmethod
     def convert(cls, envelope):
         ret = PersistedEnvelope()
@@ -18,7 +18,7 @@ class PersistedEnvelope:
         ret._timeToLive         = envelope.getTimeToLive()
         try:
             m = envelope.getMessage()
-            jsons = json.dumps(m, default=SimpleEnvelope.serialize)
+            jsons = json.dumps(m, default=m.__class__.serialize)
             ret.message = jsons
         except Exception as e:
             raise Exception(e)
@@ -45,4 +45,4 @@ class PersistedEnvelope:
         return ret
 
     def __str__(self):
-        return this.__class__.__qualname__ + "[" + self._envelopeId + "]"
+        return this.__class__.__name__ + "[" + self._envelopeId + "]"

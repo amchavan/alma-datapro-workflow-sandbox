@@ -29,7 +29,7 @@ from adapt.messagebus.configuration.PersistedEnvelopeRepository import Persisted
 from adapt.test.messages.TestMessage import TestMessage
 from adapt.test.messages.DoubleRequest import DoubleRequest
 from adapt.test.messages.DoubleResponse import DoubleResponse
-from adapt.test.messages.security.MockedTokenFactory import MockedTokenFactory
+from adapt.test.messagebus.security.MockedTokenFactory import MockedTokenFactory
 
 
 class TestSerialization(unittest.TestCase):
@@ -223,7 +223,7 @@ class TestExecutor(unittest.TestCase):
             self.doubled = None
         def consume(self, message):
             if not isinstance(message, DoubleResponse):
-                msg = "Not a " + DoubleResponse.__qualname__ + ": " + str(message)
+                msg = "Not a " + DoubleResponse.__name__ + ": " + str(message)
                 print(">>>>> message 2: " + str(message))
                 print(">>>>> Thread: " + threading.currentThread().getName())
                 print(">>>>> " + msg)

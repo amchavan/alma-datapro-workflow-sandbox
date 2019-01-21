@@ -1,6 +1,6 @@
-class MessageQueue:
+class MessageQueue(object):
     def __str__(self):
-        return self.__class__.__qualname__ + "[" + self.__queueName + "]"
+        return self.__class__.__name__ + "[" + self.__queueName + "]"
     def __init__(self, queueName, serviceName, messageBus):
         if queueName is None or messageBus is None:
             raise IllegalArgumentException("Null arg")

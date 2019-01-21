@@ -1,4 +1,4 @@
-class RecipientGroup:
+class RecipientGroup(object):
     __MEMBER_SEPARATOR = ","
     
     def __init__(self):
@@ -54,7 +54,7 @@ class RecipientGroup:
         return True
 
     def __str__(self):
-        return this.__class__.__qualname__ + "[" + self._groupName + ": " + self._groupMembers + "]"
+        return this.__class__.__name__ + "[" + self._groupName + ": " + self._groupMembers + "]"
 
     def getGroupMembersAsList(self):
         ret = []

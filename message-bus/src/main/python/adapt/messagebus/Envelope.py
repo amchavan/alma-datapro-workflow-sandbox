@@ -1,7 +1,7 @@
 from enum import Enum
 
 State = Enum('State', 'Sent Received Consumed Expired Rejected')
-class Envelope:
+class Envelope(object):
     def getConsumedTimestamp(self):
         raise NotImplementedError
     def getExpiredTimestamp(self):

@@ -1,0 +1,16 @@
+Python 2 vs Python 3
+
+Python2: unicode(<str>, "UTF-8")
+Python3: str(<str>, "UTF-8)
+
+Python2: getattr #Look at logs in SimpleEnvelope.py
+Python3: inspect.getattr_static
+
+Python2: All modules require __init__.py empty files.
+Python3: Only required for resources module.
+
+Python2: New classes explicitly by importing 'object'.
+Python3: Importing nothing bears the same result.
+
+Python2: Use of __name__ as __qualname__ doesn't exist. Luckily we don't use subclasses for messages (where it mattered) as it wouldn't work properly.
+Python3: Use of __qualname__.

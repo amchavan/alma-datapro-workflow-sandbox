@@ -9,6 +9,6 @@ setup(name='adaptmb-demos-common',
       author='ALMA',
       author_email='test@alma.cl',
       license='LGPL',
-      packages=['alma', 'alma/adapt/examples/common'],
+      packages=['alma', 'alma/adapt','alma/adapt/examples', 'alma/adapt/examples/common'],
       install_requires=dependencies,
       zip_safe=False)

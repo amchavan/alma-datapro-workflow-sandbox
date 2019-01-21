@@ -3,7 +3,7 @@ from adapt.messagebus.SimpleEnvelope import SimpleEnvelope
 
 import json
 
-class SimpleEnvelopeDeserializer:
+class SimpleEnvelopeDeserializer(object):
     def deserialize(self, jp, ctxt):
         raise NotImplementedError #Apparently is not used. If I'm wrong we'll get an exception :)
 #        ObjectMapper mapper = (ObjectMapper) jp.getCodec();

@@ -11,7 +11,7 @@ from adapt.messagebus.configuration.PersistedEnvelopeRepository import Persisted
 
 class MessageArchiver(Thread):
     def __init__(self, channel, exchangeName, envelopeRepository, mpq, msrk):
-        super().__init__()
+        super(MessageArchiver, self).__init__()
         self.__channel = channel
         self.__mpq = mpq
         self.__msrk = msrk
@@ -49,7 +49,7 @@ class MessageArchiver(Thread):
         else:
             simpleEnvelope = SimpleEnvelope()
             if body is not None:
-                jsons = str(body, "UTF-8")
+                jsons = unicode(body, "UTF-8")
                 simpleEnvelope.deserialize(json.loads(jsons))
             persistedEnvelope = PersistedEnvelope.convert(simpleEnvelope)
         self.__envelopeRepository.save(persistedEnvelope)
@@ -59,4 +59,4 @@ class MessageArchiver(Thread):
         self.__channel.start_consuming()
     def join(self):
         self.__channel.stop_consuming()
-        super().join()
+        super(MessageArchiver, self).join()

@@ -20,13 +20,15 @@ class SimpleEnvelope(Envelope):
             clels = cl.split(".")
             mel = m
             for clel in clels:
-                c = inspect.getattr_static(mel, clel)
+                #Python 2.7 doesn't support getattr_static. Better to use once ported!
+                #c = inspect.getattr_static(mel, clel)
+                c = getattr(mel, clel)
                 if not clel == clels[-1]:
                     mel = c
             if not inspect.isclass(c):
                 raise Exception("Class '" + cl +"' not found in module '" + mod + "'.")
             if inh is not None and not issubclass(c, inh):
-                raise Exception("Class '" + cl +"' is not an instance of '" + inh.__qualname__ + "' class.")
+                raise Exception("Class '" + cl +"' is not an instance of '" + inh.__name__ + "' class.")
             c = getattr(mel, clels[-1])
         except AttributeError as e:
             raise Exception("Class '" + cl + "' not found in module '" + mod + "'.", e)
@@ -42,13 +44,13 @@ class SimpleEnvelope(Envelope):
         return _id
 
     def __init__(self, _id=None, message=None, messageClass=None, sentTimestamp=None, receivedTimestamp=None, consumedTimestamp=None, expiredTimestamp=None, originIP=None, queueName=None, state=None, expireTime=0):
-        super()
+        super(SimpleEnvelope, self).__init__()
         self._new = False
         if _id is None: self._new = True
         self._id = SimpleEnvelope._makeID() if self._new else _id
         self.message = message
         if self._new and self.message is not None: self.message.setEnvelope(self)
-        #self.messageClass = message.__class__.__module__ + "," + message.__class__.__qualname__ if self._new else messageClass
+        #self.messageClass = message.__class__.__module__ + "," + message.__class__.__name__ if self._new else messageClass
         self.messageClass = message.__class__.__module__ if self._new else messageClass
         self.sentTimestamp = sentTimestamp
         self.receivedTimestamp = receivedTimestamp
@@ -240,7 +242,7 @@ class SimpleEnvelope(Envelope):
     def setToken(self, token):
         self.token = token
     def __str__(self):
-        msg = self.__class__.__qualname__ + "[message=" + str(self.message) + ", sent=" + self.sentTimestamp + ", originIP=" + self.originIP + ", queueName=" + self.queueName + ", state=" + self.state.name
+        msg = self.__class__.__name__ + "[message=" + str(self.message) + ", sent=" + self.sentTimestamp + ", originIP=" + self.originIP + ", queueName=" + self.queueName + ", state=" + self.state.name
         if self.token is not None:
             msg += ", token=" + self.token[0:10] + "..."
         msg += "]"

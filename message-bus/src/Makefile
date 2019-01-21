@@ -1,9 +1,10 @@
+py3:=$(if $(filter $(PYVER),3),3,)
 all: compile
 	@echo "All done"
 
 test: compile
-	python3 test/python/tests.py
+	python$(py3) test/python/tests.py
 
 compile:
 	@cd ..; mvn clean install; cd -
-	@pip3 install --user --upgrade main/python
+	pip$(py3) install --user --upgrade main/python

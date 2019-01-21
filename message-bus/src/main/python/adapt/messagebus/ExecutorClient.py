@@ -4,7 +4,7 @@ from adapt.messagebus.MessageBroker import MessageBroker
 from adapt.messagebus.Subscriber import Subscriber
 from adapt.messagebus.Publisher import Publisher
 
-class ExecutorClient:
+class ExecutorClient(object):
     #Static Methods
     @classmethod
     def makeResponseQueueName(cls):
