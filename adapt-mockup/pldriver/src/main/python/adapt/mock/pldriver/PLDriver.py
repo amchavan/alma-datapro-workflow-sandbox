@@ -6,12 +6,12 @@ import tempfile
 import subprocess
 import collections
 
-from draws.messages.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
+from adapt.messagebus.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
 
-from draws.mock.pldriver.Template import Template
-from draws.mock.pldriver.TaskStats import TaskStats
-from draws.mock.pldriver.TaskException import TaskException
-from draws.mock.messages.gen.XTSSSetState import XTSSSetState
+from adapt.mock.pldriver.Template import Template
+from adapt.mock.pldriver.TaskStats import TaskStats
+from adapt.mock.pldriver.TaskException import TaskException
+from adapt.mock.messages.gen.XTSSSetState import XTSSSetState
 
 #Main class of the PLDriver implementation. It drives the execution
 #of the pre tasks, the pipeline itself and the post tasks.
@@ -105,7 +105,7 @@ class PLDriver():
         return res
 
 if __name__ == "__main__":
-    from draws.mock.pldriver.PLDriver import PLDriver
+    from adapt.mock.pldriver.PLDriver import PLDriver
     parser = argparse.ArgumentParser(description='Pipeline Driver mock-up')
     parser.add_argument(dest="progID", help="ID of the project containing the OUS")
     parser.add_argument(dest="ousUID", help="ID of the OUS that should be processed")

@@ -6,8 +6,8 @@ import random
 import time
 import argparse
 
-from draws.messages.rabbitmq.Publisher import Publisher
-from draws.messages.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
+from adapt.messagebus.rabbitmq.Publisher import Publisher
+from adapt.messagebus.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
 
 sys.path.insert(0, "../shared")
 from dbmsgq import MqConnection, ExecutorClient

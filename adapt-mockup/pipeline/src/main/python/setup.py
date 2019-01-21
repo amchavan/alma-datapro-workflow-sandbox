@@ -1,17 +1,17 @@
 from setuptools import setup
 
 dependencies = [
-    "draws-mock-icd",
-    "drawsmb"
+    "adapt-mock-icd",
+    "adaptmb"
 ]
 
-setup(name='draws-mock-pipeline',
+setup(name='adapt-mock-pipeline',
       version='0.1',
       description='DRAWS Mock Pipeline',
       url='http://www.almaobservatory.org',
       author='ALMA',
       author_email='test@alma.cl',
       license='LGPL',
-      packages=['draws', 'draws/mock', 'draws/mock/pipeline'],
+      packages=['adapt', 'adapt/mock', 'adapt/mock/pipeline'],
       install_requires=dependencies,
       zip_safe=False)

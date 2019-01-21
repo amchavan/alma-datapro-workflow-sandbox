@@ -1,17 +1,17 @@
 from setuptools import setup
 
 dependencies = [
-    "draws-mock-icd",
-    "drawsmb"
+    "adapt-mock-icd",
+    "adaptmb"
 ]
 
-setup(name='draws-mock-product-ingestor',
+setup(name='adapt-mock-product-ingestor',
       version='0.1',
       description='DRAWS Mock Product Ingestor',
       url='http://www.almaobservatory.org',
       author='ALMA',
       author_email='test@alma.cl',
       license='LGPL',
-      packages=['draws', 'draws/mock', 'draws/mock/product-ingestor'],
+      packages=['adapt', 'adapt/mock', 'adapt/mock/product-ingestor'],
       install_requires=dependencies,
       zip_safe=False)

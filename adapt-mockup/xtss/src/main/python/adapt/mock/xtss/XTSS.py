@@ -5,10 +5,10 @@ import datetime
 
 from collections import namedtuple
 
-from draws.messages.rabbitmq.Subscriber import Subscriber
-from draws.messages.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
+from adapt.messagebus.rabbitmq.Subscriber import Subscriber
+from adapt.messagebus.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
 
-from draws.mock.messages.gen.XTSSSetState import XTSSSetState
+from adapt.mock.messages.gen.XTSSSetState import XTSSSetState
 
 sys.path.insert(0, "../shared")
 from dbmsgq import Executor
