@@ -7,9 +7,9 @@ import lxml.etree as ET
 
 def getXSLTFilename(args):
     if args.java is not None:
-        return ET.fromstring(pkgutil.get_data('draws.resources', 'Msg2Java.xslt'))
+        return ET.fromstring(pkgutil.get_data('adapt.resources', 'Msg2Java.xslt'))
     if args.py is not None:
-        return ET.fromstring(pkgutil.get_data('draws.resources', 'Msg2Py.xslt'))
+        return ET.fromstring(pkgutil.get_data('adapt.resources', 'Msg2Py.xslt'))
     if args.xslt is not None:
         return ET.parse(args.xslt)
     

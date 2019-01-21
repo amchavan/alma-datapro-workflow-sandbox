@@ -5,31 +5,31 @@ import threading
 
 from threading import Thread
 
-from draws.messages.Envelope import State
-from draws.messages.Executor import Executor
-from draws.messages.Publisher import Publisher
-from draws.messages.Subscriber import Subscriber
-from draws.messages.MessageBroker import MessageBroker
-from draws.messages.ExecutorClient import ExecutorClient
-from draws.messages.SimpleEnvelope import SimpleEnvelope
-from draws.messages.RequestMessage import RequestMessage
-from draws.messages.MessageConsumer import MessageConsumer
-from draws.messages.ResponseMessage import ResponseMessage
-from draws.messages.AbstractMessage import AbstractMessage
-from draws.messages.RequestProcessor import RequestProcessor
-from draws.messages.AbstractRequestMessage import AbstractRequestMessage
-from draws.messages.TimeLimitExceededException import TimeLimitExceededException
+from adapt.messages.Envelope import State
+from adapt.messages.Executor import Executor
+from adapt.messages.Publisher import Publisher
+from adapt.messages.Subscriber import Subscriber
+from adapt.messages.MessageBroker import MessageBroker
+from adapt.messages.ExecutorClient import ExecutorClient
+from adapt.messages.SimpleEnvelope import SimpleEnvelope
+from adapt.messages.RequestMessage import RequestMessage
+from adapt.messages.MessageConsumer import MessageConsumer
+from adapt.messages.ResponseMessage import ResponseMessage
+from adapt.messages.AbstractMessage import AbstractMessage
+from adapt.messages.RequestProcessor import RequestProcessor
+from adapt.messages.AbstractRequestMessage import AbstractRequestMessage
+from adapt.messages.TimeLimitExceededException import TimeLimitExceededException
 
-from draws.messages.security.JWTFactory import JWTFactory
+from adapt.messages.security.JWTFactory import JWTFactory
 
-from draws.messages.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
-from draws.messages.configuration.RecipientGroupRepository import RecipientGroupRepository
-from draws.messages.configuration.PersistedEnvelopeRepository import PersistedEnvelopeRepository
+from adapt.messages.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
+from adapt.messages.configuration.RecipientGroupRepository import RecipientGroupRepository
+from adapt.messages.configuration.PersistedEnvelopeRepository import PersistedEnvelopeRepository
 
-from draws.test.messages.TestMessage import TestMessage
-from draws.test.messages.DoubleRequest import DoubleRequest
-from draws.test.messages.DoubleResponse import DoubleResponse
-from draws.test.messages.security.MockedTokenFactory import MockedTokenFactory
+from adapt.test.messages.TestMessage import TestMessage
+from adapt.test.messages.DoubleRequest import DoubleRequest
+from adapt.test.messages.DoubleResponse import DoubleResponse
+from adapt.test.messages.security.MockedTokenFactory import MockedTokenFactory
 
 
 class TestSerialization(unittest.TestCase):
