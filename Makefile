@@ -1,4 +1,4 @@
-MODULES:=message-bus message-bus-demos draws-mockup
+MODULES:=message-bus message-bus-demos adapt-mockup
 
 #1: Module name
 define makeModule

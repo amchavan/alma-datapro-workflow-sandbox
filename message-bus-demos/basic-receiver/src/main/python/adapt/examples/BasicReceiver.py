@@ -1,8 +1,8 @@
 import os
 import argparse
 
-from draws.messages.Subscriber import Subscriber
-from draws.messages.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
+from adapt.messagebus.Subscriber import Subscriber
+from adapt.messagebus.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
 
 class BasicReceiver:
     def __init__(self):

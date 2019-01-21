@@ -1,8 +1,8 @@
 import os
 import argparse
 
-from draws.messages.Publisher import Publisher
-from draws.messages.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
+from adapt.messagebus.Publisher import Publisher
+from adapt.messagebus.rabbitmq.RabbitMqMessageBroker import RabbitMqMessageBroker
 
 from alma.adapt.examples.common.Person import Person
 

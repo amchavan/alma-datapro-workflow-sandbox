@@ -1,14 +1,14 @@
 from setuptools import setup
 
-dependencies = ['drawsmb', 'drawsmb-demos-common']
+dependencies = ['adaptmb', 'adaptmb-demos-common']
 
-setup(name='drawsmb-demos-receiver',
+setup(name='adaptmb-demos-receiver',
       version='0.1',
       description='DRAWS Message Bus API',
       url='http://www.almaobservatory.org',
       author='ALMA',
       author_email='test@alma.cl',
       license='LGPL',
-      packages=['draws', 'draws/examples'],
+      packages=['adapt', 'adapt/examples'],
       install_requires=dependencies,
       zip_safe=False)

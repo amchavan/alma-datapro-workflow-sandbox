@@ -1,4 +1,4 @@
-from draws.messages.AbstractMessage import AbstractMessage
+from adapt.messagebus.AbstractMessage import AbstractMessage
 
 class Person(AbstractMessage):
     def __init__(self, name=None, age=None, alive=None):
