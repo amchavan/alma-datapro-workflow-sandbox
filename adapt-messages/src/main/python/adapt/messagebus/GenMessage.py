@@ -6,9 +6,9 @@ import argparse
 import lxml.etree as ET
 
 def getXSLTFilename(args):
-    if args.java is not None:
+    if args.java:
         return ET.fromstring(pkgutil.get_data('adapt.resources', 'Msg2Java.xslt'))
-    if args.py is not None:
+    if args.py:
         return ET.fromstring(pkgutil.get_data('adapt.resources', 'Msg2Py.xslt'))
     if args.xslt is not None:
         return ET.parse(args.xslt)
@@ -21,7 +21,9 @@ def main(args):
     transform = ET.XSLT(xslt)
     newdom = transform(dom)
     path = dom.getroot().attrib['package'].replace('.','/')
-    if os.path.exists(args.dir) and os.path.isdir(args.dir):
+    if not os.path.exists(args.dir):
+        os.makedirs(args.dir)
+    elif os.path.isdir(args.dir):
         path = args.dir + '/' + path
         if not os.path.exists(path):
             os.makedirs(path)
@@ -29,6 +31,8 @@ def main(args):
         f = open(path, 'w')
         f.write(str(newdom))
         f.close()
+    else:
+        print("There's file with the desired directory output name ('" + args.dir + "').")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

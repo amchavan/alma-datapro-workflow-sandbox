@@ -1,10 +1,10 @@
 from setuptools import setup
 
 dependencies = [
-    "adaptmb-messages"
+    "adaptmb"
 ]
 
-setup(name='adaptmb',
+setup(name='adaptmb-messages',
       version='0.1',
       description='DRAWS Message Bus API',
       url='http://www.almaobservatory.org',
