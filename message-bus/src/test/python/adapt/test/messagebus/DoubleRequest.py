@@ -1,4 +1,4 @@
-from draws.messages.AbstractRequestMessage import AbstractRequestMessage
+from adapt.messagebus.AbstractRequestMessage import AbstractRequestMessage
 
 #Request: double a number
 class DoubleRequest(AbstractRequestMessage):

@@ -1,5 +1,5 @@
-from draws.messages.AbstractMessage import AbstractMessage
-from draws.messages.ResponseMessage import ResponseMessage
+from adapt.messagebus.AbstractMessage import AbstractMessage
+from adapt.messagebus.ResponseMessage import ResponseMessage
 
 #Response: a doubled number
 class DoubleResponse(AbstractMessage, ResponseMessage):
