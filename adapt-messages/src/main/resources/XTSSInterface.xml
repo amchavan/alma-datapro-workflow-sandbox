@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Message name="XTSSInterface" package="alma.icd.adapt.messages.generated">
+    <entry name="operation" type="String"/>
+    <entry name="ousUID" type="String"/>
+    <entry name="target-state" type="String"/>
+    <entry name="target-substate" type="String"/>
+    <entry name="flagName" type="String"/>
+    <entry name="flagValue" type="String"/>
+    <entry name="ous-flag-name" type="String"/>
+    <entry name="ous-flag-values" type="String"/>
+</Message>
